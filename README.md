@@ -25,14 +25,17 @@ $ npm start
 ## CSS Media Queries
 To see the mobile and the desktop version
 use the width of 1920px (Desktop full HD) 
+
 ![image](https://user-images.githubusercontent.com/87839952/184237532-5cce3f58-62a3-4659-b70e-dbcd72cafb65.png)
 
 
-use the width of 1536px (Desktop HD) 
+use the width of 1536px (Desktop HD)
+
 ![image](https://user-images.githubusercontent.com/87839952/184237487-d5a73458-c0c5-4f13-b8b3-bed61c217e29.png)
 
 
 use the width of 768px (Mobile/Tablet) 
+
 ![image](https://user-images.githubusercontent.com/87839952/184237446-aa7e8491-0000-4967-a507-91c142d8b7f4.png)
 
 
