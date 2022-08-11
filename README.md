@@ -1,46 +1,40 @@
-# Getting Started with Create React App
+# Justa---Front End-Challenge
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+I implemented a Pokédex with pagination, dashboard with all pokémons, search system by name and type, favorite system and a page to check all favorite Pokémons.
 
-## Available Scripts
+## Languages & tools
 
-In the project directory, you can run:
+- ReactJS
+- JavaScript
+- TypeScript
+- Fetch
+- Styled-components 
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
 
-### `npm test`
+# Install dependencies
+$ npm react-router-dom
+npm i --save @fortawesome/fontawesome-svg-core
+npm install --save @fortawesome/free-solid-svg-icons
+npm install --save @fortawesome/react-fontawesome
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Start the project
+$ npm start
 
-### `npm run build`
+## CSS Media Queries
+To see the mobile and the desktop version
+use the width of 1920px (Desktop full HD) 
+![image](https://user-images.githubusercontent.com/87839952/184237532-5cce3f58-62a3-4659-b70e-dbcd72cafb65.png)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+use the width of 1536px (Desktop HD) 
+![image](https://user-images.githubusercontent.com/87839952/184237487-d5a73458-c0c5-4f13-b8b3-bed61c217e29.png)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `npm run eject`
+use the width of 768px (Mobile/Tablet) 
+![image](https://user-images.githubusercontent.com/87839952/184237446-aa7e8491-0000-4967-a507-91c142d8b7f4.png)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+use the width of 375px (Mobile cellphone) 
+![image](https://user-images.githubusercontent.com/87839952/184237393-fb4ac6e0-cc95-4fc0-95e8-90472dfa224a.png)
