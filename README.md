@@ -8,7 +8,7 @@ I implemented a Pokédex with pagination, dashboard with all pokémons, search s
 - JavaScript
 - TypeScript
 - Fetch
-- Styled-components 
+
 
 
 
