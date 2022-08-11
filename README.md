@@ -36,5 +36,6 @@ use the width of 768px (Mobile/Tablet)
 ![image](https://user-images.githubusercontent.com/87839952/184237446-aa7e8491-0000-4967-a507-91c142d8b7f4.png)
 
 
-use the width of 375px (Mobile cellphone) 
+use the width of 375px (Mobile cellphone)
+
 ![image](https://user-images.githubusercontent.com/87839952/184237393-fb4ac6e0-cc95-4fc0-95e8-90472dfa224a.png)
