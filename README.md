@@ -14,7 +14,7 @@ I implemented a Pokédex with pagination, dashboard with all pokémons, search s
 
 
 # Install dependencies
-$ npm react-router-dom
+npm react-router-dom
 
 npm i --save @fortawesome/fontawesome-svg-core
 
@@ -23,7 +23,7 @@ npm install --save @fortawesome/free-solid-svg-icons
 npm install --save @fortawesome/react-fontawesome
 
 # Start the project
-$ npm start
+npm start
 
 ## CSS Media Queries
 To see the mobile and the desktop version
