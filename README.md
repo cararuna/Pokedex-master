@@ -26,8 +26,8 @@ npm install --save @fortawesome/react-fontawesome
 npm start
 
 ## CSS Media Queries
-To see the mobile and the desktop version
-use the width of 1920px (Desktop full HD) 
+To see the desktop version
+use width of 1920px (Desktop full HD) 
 
 ![image](https://user-images.githubusercontent.com/87839952/184237532-5cce3f58-62a3-4659-b70e-dbcd72cafb65.png)
 
