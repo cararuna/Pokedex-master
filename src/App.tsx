@@ -1,26 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react'
+import ListaPokemon from './components/ListaPokemon'
+import { Context } from './components/GlobalContext'
+import Search from './components/Search'
+import { IPokemon } from './types/pokemon'
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { Home } from './pages/Home'
+import { Favorites } from './pages/Favorites'
 
-function App() {
+export default function App() {
+  const [favorites, setFavorites] = useState<IPokemon[]>([])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <BrowserRouter>
+      <Context.Provider value={{ favorites, setFavorites }}>
+        <Switch>
+          <Route path="/" exact component={Home} />
+          <Route path="/favorites" exact component={Favorites} />
+        </Switch>
+      </Context.Provider>
+    </BrowserRouter>
+  )
 }
-
-export default App;
