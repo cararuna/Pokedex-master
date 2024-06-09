@@ -1,65 +1,64 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faStar } from '@fortawesome/free-solid-svg-icons'
-import { useContext, useEffect, useState } from 'react'
-import Modal from 'react-modal'
-import { IPokemon, IPokemonData } from '../types/pokemon'
-import { Context } from './GlobalContext'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faStar } from "@fortawesome/free-solid-svg-icons";
+import { useContext, useEffect, useState } from "react";
+import Modal from "react-modal";
+import { IPokemon, IPokemonData } from "../types/pokemon";
+import { Context } from "./GlobalContext";
 
 interface IPokemonProps {
-  pokemon: IPokemon
+  pokemon: IPokemon;
 }
 
 const Pokemon = ({ pokemon }: IPokemonProps) => {
   /* const [isFavorite, setIsFavorite] = useState(false) */
 
-  const { favorites, setFavorites } = useContext(Context)
+  const { favorites, setFavorites } = useContext(Context);
 
-  const [pokemonData, setPokemonData] = useState<IPokemonData>()
+  const [pokemonData, setPokemonData] = useState<IPokemonData>();
 
   useEffect(() => {
     if (pokemon.url) {
       const loadImgPokemon = () => {
         fetch(pokemon.url)
-          .then(res => res.json())
+          .then((res) => res.json())
           .then((data: IPokemonData) => {
-            setPokemonData(data)
-          })
-      }
-      loadImgPokemon()
+            setPokemonData(data);
+          });
+      };
+      loadImgPokemon();
     } else {
-      setPokemonData(pokemon as IPokemonData)
+      setPokemonData(pokemon as IPokemonData);
     }
-  }, [pokemon.url])
+  }, [pokemon.url]);
 
-  const [modalIsOpen, setIsOpen] = useState(false)
+  const [modalIsOpen, setIsOpen] = useState(false);
 
   function handleOpenModal() {
-    setIsOpen(true)
+    setIsOpen(true);
   }
 
   function handleCloseModal() {
-    setIsOpen(false)
+    setIsOpen(false);
   }
 
   function handleFavoriteClick() {
     if (pokemonData) {
       const favIndex = favorites.findIndex(
-        favorite => favorite.name === pokemonData.name
-      )
+        (favorite) => favorite.name === pokemonData.name
+      );
       if (favIndex === -1) {
-        setFavorites([...favorites, pokemonData])
+        setFavorites([...favorites, pokemonData]);
       } else {
         setFavorites(
           [...favorites].filter((favorite, index) => index !== favIndex)
-        )
+        );
       }
     }
-    console.log(favorites)
   }
 
   const isFavorite = () => {
-    return favorites.some(favorite => favorite.name === pokemonData?.name)
-  }
+    return favorites.some((favorite) => favorite.name === pokemonData?.name);
+  };
 
   return (
     <>
@@ -85,17 +84,17 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                 >
                   <FontAwesomeIcon
                     icon={faStar}
-                    color={isFavorite() ? 'gold' : 'white'}
+                    color={isFavorite() ? "gold" : "white"}
                   />
                 </div>
               </p>
               <h1 className="title" onClick={handleOpenModal}>
-                {pokemonData.name}{' '}
+                {pokemonData.name}{" "}
               </h1>
               <div className="typeMap">
                 {pokemonData?.types?.map(({ type }) => (
                   <span key={type.name} className={type.name}>
-                    {type.name}{' '}
+                    {type.name}{" "}
                   </span>
                 ))}
               </div>
@@ -127,17 +126,17 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                 <div className="typeModal">
                   {pokemonData?.types?.map(({ type }) => (
                     <span key={type.name} className={type.name}>
-                      {type.name}{' '}
+                      {type.name}{" "}
                     </span>
                   ))}
                 </div>
                 <ul className="info">
                   <div>
-                    Abilities{' '}
+                    Abilities{" "}
                     <div>
                       {pokemonData?.abilities?.map(({ ability }) => (
                         <li key={ability.name} className="pokeAbility">
-                          {ability.name}{' '}
+                          {ability.name}{" "}
                         </li>
                       ))}
                     </div>
@@ -146,7 +145,7 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                     Weight
                     <div className="pokeWeight">
                       {pokemonData.weight / 10} Kg
-                    </div>{' '}
+                    </div>{" "}
                   </div>
                 </ul>
                 <div className="stats">
@@ -167,7 +166,7 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
         </li>
       )}
     </>
-  )
-}
+  );
+};
 
-export default Pokemon
+export default Pokemon;
