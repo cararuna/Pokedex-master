@@ -10,8 +10,8 @@ export interface IPokemonData {
       url: string;
     };
   }[];
+  isFavorite?: boolean;
 
-  
   abilities: {
     ability: {
       name: string;
@@ -27,15 +27,14 @@ export interface IPokemonData {
   }[];
 
   sprites?: {
-    front_default:string;
-    
+    front_default: string;
   };
-  
 }
 
 export interface IPokemon {
   name: string;
   url: string;
+  id: number;
   types: {
     type: {
       name: string;
@@ -45,23 +44,22 @@ export interface IPokemon {
 }
 
 export enum PokemonType {
-  normal = 'normal', 
-  fire = 'fire', 
-  water = 'water', 
-  grass = 'grass', 
-  flying = 'flying', 
-  fighting = 'fighting', 
-  poison = 'poison', 
-  electric = 'electric', 
-  ground = 'ground', 
-  rock = 'rock', 
-  psychic = 'psychic', 
-  ice = 'ice', 
-  bug = 'bug', 
-  ghost = 'ghost', 
-  steel = 'steel', 
-  dragon = 'dragon', 
-  dark = 'dark',
-  fairy = 'fairy'
-
+  normal = "normal",
+  fire = "fire",
+  water = "water",
+  grass = "grass",
+  flying = "flying",
+  fighting = "fighting",
+  poison = "poison",
+  electric = "electric",
+  ground = "ground",
+  rock = "rock",
+  psychic = "psychic",
+  ice = "ice",
+  bug = "bug",
+  ghost = "ghost",
+  steel = "steel",
+  dragon = "dragon",
+  dark = "dark",
+  fairy = "fairy",
 }

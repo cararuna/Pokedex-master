@@ -10,8 +10,15 @@ import { faStar } from "@fortawesome/free-solid-svg-icons";
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const typeUrl = "https://pokeapi.co/api/v2/type/";
 
+interface IData {
+  id: number;
+  userId: number;
+  pokemonId: number;
+}
+
 export const Home = () => {
   const [pokemons, setPokemons] = useState([] as IPokemon[]);
+
   const [nextUrl, setNextUrl] = useState("");
   const [previousUrl, setPreviousUrl] = useState("");
   const [inputText, setInputText] = useState("");
@@ -61,6 +68,22 @@ export const Home = () => {
 
   useEffect(() => {
     loadPokemonList(firstUrl);
+
+    const fetchFavorites = async () => {
+      try {
+        const response = await fetch("https://localhost:7198/Favorites");
+        if (!response.ok) {
+          throw new Error("Network response was not ok " + response.statusText);
+        }
+        const data = await response.json();
+
+        const pokemonIds = data.map((item: IData) => item.pokemonId);
+      } catch (error) {
+        console.error("Error fetching favorites:", error);
+      }
+    };
+
+    fetchFavorites();
   }, []);
 
   return (

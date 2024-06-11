@@ -9,29 +9,38 @@ interface IPokemonProps {
   pokemon: IPokemon;
 }
 
+interface IData {
+  id: number;
+  userId: number;
+  pokemonId: number;
+}
+
 const Pokemon = ({ pokemon }: IPokemonProps) => {
-  /* const [isFavorite, setIsFavorite] = useState(false) */
-
   const { favorites, setFavorites } = useContext(Context);
-
   const [pokemonData, setPokemonData] = useState<IPokemonData>();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [modalIsOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (pokemon.url) {
-      const loadImgPokemon = () => {
-        fetch(pokemon.url)
-          .then((res) => res.json())
-          .then((data: IPokemonData) => {
-            setPokemonData(data);
-          });
+      const loadImgPokemon = async () => {
+        const response = await fetch(pokemon.url);
+        const data: IPokemonData = await response.json();
+
+        // Verifica se o Pokémon é favorito
+        const isFav = favorites.some((fav) => fav.id === data.id);
+        setIsFavorite(isFav);
+
+        // Atualiza os dados do Pokémon
+        setPokemonData({ ...data, isFavorite: isFav });
       };
       loadImgPokemon();
     } else {
-      setPokemonData(pokemon as IPokemonData);
+      const isFav = favorites.some((fav) => fav.id === pokemon.id);
+      setIsFavorite(isFav);
+      setPokemonData({ ...pokemon, isFavorite: isFav } as IPokemonData);
     }
-  }, [pokemon.url]);
-
-  const [modalIsOpen, setIsOpen] = useState(false);
+  }, [pokemon.url, favorites]);
 
   function handleOpenModal() {
     setIsOpen(true);
@@ -41,23 +50,69 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
     setIsOpen(false);
   }
 
-  function handleFavoriteClick() {
+  async function handleFavoriteClick() {
     if (pokemonData) {
-      const favIndex = favorites.findIndex(
-        (favorite) => favorite.name === pokemonData.name
-      );
-      if (favIndex === -1) {
-        setFavorites([...favorites, pokemonData]);
+      const pokemonId = pokemonData.id;
+      if (isFavorite) {
+        await handleDeleteRequest(pokemonId);
+        setIsFavorite(false);
+        setFavorites(favorites.filter((fav) => fav.id !== pokemonId));
       } else {
-        setFavorites(
-          [...favorites].filter((favorite, index) => index !== favIndex)
-        );
+        await handlePostRequest(pokemonId);
+        setIsFavorite(true);
+        setFavorites([...favorites, pokemonData]);
       }
     }
   }
 
-  const isFavorite = () => {
-    return favorites.some((favorite) => favorite.name === pokemonData?.name);
+  const handlePostRequest = async (pokemonId: number) => {
+    const url = "https://localhost:7198/Favorites";
+    const body = {
+      userId: 5,
+      pokemonId: pokemonId,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleDeleteRequest = async (pokemonId: number) => {
+    const url = `https://localhost:7198/Favorites`;
+    const body = {
+      userId: 5,
+      pokemonId: pokemonId,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   return (
@@ -77,14 +132,10 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
               <p className="topPokeButton">
                 <div className="numberPokemon">Nº {pokemonData.id}</div>
 
-                <div
-                  id="buttonFavorite"
-                  onClick={handleFavoriteClick}
-                  /* onClick={() => {handleFavoriteClick()}} */
-                >
+                <div id="buttonFavorite" onClick={handleFavoriteClick}>
                   <FontAwesomeIcon
                     icon={faStar}
-                    color={isFavorite() ? "gold" : "white"}
+                    color={isFavorite ? "gold" : "white"}
                   />
                 </div>
               </p>
@@ -152,10 +203,7 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                   {pokemonData?.stats?.map(({ stat, base_stat }) => (
                     <div key={stat.name} className={stat.name}>
                       <span className="progress">{stat.name}</span>
-                      <ul
-                        className="progress-value"
-                        /* style={{ width: { base_stat } }} */
-                      ></ul>
+                      <ul className="progress-value"></ul>
                       <ul className="progres-name">{base_stat}</ul>
                     </div>
                   ))}
