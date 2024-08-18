@@ -6,7 +6,7 @@ import { IPokemon } from "../../types/pokemon";
 import "../Home/index.css";
 import "../../ListaPokemon.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar } from "@fortawesome/free-solid-svg-icons";
+import { faStar, faHandFist } from "@fortawesome/free-solid-svg-icons";
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const typeUrl = "https://pokeapi.co/api/v2/type/";
 
@@ -89,11 +89,18 @@ export const Home = () => {
   return (
     <div className="container">
       <Search setSelectValue={setSelectValue} setInputText={setInputText} />
-      <Link to="/favorites" className="buttonsFav">
-        <button>
-          <FontAwesomeIcon icon={faStar} style={{ color: "gold" }} />
-        </button>
-      </Link>
+      <div className="buttonsSpace">
+        <Link to="/favorites" className="buttonsFav">
+          <button>
+            <FontAwesomeIcon icon={faStar} style={{ color: "gold" }} />
+          </button>
+        </Link>
+        <Link to="/listaMovementos" className="buttonsFav">
+          <button>
+            <FontAwesomeIcon icon={faHandFist} style={{ color: "orange" }} />
+          </button>
+        </Link>
+      </div>
       <ListaPokemon
         list={pokemons.filter((pokemon) => pokemon.name.includes(inputText))}
         loadPreviousPage={loadPreviousPage}

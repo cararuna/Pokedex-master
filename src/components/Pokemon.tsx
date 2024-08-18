@@ -9,12 +9,6 @@ interface IPokemonProps {
   pokemon: IPokemon;
 }
 
-interface IData {
-  id: number;
-  userId: number;
-  pokemonId: number;
-}
-
 const Pokemon = ({ pokemon }: IPokemonProps) => {
   const { favorites, setFavorites } = useContext(Context);
   const [pokemonData, setPokemonData] = useState<IPokemonData>();
@@ -31,8 +25,11 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
         const isFav = favorites.some((fav) => fav.id === data.id);
         setIsFavorite(isFav);
 
-        // Atualiza os dados do Pokémon
-        setPokemonData({ ...data, isFavorite: isFav });
+        // Atualiza os dados do Pokémon, mas sem os movimentos ainda
+        setPokemonData({
+          ...data,
+          isFavorite: isFav,
+        });
       };
       loadImgPokemon();
     } else {
@@ -43,6 +40,57 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
   }, [pokemon.url, favorites]);
 
   function handleOpenModal() {
+    if (pokemonData) {
+      const loadMoves = async () => {
+        const moveTypesMap: {
+          [key: string]: { moveName: string; power: number };
+        } = {};
+
+        for (const move of pokemonData.moves) {
+          const isLevelUp = move.version_group_details.some(
+            (detail) => detail.move_learn_method.name === "level-up"
+          );
+
+          if (isLevelUp) {
+            const moveResponse = await fetch(move.move.url);
+            const moveData = await moveResponse.json();
+
+            if (moveData.power && moveData.power > 0) {
+              const moveType = moveData.type.name;
+              const moveName = moveData.name;
+              const adjustedPower = Math.ceil(moveData.power / 10);
+
+              if (
+                !moveTypesMap[moveType] ||
+                moveTypesMap[moveType].power < adjustedPower
+              ) {
+                moveTypesMap[moveType] = { moveName, power: adjustedPower };
+              }
+            }
+          }
+        }
+
+        for (const [moveType, { moveName, power }] of Object.entries(
+          moveTypesMap
+        )) {
+          console.log(
+            `Tipo: ${moveType}, Movimento: ${moveName}, Power: ${power}`
+          );
+        }
+
+        const moveTypesArray: string[] = Object.entries(moveTypesMap).map(
+          ([type, { moveName, power }]) =>
+            `${moveName} (${type} - ${power} power)`
+        );
+
+        setPokemonData((prevData) =>
+          prevData ? { ...prevData, moveTypes: moveTypesArray } : undefined
+        );
+      };
+
+      loadMoves();
+    }
+
     setIsOpen(true);
   }
 
@@ -84,8 +132,6 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
-      const data = await response.json();
     } catch (error) {
       console.error("Error:", error);
     }
@@ -207,6 +253,16 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                       <ul className="progres-name">{base_stat}</ul>
                     </div>
                   ))}
+                </div>
+                <div className="info">
+                  <h2>Movimentos:</h2>
+                  <ul>
+                    {pokemonData.moveTypes?.map((move, index) => (
+                      <li key={index} className="pokeMoves">
+                        {move}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>

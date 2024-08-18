@@ -29,6 +29,26 @@ export interface IPokemonData {
   sprites?: {
     front_default: string;
   };
+
+  moves: {
+    move: {
+      name: string;
+      url: string;
+    };
+    version_group_details: {
+      level_learned_at: number;
+      version_group: {
+        name: string;
+        url: string;
+      };
+      move_learn_method: {
+        name: string;
+        url: string;
+      };
+    }[];
+  }[];
+
+  moveTypes?: string[]; // Adicionando a propriedade moveTypes como opcional
 }
 
 export interface IPokemon {

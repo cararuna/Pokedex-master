@@ -1,0 +1,8 @@
+.inDevelopment {
+  display: flex;
+  justify-content: center;
+  color: blue;
+  font-weight: bolder;
+  font-size: x-large;
+  font-family: "kanit";
+}

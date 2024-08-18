@@ -4,6 +4,7 @@ import { IPokemon } from "./types/pokemon";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { Home } from "./pages/Home";
 import { Favorites } from "./pages/Favorites";
+import ListaMovementos from "./components/ListaMovementos";
 
 export default function App() {
   const [favorites, setFavorites] = useState<IPokemon[]>([]);
@@ -44,6 +45,7 @@ export default function App() {
         <Switch>
           <Route path="/" exact component={Home} />
           <Route path="/favorites" exact component={Favorites} />
+          <Route path="/listaMovementos" exact component={ListaMovementos} />
         </Switch>
       </Context.Provider>
     </BrowserRouter>

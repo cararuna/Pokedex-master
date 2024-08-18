@@ -6,39 +6,39 @@
   flex-direction: column;
 }
 
-
-
 .buttonsFav {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-
-
 .buttonsFav Button {
-  height: 3rem ;
-  width: 3rem ;
+  height: 3rem;
+  width: 3rem;
   display: flex;
   align-items: center;
-	background:linear-gradient(to bottom, #2f46cf 5%, #3a58fd 100%);
-  color:#FFFFFF;
-  background-color:#2f46cf;
-	border-radius:8px;
-	display:inline-block;
-	cursor:pointer;
-	font-family:Arial;
-	font-size:15px;
-	font-weight:bold;
-	text-decoration:none;
+  background: linear-gradient(to bottom, #2f46cf 5%, #3a58fd 100%);
+  color: #ffffff;
+  background-color: #2f46cf;
+  border-radius: 8px;
+  display: inline-block;
+  cursor: pointer;
+  font-family: Arial;
+  font-size: 15px;
+  font-weight: bold;
+  text-decoration: none;
   margin-left: 2rem;
 }
 .buttonsFav Button:hover {
-  background:linear-gradient(to bottom, #3c5aff 5%, rgb(101, 124, 255) 100%);
-  color:#FFFFFF;
-  background-color:#2b40ba;
+  background: linear-gradient(to bottom, #3c5aff 5%, rgb(101, 124, 255) 100%);
+  color: #ffffff;
+  background-color: #2b40ba;
 }
 .buttonsFav Button:active {
-	position:relative;
-	top:1px;
+  position: relative;
+  top: 1px;
+}
+.buttonsSpace {
+  display: flex;
+  align-items: center;
 }
