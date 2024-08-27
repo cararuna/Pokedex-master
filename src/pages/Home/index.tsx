@@ -95,7 +95,13 @@ export const Home = () => {
             <FontAwesomeIcon icon={faStar} style={{ color: "gold" }} />
           </button>
         </Link>
-        <Link to="/listaMovementos" className="buttonsFav">
+        <Link
+          to={{
+            pathname: "/listaMovementos",
+            state: { list: pokemons },
+          }}
+          className="buttonsFav"
+        >
           <button>
             <FontAwesomeIcon icon={faHandFist} style={{ color: "orange" }} />
           </button>

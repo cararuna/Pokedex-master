@@ -6,3 +6,24 @@
   font-size: x-large;
   font-family: "kanit";
 }
+
+.pokemon-moves-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.pokeMoves {
+  font-weight: bolder;
+  font-size: 1rem;
+  line-height: 1.7rem;
+  letter-spacing: -0.01em;
+  color: #2f3133;
+}
+
+.pokemon-move {
+  background: white;
+  width: 300px;
+  border: white;
+  padding: 10px;
+}
