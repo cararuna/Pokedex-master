@@ -1,95 +1,156 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import "../ListaMovimentos.css";
+import { Link } from "react-router-dom";
+import "../../src/ListaMovimentos.css";
+
+const firstUrl = "https://pokeapi.co/api/v2/pokemon";
+const maxPokemonIndex = 387;
+const pagesPerLoad = 7;
+const pokemonsPerPage = 20;
 
 interface IPokemon {
   name: string;
   url: string;
 }
 
-interface IPokemonDetails {
-  name: string;
-  moveTypes: string[];
+interface IPokemonMove {
+  attackName: string;
+  moveType: string;
+  power: number;
 }
 
-interface ILocationState {
-  list: IPokemon[];
+interface IPokemonDetails {
+  pokemonNumber: number;
+  pokemonName: string;
+  pokemonMoves: IPokemonMove[];
 }
 
 const ListaMovementos = () => {
-  const location = useLocation();
-  const state = (location.state as ILocationState) || { list: [] }; // Tipagem do estado
-  const [pokemonData, setPokemonData] = useState<IPokemonDetails[]>([]);
+  const [allPokemonData, setAllPokemonData] = useState<IPokemonDetails[]>([]);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(firstUrl);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isPreviousVisible, setIsPreviousVisible] = useState(false);
 
-  useEffect(() => {
-    if (state.list.length > 0) {
-      const fetchPokemonData = async () => {
-        const pokemonDetails = await Promise.all(
-          state.list.map(async (pokemon: IPokemon) => {
-            const response = await fetch(pokemon.url);
-            const data = await response.json();
+  const fetchPokemonDetails = async (
+    pokemonList: IPokemon[],
+    startIndex: number
+  ) => {
+    const pokemonDetails = await Promise.all(
+      pokemonList.map(async (pokemon, index) => {
+        const pokemonIndex = startIndex + index;
 
-            const moveTypesMap: Record<
-              string,
-              { moveName: string; power: number }
-            > = {};
+        if (pokemonIndex > maxPokemonIndex) {
+          return null;
+        }
 
-            for (const move of data.moves) {
-              const isLevelUp = move.version_group_details.some(
-                (detail: any) => detail.move_learn_method.name === "level-up"
-              );
+        const response = await fetch(pokemon.url);
+        const data = await response.json();
 
-              if (isLevelUp) {
-                const moveResponse = await fetch(move.move.url);
-                const moveData = await moveResponse.json();
+        const moveTypesMap: Record<
+          string,
+          { moveName: string; power: number }
+        > = {};
 
-                if (moveData.power && moveData.power > 0) {
-                  const moveType = moveData.type.name;
-                  const moveName = moveData.name;
-                  let adjustedPower = Math.ceil(moveData.power / 10);
+        for (const move of data.moves) {
+          const isLevelUp = move.version_group_details.some(
+            (detail: any) => detail.move_learn_method.name === "level-up"
+          );
 
-                  // Limita o power a 10
-                  if (adjustedPower > 10) {
-                    adjustedPower = 10;
-                  }
+          if (isLevelUp) {
+            const moveResponse = await fetch(move.move.url);
+            const moveData = await moveResponse.json();
 
-                  // Define o valor mínimo de power como 6
-                  if (adjustedPower < 6) {
-                    adjustedPower = 6;
-                  }
+            if (moveData.power && moveData.power > 0) {
+              const moveType = moveData.type.name;
+              const moveName = moveData.name;
+              let adjustedPower = Math.ceil(moveData.power / 10);
 
-                  // Arredonda para os valores permitidos (6, 8, 9, 10)
-                  if (adjustedPower === 7) {
-                    adjustedPower = 8;
-                  }
+              // Limita o power a 10
+              if (adjustedPower > 10) {
+                adjustedPower = 10;
+              }
 
-                  if (
-                    !moveTypesMap[moveType] ||
-                    moveTypesMap[moveType].power < adjustedPower
-                  ) {
-                    moveTypesMap[moveType] = { moveName, power: adjustedPower };
-                  }
-                }
+              // Define o valor mínimo de power como 6
+              if (adjustedPower < 6) {
+                adjustedPower = 6;
+              }
+
+              // Arredonda para os valores permitidos (6, 8, 9, 10)
+              if (adjustedPower === 7) {
+                adjustedPower = 8;
+              }
+
+              if (
+                !moveTypesMap[moveType] ||
+                moveTypesMap[moveType].power < adjustedPower
+              ) {
+                moveTypesMap[moveType] = { moveName, power: adjustedPower };
               }
             }
+          }
+        }
 
-            const moveTypesArray = Object.entries(moveTypesMap).map(
-              ([type, { moveName, power }]) =>
-                `${moveName} (${type} - ${power} power)`
-            );
-
-            return {
-              name: data.name,
-              moveTypes: moveTypesArray,
-            };
+        const pokemonMoves = Object.entries(moveTypesMap).map(
+          ([type, { moveName, power }]) => ({
+            attackName: moveName,
+            moveType: type,
+            power: power,
           })
         );
-        setPokemonData(pokemonDetails);
-      };
 
-      fetchPokemonData();
+        return {
+          pokemonNumber: pokemonIndex + 1,
+          pokemonName: data.name,
+          pokemonMoves,
+        };
+      })
+    );
+
+    return pokemonDetails.filter(
+      (pokemon): pokemon is IPokemonDetails => pokemon !== null
+    );
+  };
+
+  const loadPokemonPages = async (url: string | null) => {
+    if (!url) return;
+
+    let currentLoadUrl = url;
+    let currentLoadPage = 0;
+    let allLoadedData: IPokemonDetails[] = [];
+
+    while (currentLoadUrl && currentLoadPage < pagesPerLoad) {
+      const response = await fetch(currentLoadUrl);
+      const data = await response.json();
+      const pokemonDetails = await fetchPokemonDetails(
+        data.results,
+        currentPage * pagesPerLoad * pokemonsPerPage +
+          currentLoadPage * pokemonsPerPage
+      );
+      allLoadedData = [...allLoadedData, ...pokemonDetails];
+      currentLoadUrl = data.next;
+      currentLoadPage++;
     }
-  }, [state.list]);
+
+    setAllPokemonData(allLoadedData);
+    setCurrentUrl(currentLoadUrl);
+
+    // Mostra o botão "Previous" se não estivermos na primeira página
+    setIsPreviousVisible(currentPage > 0);
+
+    // Loga o objeto
+    console.log(allLoadedData);
+  };
+
+  /*  useEffect(() => {
+    loadPokemonPages(currentUrl);
+  }, [currentPage]); */
+
+  const handleNext = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
+  const handlePrevious = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 0));
+  };
 
   return (
     <>
@@ -97,18 +158,14 @@ const ListaMovementos = () => {
         <button className="footerButton">Back</button>
       </Link>
       <div className="pokemon-moves-list">
-        {pokemonData.map((pokemon, index) => (
-          <div key={index} className="pokemon-move">
-            <h2>{pokemon.name}</h2>
-            <ul>
-              {pokemon.moveTypes.map((move, moveIndex) => (
-                <li key={moveIndex} className="pokeMoves">
-                  {move}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <button onClick={handleNext} className="footerButton">
+          Next
+        </button>
+        {isPreviousVisible && (
+          <button onClick={handlePrevious} className="footerButton">
+            Previous
+          </button>
+        )}
       </div>
     </>
   );
