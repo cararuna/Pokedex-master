@@ -1,6 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../../src/ListaMovimentos.css";
+import DataGrid, {
+  Column,
+  Export,
+  Pager,
+  Paging,
+} from "devextreme-react/data-grid";
+import { Workbook } from "exceljs";
+import saveAs from "file-saver";
+import { exportDataGrid } from "devextreme/excel_exporter";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const maxPokemonIndex = 387;
@@ -64,17 +73,14 @@ const ListaMovementos = () => {
               const moveName = moveData.name;
               let adjustedPower = Math.ceil(moveData.power / 10);
 
-              // Limita o power a 10
               if (adjustedPower > 10) {
                 adjustedPower = 10;
               }
 
-              // Define o valor mínimo de power como 6
               if (adjustedPower < 6) {
                 adjustedPower = 6;
               }
 
-              // Arredonda para os valores permitidos (6, 8, 9, 10)
               if (adjustedPower === 7) {
                 adjustedPower = 8;
               }
@@ -132,17 +138,14 @@ const ListaMovementos = () => {
 
     setAllPokemonData(allLoadedData);
     setCurrentUrl(currentLoadUrl);
-
-    // Mostra o botão "Previous" se não estivermos na primeira página
     setIsPreviousVisible(currentPage > 0);
 
-    // Loga o objeto
-    console.log(allLoadedData);
+    console.log(allLoadedData); // Loga o objeto final
   };
 
-  /*  useEffect(() => {
+  useEffect(() => {
     loadPokemonPages(currentUrl);
-  }, [currentPage]); */
+  }, [currentPage]);
 
   const handleNext = () => {
     setCurrentPage((prevPage) => prevPage + 1);
@@ -150,6 +153,40 @@ const ListaMovementos = () => {
 
   const handlePrevious = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 0));
+  };
+
+  // Função para exportar a tabela para Excel
+  const onExporting = (e: any) => {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet("PokemonData");
+
+    exportDataGrid({
+      component: e.component,
+      worksheet: worksheet,
+      autoFilterEnabled: true,
+      customizeCell: (options: { gridCell?: any; excelCell?: any }) => {
+        const { gridCell, excelCell } = options;
+        if (
+          gridCell?.column?.dataField === "pokemonMoves" &&
+          Array.isArray(gridCell.value)
+        ) {
+          excelCell.value = gridCell.value
+            .map(
+              (move: IPokemonMove) =>
+                `(${move.attackName} / ${move.moveType} / ${move.power})`
+            )
+            .join(", ");
+        }
+      },
+    }).then(() => {
+      workbook.xlsx.writeBuffer().then((buffer: any) => {
+        saveAs(
+          new Blob([buffer], { type: "application/octet-stream" }),
+          "PokemonData.xlsx"
+        );
+      });
+    });
+    e.cancel = true; // Impede o comportamento padrão da exportação
   };
 
   return (
@@ -167,6 +204,36 @@ const ListaMovementos = () => {
           </button>
         )}
       </div>
+      {/* DataGrid para exibir os dados dos Pokémons */}
+      <DataGrid
+        dataSource={allPokemonData}
+        showBorders={true}
+        onExporting={onExporting}
+        columnAutoWidth={true} // Garantir que as colunas sejam dimensionadas automaticamente
+        rowAlternationEnabled={true} // Alternar as cores das linhas para facilitar a leitura
+        export={{ enabled: true }} // Habilitar a exportação na grade
+      >
+        <Paging defaultPageSize={20} />
+        <Pager showPageSizeSelector={true} allowedPageSizes={[20, 50, 100]} />
+
+        <Column dataField="pokemonNumber" caption="Number" width={70} />
+        <Column dataField="pokemonName" caption="Name" />
+        <Column
+          dataField="pokemonMoves"
+          caption="Moves"
+          customizeText={(cellInfo) => {
+            const moves = cellInfo.value as IPokemonMove[];
+            return moves
+              .map(
+                (move) =>
+                  `(${move.attackName} / ${move.moveType} / ${move.power})`
+              )
+              .join(", ");
+          }}
+        />
+
+        <Export enabled={true} />
+      </DataGrid>
     </>
   );
 };
