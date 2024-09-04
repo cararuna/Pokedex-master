@@ -77,8 +77,8 @@ const ListaMovementos = () => {
                 adjustedPower = 10;
               }
 
-              if (adjustedPower < 6) {
-                adjustedPower = 6;
+              if (adjustedPower <= 6) {
+                adjustedPower = 8;
               }
 
               if (adjustedPower === 7) {
