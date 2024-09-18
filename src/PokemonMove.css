@@ -1,0 +1,9 @@
+.PokemonMove {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+
+.PokemonImg {
+  height: 64px;
+}

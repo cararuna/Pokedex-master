@@ -1,5 +1,9 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar } from "@fortawesome/free-solid-svg-icons";
+import {
+  faStar,
+  faEye,
+  faCheckCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { IPokemon, IPokemonData } from "../types/pokemon";
@@ -13,6 +17,9 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
   const { favorites, setFavorites } = useContext(Context);
   const [pokemonData, setPokemonData] = useState<IPokemonData>();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [wasSeen, setWasSeen] = useState(false);
+  const [wasCaught, setWasCaught] = useState(false);
+
   const [modalIsOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -113,6 +120,36 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
     }
   }
 
+  async function handleSeenClick() {
+    if (pokemonData) {
+      const pokemonId = pokemonData.id;
+      if (wasSeen) {
+        await handleDeleteRequest(pokemonId);
+        setIsFavorite(false);
+        setFavorites(favorites.filter((fav) => fav.id !== pokemonId));
+      } else {
+        await handlePostRequest(pokemonId);
+        setIsFavorite(true);
+        setFavorites([...favorites, pokemonData]);
+      }
+    }
+  }
+
+  async function handleCaughtClick() {
+    if (pokemonData) {
+      const pokemonId = pokemonData.id;
+      if (isFavorite) {
+        await handleDeleteRequest(pokemonId);
+        setIsFavorite(false);
+        setFavorites(favorites.filter((fav) => fav.id !== pokemonId));
+      } else {
+        await handlePostRequest(pokemonId);
+        setIsFavorite(true);
+        setFavorites([...favorites, pokemonData]);
+      }
+    }
+  }
+
   const handlePostRequest = async (pokemonId: number) => {
     const url = "https://localhost:7198/Favorites";
     const body = {
@@ -181,6 +218,18 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                 <div id="buttonFavorite" onClick={handleFavoriteClick}>
                   <FontAwesomeIcon
                     icon={faStar}
+                    color={isFavorite ? "gold" : "white"}
+                  />
+                </div>
+                <div id="buttonFavorite" onClick={handleSeenClick}>
+                  <FontAwesomeIcon
+                    icon={faEye}
+                    color={isFavorite ? "gold" : "white"}
+                  />
+                </div>
+                <div id="buttonFavorite" onClick={handleCaughtClick}>
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
                     color={isFavorite ? "gold" : "white"}
                   />
                 </div>
