@@ -27,6 +27,7 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
       const loadImgPokemon = async () => {
         const response = await fetch(pokemon.url);
         const data: IPokemonData = await response.json();
+        console.log(data);
 
         // Verifica se o Pokémon é favorito
         const isFav = favorites.some((fav) => fav.id === data.id);

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "../../src/ListaMovimentos.css";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import PokemonMove from "./PokemonMove";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const maxPokemonIndex = 387;
-const pagesPerLoad = 7;
 const pokemonsPerPage = 20;
 
 interface IPokemon {
@@ -31,6 +31,7 @@ const MovimentosCompletos = () => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(firstUrl);
   const [currentPage, setCurrentPage] = useState(0);
   const [isPreviousVisible, setIsPreviousVisible] = useState(false);
+  const [loading, setLoading] = useState(true); // Estado de carregamento
 
   const fetchPokemonDetails = async (
     pokemonList: IPokemon[],
@@ -46,8 +47,6 @@ const MovimentosCompletos = () => {
 
         const response = await fetch(pokemon.url);
         const data = await response.json();
-        console.log(response);
-        console.log(data);
 
         const moveTypesMap: Record<
           string,
@@ -103,7 +102,7 @@ const MovimentosCompletos = () => {
           pokemonName: data.name,
           pokemonMoves,
           pokemonSprite:
-            data.sprites.versions?.["generation-iii"]?.["firered-leafgreen"]
+            data.sprites.versions?.["generation-iv"]?.["diamond-pearl"]
               .front_default,
         };
       })
@@ -118,27 +117,30 @@ const MovimentosCompletos = () => {
     if (!url) return;
 
     let currentLoadUrl = url;
-    let currentLoadPage = 0;
     let allLoadedData: IPokemonDetails[] = [];
 
-    while (currentLoadUrl && currentLoadPage < pagesPerLoad) {
+    setLoading(true); // Ativa o loading
+
+    while (currentLoadUrl) {
       const response = await fetch(currentLoadUrl);
       const data = await response.json();
+
       const pokemonDetails = await fetchPokemonDetails(
         data.results,
-        currentPage * pagesPerLoad * pokemonsPerPage +
-          currentLoadPage * pokemonsPerPage
+        allLoadedData.length
       );
+
       allLoadedData = [...allLoadedData, ...pokemonDetails];
       currentLoadUrl = data.next;
-      currentLoadPage++;
+
+      if (allLoadedData.length >= maxPokemonIndex) {
+        break;
+      }
     }
 
     setAllPokemonData(allLoadedData);
-    setCurrentUrl(currentLoadUrl);
     setIsPreviousVisible(currentPage > 0);
-
-    console.log(allLoadedData); // Loga o objeto final
+    setLoading(false); // Desativa o loading após o carregamento
   };
 
   useEffect(() => {
@@ -155,15 +157,24 @@ const MovimentosCompletos = () => {
 
   return (
     <>
-      {allPokemonData.map((pokemon, index) => (
-        <PokemonMove
-          key={index}
-          number={pokemon.pokemonNumber}
-          name={pokemon.pokemonName}
-          moves={pokemon.pokemonMoves}
-          sprites={pokemon.pokemonSprite}
-        />
-      ))}
+      {loading ? (
+        <div className="loading-container">
+          <FontAwesomeIcon icon={faSpinner} spin size="3x" />
+          <p>Carregando Lista de Pokémons...</p>
+        </div>
+      ) : (
+        <>
+          {allPokemonData.map((pokemon, index) => (
+            <PokemonMove
+              key={index}
+              number={pokemon.pokemonNumber}
+              name={pokemon.pokemonName}
+              moves={pokemon.pokemonMoves}
+              sprites={pokemon.pokemonSprite}
+            />
+          ))}
+        </>
+      )}
     </>
   );
 };

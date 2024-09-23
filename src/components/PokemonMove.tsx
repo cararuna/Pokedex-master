@@ -19,7 +19,7 @@ const PokemonMove: React.FC<any> = (props) => {
     <div className="PokemonMove">
       <img className="PokemonImg" src={props.sprites} alt={props.name} />
       <h2>
-        {props.name} (#{props.id})
+        {props.name} (#{props.number})
       </h2>
       <ul>
         {props.moves.map((move: any, index: any) => (
