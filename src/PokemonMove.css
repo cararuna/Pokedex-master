@@ -1,6 +1,6 @@
 .PokemonMove {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 2rem;
   margin: 1rem;
   border: 2px solid #000; /* Adiciona uma borda preta */
@@ -9,6 +9,17 @@
   background-color: rgba(0, 0, 0, 0.3); /* Cor preta com 10% de opacidade */
 }
 
-.PokemonImg {
-  height: 64px;
+/* .PokemonImg {
+  height: 128px;
+} */
+
+.MoveTypeImg {
+  height: 2rem;
+}
+
+.pokeInfoLine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
