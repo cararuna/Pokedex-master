@@ -156,7 +156,7 @@ const MovimentosCompletos = () => {
   };
 
   return (
-    <>
+    <div className="MovimentosCompletos">
       {loading ? (
         <div className="loading-container">
           <FontAwesomeIcon icon={faSpinner} spin size="3x" />
@@ -175,7 +175,7 @@ const MovimentosCompletos = () => {
           ))}
         </>
       )}
-    </>
+    </div>
   );
 };
 
