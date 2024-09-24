@@ -7,6 +7,7 @@
   border-radius: 10px; /* Arredonda os cantos da borda */
   padding: 1rem; /* Adiciona espaçamento interno */
   background-color: rgba(0, 0, 0, 0.3); /* Cor preta com 10% de opacidade */
+  min-width: 320px;
 }
 
 /* .PokemonImg {

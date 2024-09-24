@@ -65,7 +65,7 @@ const PokemonMove: React.FC<any> = (props) => {
               alt={move.moveType}
               className="MoveTypeImg"
             />
-            {move.attackName} - {move.moveType} - Power: {move.power}
+            {move.attackName} {/* - {move.moveType}  */}- Power: {move.power}
           </li>
         ))}
       </ul>
