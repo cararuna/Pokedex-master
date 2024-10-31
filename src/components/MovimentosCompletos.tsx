@@ -3,6 +3,7 @@ import "../../src/ListaMovimentos.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import PokemonMove from "./PokemonMove";
+import Search from "./Search";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const maxPokemonIndex = 387;
@@ -32,6 +33,7 @@ const MovimentosCompletos = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isPreviousVisible, setIsPreviousVisible] = useState(false);
   const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [inputTextState, setInputTextState] = useState("");
 
   const fetchPokemonDetails = async (
     pokemonList: IPokemon[],
@@ -155,25 +157,48 @@ const MovimentosCompletos = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 0));
   };
 
+  const hasSelect = true;
+
+  const placeholder = "Procure pelo Nome do Pokémon";
+
+  // Função para atualizar o texto do input
+  const handleSearchChange = (text: string) => {
+    setInputTextState(text);
+  };
+
   return (
     <div className="MovimentosCompletos">
-      {loading ? (
+      <Search
+        hasSelect={hasSelect}
+        setInputText={handleSearchChange}
+        //setSelectValue={setSelectValue}
+        placeholder={placeholder}
+      />
+      {!loading ? (
+        <>
+          {allPokemonData
+            .filter((pokemon) => {
+              // Aplica o filtro apenas se inputText não estiver vazio
+              if (inputTextState === "") return true;
+              return pokemon.pokemonName
+                .toLowerCase()
+                .includes(inputTextState.toLowerCase());
+            })
+            .map((pokemon, index) => (
+              <PokemonMove
+                key={index}
+                number={pokemon.pokemonNumber}
+                name={pokemon.pokemonName}
+                moves={pokemon.pokemonMoves}
+                sprites={pokemon.pokemonSprite}
+              />
+            ))}
+        </>
+      ) : (
         <div className="loading-container">
           <FontAwesomeIcon icon={faSpinner} spin size="3x" />
-          <p>Carregando Lista de Pokémons...</p>
+          <p>Carregando Lista de Pokémons e seus golpes...</p>
         </div>
-      ) : (
-        <>
-          {allPokemonData.map((pokemon, index) => (
-            <PokemonMove
-              key={index}
-              number={pokemon.pokemonNumber}
-              name={pokemon.pokemonName}
-              moves={pokemon.pokemonMoves}
-              sprites={pokemon.pokemonSprite}
-            />
-          ))}
-        </>
       )}
     </div>
   );

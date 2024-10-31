@@ -24,6 +24,8 @@ export const Home = () => {
   const [inputText, setInputText] = useState("");
   const [selectValue, setSelectValue] = useState("");
 
+  const hasSelect = true;
+
   const loadPreviousPage = () => {
     loadPokemonList(previousUrl);
   };
@@ -88,7 +90,11 @@ export const Home = () => {
 
   return (
     <div className="container">
-      <Search setSelectValue={setSelectValue} setInputText={setInputText} />
+      <Search
+        hasSelect={hasSelect}
+        setSelectValue={setSelectValue}
+        setInputText={setInputText}
+      />
       <div className="buttonsSpace">
         <Link to="/favorites" className="buttonsFav">
           <button>
