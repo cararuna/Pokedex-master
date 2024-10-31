@@ -166,12 +166,14 @@ const MovimentosCompletos = () => {
     setInputTextState(text);
   };
 
+  const [selectValue, setSelectValue] = useState("");
+
   return (
     <div className="MovimentosCompletos">
       <Search
         hasSelect={hasSelect}
         setInputText={handleSearchChange}
-        //setSelectValue={setSelectValue}
+        setSelectValue={setSelectValue}
         placeholder={placeholder}
       />
       {!loading ? (
@@ -179,10 +181,22 @@ const MovimentosCompletos = () => {
           {allPokemonData
             .filter((pokemon) => {
               // Aplica o filtro apenas se inputText não estiver vazio
-              if (inputTextState === "") return true;
-              return pokemon.pokemonName
+              if (inputTextState === "" && selectValue === "") return true; // Se ambos estiverem vazios, retornar todos
+
+              const nameMatches = pokemon.pokemonName
                 .toLowerCase()
                 .includes(inputTextState.toLowerCase());
+
+              // Se selectValue não estiver vazio, verifica os movimentos
+              const typeMatches =
+                selectValue === "" ||
+                pokemon.pokemonMoves.some(
+                  (move) =>
+                    move.moveType.toLowerCase() === selectValue.toLowerCase()
+                );
+
+              // Retorna verdadeiro se corresponder ao nome e/ou tipo de movimento
+              return nameMatches && typeMatches;
             })
             .map((pokemon, index) => (
               <PokemonMove

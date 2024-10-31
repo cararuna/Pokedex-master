@@ -3,7 +3,7 @@ import { PokemonType } from "../types/pokemon";
 
 interface Props {
   setInputText: (text: string) => void;
-  setSelectValue?: (text: string) => void;
+  setSelectValue: (text: string) => void;
   hasSelect: boolean;
   placeholder?: string;
 }
@@ -27,7 +27,7 @@ export default function Search({
           name="s"
           onChange={(e) => setInputText(e.target.value.toLowerCase())}
         />
-        {hasSelect && setSelectValue && (
+        {hasSelect && (
           <select onChange={(e) => setSelectValue(e.target.value)}>
             <option value="">select a type</option>
             {Object.values(PokemonType).map((pokemonType) => (

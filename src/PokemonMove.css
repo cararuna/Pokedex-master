@@ -1,12 +1,14 @@
 .PokemonMove {
   display: flex;
+  font-weight: bold;
+  color: #fffced;
   flex-direction: column;
   gap: 2rem;
   margin: 1rem;
-  border: 2px solid #000; /* Adiciona uma borda preta */
-  border-radius: 10px; /* Arredonda os cantos da borda */
-  padding: 1rem; /* Adiciona espaçamento interno */
-  background-color: rgba(0, 0, 0, 0.3); /* Cor preta com 10% de opacidade */
+  border: 6px solid #ffaa00;
+  border-radius: 10px;
+  padding: 1rem;
+  background-color: #352356;
   min-width: 320px;
 }
 
