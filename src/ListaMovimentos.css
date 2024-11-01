@@ -44,3 +44,9 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
+
+.pokemonMovesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}

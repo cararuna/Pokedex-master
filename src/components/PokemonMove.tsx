@@ -5,6 +5,7 @@ interface IMove {
   attackName: string;
   moveType: string;
   power: number;
+  pokemonType: string;
 }
 
 const getImageForType = (moveType: string) => {
@@ -51,9 +52,15 @@ const getImageForType = (moveType: string) => {
 };
 
 const PokemonMove: React.FC<any> = (props) => {
+  const pokemonTypeClass = props.pokemonType;
+
   return (
-    <div className="PokemonMove">
-      <img className="PokemonImg" src={props.sprites} alt={props.name} />
+    <div className={`PokemonMove ${pokemonTypeClass}`}>
+      <img
+        className={`PokemonImg ${pokemonTypeClass}`}
+        src={props.sprites}
+        alt={props.name}
+      />
       <h2 style={{ margin: "auto" }}>
         {props.name} (#{props.number})
       </h2>

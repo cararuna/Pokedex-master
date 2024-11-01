@@ -6,8 +6,7 @@ import PokemonMove from "./PokemonMove";
 import Search from "./Search";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
-const maxPokemonIndex = 387;
-const pokemonsPerPage = 20;
+const maxPokemonIndex = 387; //387
 
 interface IPokemon {
   name: string;
@@ -21,6 +20,7 @@ interface IPokemonMove {
 }
 
 interface IPokemonDetails {
+  pokemonType: string;
   pokemonNumber: number;
   pokemonSprite: string;
   pokemonName: string;
@@ -102,6 +102,7 @@ const MovimentosCompletos = () => {
         return {
           pokemonNumber: pokemonIndex + 1,
           pokemonName: data.name,
+          pokemonType: data.types[0].type.name,
           pokemonMoves,
           pokemonSprite:
             data.sprites.versions?.["generation-iv"]?.["diamond-pearl"]
@@ -149,14 +150,6 @@ const MovimentosCompletos = () => {
     loadPokemonPages(currentUrl);
   }, [currentPage]);
 
-  const handleNext = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-  };
-
-  const handlePrevious = () => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 0));
-  };
-
   const hasSelect = true;
 
   const placeholder = "Procure pelo Nome do Pokémon";
@@ -177,7 +170,7 @@ const MovimentosCompletos = () => {
         placeholder={placeholder}
       />
       {!loading ? (
-        <>
+        <div className="pokemonMovesContainer">
           {allPokemonData
             .filter((pokemon) => {
               // Aplica o filtro apenas se inputText não estiver vazio
@@ -203,11 +196,12 @@ const MovimentosCompletos = () => {
                 key={index}
                 number={pokemon.pokemonNumber}
                 name={pokemon.pokemonName}
+                pokemonType={pokemon.pokemonType}
                 moves={pokemon.pokemonMoves}
                 sprites={pokemon.pokemonSprite}
               />
             ))}
-        </>
+        </div>
       ) : (
         <div className="loading-container">
           <FontAwesomeIcon icon={faSpinner} spin size="3x" />

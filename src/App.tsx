@@ -10,7 +10,7 @@ import MovimentosCompletos from "./components/MovimentosCompletos";
 export default function App() {
   const [favorites, setFavorites] = useState<IPokemon[]>([]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchFavorites = async () => {
       try {
         const response = await fetch("https://localhost:7198/Favorites");
@@ -38,7 +38,7 @@ export default function App() {
     };
 
     fetchFavorites();
-  }, []);
+  }, []); */
 
   return (
     <BrowserRouter>

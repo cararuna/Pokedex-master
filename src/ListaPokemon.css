@@ -603,7 +603,7 @@ body .containerList img {
   cursor: pointer;
 }
 
-.grass {
+/* .grass {
   background: linear-gradient(to bottom, #9bcc50 60%, #00ff2f 100%);
   border-radius: 0.4rem;
   font-size: 1.3rem;
@@ -744,7 +744,7 @@ body .containerList img {
   font-size: 1.3rem;
   font-weight: 600;
   color: #1d1d1d;
-}
+} */
 
 #grass {
   background: linear-gradient(to bottom, #9bcc50 60%, #00ff2f 100%);

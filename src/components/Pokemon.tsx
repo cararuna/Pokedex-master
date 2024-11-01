@@ -27,7 +27,6 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
       const loadImgPokemon = async () => {
         const response = await fetch(pokemon.url);
         const data: IPokemonData = await response.json();
-        console.log(data);
 
         // Verifica se o Pokémon é favorito
         const isFav = favorites.some((fav) => fav.id === data.id);
@@ -78,13 +77,13 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
           }
         }
 
-        for (const [moveType, { moveName, power }] of Object.entries(
+        /* for (const [moveType, { moveName, power }] of Object.entries(
           moveTypesMap
         )) {
           console.log(
             `Tipo: ${moveType}, Movimento: ${moveName}, Power: ${power}`
           );
-        }
+        } */
 
         const moveTypesArray: string[] = Object.entries(moveTypesMap).map(
           ([type, { moveName, power }]) =>
@@ -304,7 +303,7 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                     </div>
                   ))}
                 </div>
-                <div className="info">
+                {/* <div className="info">
                   <h2>Movimentos:</h2>
                   <ul>
                     {pokemonData.moveTypes?.map((move, index) => (
@@ -313,7 +312,7 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </div> */}
               </div>
             </div>
           </Modal>
