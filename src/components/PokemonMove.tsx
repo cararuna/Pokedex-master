@@ -54,8 +54,6 @@ const getImageForType = (moveType: string) => {
 const PokemonMove: React.FC<any> = (props) => {
   const pokemonTypeClass = props.pokemonType;
   // const pokemonTypeClass = props.pokemonType;
-  const pokemonMoveTypeClass = props.pokemonType;
-
   console.log(props);
 
   return (
@@ -70,17 +68,27 @@ const PokemonMove: React.FC<any> = (props) => {
       />
       <div>
         {props.moves.map((move: any, index: any) => (
-          <li key={index} className={`pokeInfoLine ${move.moveType}-bg`}>
-            <div className={`pokeInfoMove`}>
+          <li key={index} className={`pokeInfoLine `}>
+            <div
+              style={{ width: "1rem" }}
+              className={`pokeInfoMove pokeInfoLine ${move.moveType}-bg`}
+            >
               <img
                 src={getImageForType(move.moveType)}
                 alt={move.moveType}
                 className="MoveTypeImg"
               />
-              <div className="class">{move.attackName}</div>
+              <div className={`pokeInfoLine ${move.moveType}-bg`}>
+                {move.attackName}
+              </div>
             </div>
-            <div className="class">{move.power}</div>
-            <div className="class">vantagens</div>
+            <div
+              style={{ width: "1rem" }}
+              className={`pokeInfoLine powerInfo ${move.moveType}-bg`}
+            >
+              {move.power}
+            </div>
+            <div className={`pokeInfoLine ${move.moveType}-bg`}>vantagens</div>
           </li>
         ))}
       </div>
