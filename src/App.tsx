@@ -44,7 +44,8 @@ export default function App() {
     <BrowserRouter>
       <Context.Provider value={{ favorites, setFavorites }}>
         <Switch>
-          <Route path="/" exact component={Home} />
+          <Route path="/" exact component={MovimentosCompletos} />{" "}
+          {/* rota trocada para de Home para MovimentosCompletos temporariamente */}
           <Route path="/favorites" exact component={Favorites} />
           <Route
             path="/listaMovementos"

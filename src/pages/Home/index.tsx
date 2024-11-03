@@ -68,7 +68,7 @@ export const Home = () => {
     }
   }, [selectValue]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     loadPokemonList(firstUrl);
 
     const fetchFavorites = async () => {
@@ -86,7 +86,7 @@ export const Home = () => {
     };
 
     fetchFavorites();
-  }, []);
+  }, []); */
 
   return (
     <div className="container">

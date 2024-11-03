@@ -6,7 +6,7 @@ import PokemonMove from "./PokemonMove";
 import Search from "./Search";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
-const maxPokemonIndex = 387; //387
+const maxPokemonIndex = 15; //387
 
 interface IPokemon {
   name: string;

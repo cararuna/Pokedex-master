@@ -53,29 +53,37 @@ const getImageForType = (moveType: string) => {
 
 const PokemonMove: React.FC<any> = (props) => {
   const pokemonTypeClass = props.pokemonType;
+  // const pokemonTypeClass = props.pokemonType;
+  const pokemonMoveTypeClass = props.pokemonType;
+
+  console.log(props);
 
   return (
     <div className={`PokemonMove ${pokemonTypeClass}`}>
+      <h2 style={{ margin: "auto" }}>
+        {props.name} (#{props.number})
+      </h2>
       <img
         className={`PokemonImg ${pokemonTypeClass}`}
         src={props.sprites}
         alt={props.name}
       />
-      <h2 style={{ margin: "auto" }}>
-        {props.name} (#{props.number})
-      </h2>
-      <ul>
+      <div>
         {props.moves.map((move: any, index: any) => (
-          <li key={index} className="pokeInfoLine">
-            <img
-              src={getImageForType(move.moveType)}
-              alt={move.moveType}
-              className="MoveTypeImg"
-            />
-            {move.attackName} {/* - {move.moveType}  */}- Power: {move.power}
+          <li key={index} className={`pokeInfoLine ${move.moveType}-bg`}>
+            <div className={`pokeInfoMove`}>
+              <img
+                src={getImageForType(move.moveType)}
+                alt={move.moveType}
+                className="MoveTypeImg"
+              />
+              <div className="class">{move.attackName}</div>
+            </div>
+            <div className="class">{move.power}</div>
+            <div className="class">vantagens</div>
           </li>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
