@@ -189,112 +189,112 @@
 
 /* Tipo Normal */
 .pokeInfoLine.normal-bg {
-  background-color: #9e9e9e;
-  color: #882c2c;
+  background-color: #e6e7e8;
+  color: #dca1a9;
   font-weight: bolder;
 }
 
 /* Tipo Água */
 .pokeInfoLine.water-bg {
   background-color: #2babe2;
-  color: #2c308b;
+  color: #302788;
   font-weight: bolder;
 }
 
 /* Tipo Elétrico */
 .pokeInfoLine.electric-bg {
-  background-color: #fff9c4;
-  color: #fbc02d;
+  background-color: #f8ec35;
+  color: #90953a;
   font-weight: bolder;
 }
 
 /* Tipo Psíquico */
 .pokeInfoLine.psychic-bg {
-  background-color: #f8bbd0;
-  color: #7b1fa2;
+  background-color: #e6e7e8;
+  color: #4e208b;
   font-weight: bolder;
 }
 
 /* Tipo Dark (Noturno) */
 .pokeInfoLine.dark-bg {
-  background-color: #424242;
-  color: #212121;
+  background-color: #4a4370;
+  color: #e9f2f3;
   font-weight: bolder;
 }
 
 /* Tipo Steel (Aço) */
 .pokeInfoLine.steel-bg {
-  background-color: #b0bec5;
-  color: #607d8b;
+  background-color: #a1b2bb;
+  color: #2a4a57;
   font-weight: bolder;
 }
 
 /* Tipo Inseto */
 .pokeInfoLine.bug-bg {
-  background-color: #dcedc8;
-  color: #6d4c41;
+  background-color: #d6df22;
+  color: #4faa8e;
   font-weight: bolder;
 }
 
 /* Tipo Pedra */
 .pokeInfoLine.rock-bg {
-  background-color: #d7ccc8;
-  color: #5d4037;
+  background-color: #c0b397;
+  color: #54443c;
   font-weight: bolder;
 }
 
 /* Tipo Fantasma */
 .pokeInfoLine.ghost-bg {
-  background-color: #d1c4e9;
-  color: #4527a0;
+  background-color: #1e73b8;
+  color: #600051;
   font-weight: bolder;
 }
 
 /* Tipo Gelo */
 .pokeInfoLine.ice-bg {
-  background-color: #e1f5fe;
-  color: #0288d1;
+  background-color: #93c8c8;
+  color: #fdfbfc;
   font-weight: bolder;
 }
 
 /* Tipo Ground (Terra) */
 .pokeInfoLine.ground-bg {
-  background-color: #d7ccc8;
-  color: #8d6e63;
+  background-color: #fcaf40;
+  color: #885b3e;
   font-weight: bolder;
 }
 
 /* Tipo Poison (Veneno) */
 .pokeInfoLine.poison-bg {
-  background-color: #e1bee7;
-  color: #7b1fa2;
+  background-color: #c5479a;
+  color: #242663;
   font-weight: bolder;
 }
 
 /* Tipo Fairy (Fada) */
 .pokeInfoLine.fairy-bg {
-  background-color: #f8bbd0;
-  color: #ec407a;
+  background-color: #fbd9e7;
+  color: #e70971;
   font-weight: bolder;
 }
 
 /* Tipo Flying (Voador) */
 .pokeInfoLine.flying-bg {
-  background-color: #e3f2fd;
-  color: #64b5f6;
+  background-color: #e2e2e1;
+  color: #23a5d9;
   font-weight: bolder;
 }
 
 /* Tipo Fighting (Lutador) */
 .pokeInfoLine.fighting-bg {
-  background-color: #ffccbc;
-  color: #d84315;
+  background-color: #f47b22;
+  color: #f8f233;
   font-weight: bolder;
 }
 
 /* Tipo Dragon */
 .pokeInfoLine.dragon-bg {
-  background-color: #9575cd;
-  color: #512da8;
+  background-color: #f47b22;
+  color: #161e66;
   font-weight: bolder;
 }
