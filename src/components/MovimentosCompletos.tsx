@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../src/ListaMovimentos.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import PokemonMove from "./PokemonMove";
 import Search from "./Search";
 
@@ -34,6 +34,12 @@ const MovimentosCompletos = () => {
   const [isPreviousVisible, setIsPreviousVisible] = useState(false);
   const [loading, setLoading] = useState(true); // Estado de carregamento
   const [inputTextState, setInputTextState] = useState("");
+  const [selectValue, setSelectValue] = useState("");
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const fetchPokemonDetails = async (
     pokemonList: IPokemon[],
@@ -159,7 +165,19 @@ const MovimentosCompletos = () => {
     setInputTextState(text);
   };
 
-  const [selectValue, setSelectValue] = useState("");
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const showButtonAt = window.innerHeight * 1;
+      setShowScrollButton(scrollPosition > showButtonAt);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <div className="MovimentosCompletos">
@@ -207,6 +225,11 @@ const MovimentosCompletos = () => {
           <FontAwesomeIcon icon={faSpinner} spin size="3x" />
           <p>Carregando Lista de Pokémons e seus golpes...</p>
         </div>
+      )}
+      {showScrollButton && (
+        <button onClick={scrollToTop} className="scroll-to-top-button">
+          <FontAwesomeIcon icon={faArrowUp} />
+        </button>
       )}
     </div>
   );
