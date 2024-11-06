@@ -55,8 +55,21 @@ const checkListVantages = (moveType: string) => {
   const advantagesMap: { [key: string]: string[] } = {
     grass: ["water", "rock", "ground"],
     fire: ["grass", "bug", "ice", "steel"],
+    dragon: ["dragon"],
+    steel: ["fairy", "rock", "ice"],
+    dark: ["ghost", "psychic"],
+    ghost: ["ghost", "psychic"],
+    flying: ["fighting", "bug", "grass"],
     water: ["fire", "rock", "ground"],
+    bug: ["dark", "psychic", "grass"],
+    psychic: ["fighting", "poison"],
+    poison: ["fairy", "grass"],
     electric: ["water", "flying"],
+    ground: ["electric", "poison", "steel", "fire", "rock"],
+    fighting: ["dark", "normal", "steel", "ice", "rock"],
+    fairy: ["dark", "fighting", "dragon"],
+    ice: ["dragon", "grass", "flying", "ground"],
+    rock: ["fire", "ice", "flying", "bug"],
   };
 
   const advantages = advantagesMap[moveType] || [];
