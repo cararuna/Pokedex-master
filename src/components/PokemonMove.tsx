@@ -51,6 +51,38 @@ const getImageForType = (moveType: string) => {
   }
 };
 
+const checkListVantages = (moveType: string) => {
+  const advantagesMap: { [key: string]: string[] } = {
+    grass: ["water", "rock", "ground"],
+    fire: ["grass", "bug", "ice", "steel"],
+    water: ["fire", "rock", "ground"],
+    electric: ["water", "flying"],
+  };
+
+  const advantages = advantagesMap[moveType] || [];
+
+  const columnCount =
+    advantages.length <= 2 ? 1 : Math.ceil(advantages.length / 2);
+
+  return (
+    <div
+      className={`pokeAdvantagesInfoLine pokeInfoLine ${moveType}-bg`}
+      style={{
+        gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+      }}
+    >
+      {advantages.map((advantageType) => (
+        <img
+          key={advantageType}
+          src={getImageForType(advantageType)}
+          alt={advantageType}
+          className="MoveTypeImgAdvantage"
+        />
+      ))}
+    </div>
+  );
+};
+
 const PokemonMove: React.FC<any> = (props) => {
   const pokemonTypeClass = props.pokemonType;
   // const pokemonTypeClass = props.pokemonType;
@@ -88,7 +120,7 @@ const PokemonMove: React.FC<any> = (props) => {
             >
               {move.power}
             </div>
-            <div className={`pokeInfoLine ${move.moveType}-bg`}>vantagens</div>
+            {checkListVantages(move.moveType)}
           </li>
         ))}
       </div>

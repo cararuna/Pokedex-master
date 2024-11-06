@@ -166,6 +166,29 @@
   min-height: 32px;
 }
 
+.pokeAdvantagesInfoLine {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(1.5rem, 1fr));
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  min-height: 32px;
+  width: fit-content; /* Para ajustar conforme o número de elementos */
+}
+
+.pokeAdvantageLine {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.5rem;
+  min-height: 32px;
+  width: 3rem;
+}
+
+.MoveTypeImgAdvantage {
+  width: 1rem;
+}
+
 .powerInfo {
   width: 1rem;
   display: flex;
