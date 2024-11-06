@@ -79,19 +79,31 @@ const checkListVantages = (moveType: string) => {
 
   return (
     <div
-      className={`pokeAdvantagesInfoLine pokeInfoLine ${moveType}-bg`}
       style={{
-        gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+        display: "flex",
+        flexDirection: "row",
       }}
+      className={`pokeAdvantagesInfoLine pokeInfoLine ${moveType}-bg`}
     >
-      {advantages.map((advantageType) => (
-        <img
-          key={advantageType}
-          src={getImageForType(advantageType)}
-          alt={advantageType}
-          className="MoveTypeImgAdvantage"
-        />
-      ))}
+      <div>+</div>
+      <div
+        className={`pokeAdvantagesInfoLine pokeInfoLine ${moveType}-bg`}
+        style={{
+          gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+          gap: "0.1rem",
+          width: "32px",
+          padding: "0",
+        }}
+      >
+        {advantages.map((advantageType) => (
+          <img
+            key={advantageType}
+            src={getImageForType(advantageType)}
+            alt={advantageType}
+            className="MoveTypeImgAdvantage"
+          />
+        ))}
+      </div>
     </div>
   );
 };

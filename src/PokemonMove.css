@@ -170,9 +170,9 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(1.5rem, 1fr));
   gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
   min-height: 32px;
   width: fit-content; /* Para ajustar conforme o número de elementos */
+  width: 5rem;
 }
 
 .pokeAdvantageLine {
