@@ -140,7 +140,7 @@ const ListaMovementos = () => {
     setCurrentUrl(currentLoadUrl);
     setIsPreviousVisible(currentPage > 0);
 
-    console.log(allLoadedData); // Loga o objeto final
+    /* console.log(allLoadedData); */ // Loga o objeto final
   };
 
   useEffect(() => {

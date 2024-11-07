@@ -77,14 +77,6 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
           }
         }
 
-        /* for (const [moveType, { moveName, power }] of Object.entries(
-          moveTypesMap
-        )) {
-          console.log(
-            `Tipo: ${moveType}, Movimento: ${moveName}, Power: ${power}`
-          );
-        } */
-
         const moveTypesArray: string[] = Object.entries(moveTypesMap).map(
           ([type, { moveName, power }]) =>
             `${moveName} (${type} - ${power} power)`

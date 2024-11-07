@@ -111,7 +111,7 @@ const checkListVantages = (moveType: string) => {
 const PokemonMove: React.FC<any> = (props) => {
   const pokemonTypeClass = props.pokemonType;
   // const pokemonTypeClass = props.pokemonType;
-  console.log(props);
+  /* console.log(props); */
 
   return (
     <div className={`PokemonMove ${pokemonTypeClass}`}>
