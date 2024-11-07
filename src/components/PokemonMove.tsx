@@ -139,10 +139,7 @@ const PokemonMove: React.FC<any> = (props) => {
                 {move.attackName}
               </div>
             </div>
-            <div
-              style={{ width: "1rem" }}
-              className={`pokeInfoLine powerInfo ${move.moveType}-bg`}
-            >
+            <div className={`pokeInfoLine powerInfo ${move.moveType}-bg`}>
               {move.power}
             </div>
             {checkListVantages(move.moveType)}
