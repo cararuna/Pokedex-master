@@ -29,6 +29,7 @@
 }
 
 .loading-container {
+  text-align: center;
   margin-top: 10rem;
   display: flex;
   align-items: center;
