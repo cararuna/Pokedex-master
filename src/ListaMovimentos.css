@@ -56,9 +56,9 @@
   bottom: 1.5rem;
   right: 1.5rem;
   padding: 0.75rem;
-  border: none;
-  background-color: #007bff;
-  color: #fff;
+  border: 4px solid #3c59a5;
+  background-color: #3c59a5;
+  color: #ffcc03;
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
@@ -66,5 +66,6 @@
 }
 
 .scroll-to-top-button:hover {
-  background-color: #0056b3;
+  background-color: #ffcc03;
+  color: #3c59a5;
 }
