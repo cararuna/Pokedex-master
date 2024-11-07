@@ -50,3 +50,13 @@
     width: 40%;
   }
 }
+
+@media only screen and (max-width: 505px) {
+  .containerSearch select {
+    width: 50%;
+  }
+
+  .containerSearch input {
+    width: 100%;
+  }
+}

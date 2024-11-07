@@ -321,3 +321,103 @@
   color: #161e66;
   font-weight: bolder;
 }
+
+@media only screen and (max-width: 505px) {
+  .PokemonMove {
+    width: 200px;
+    padding: 0.5rem;
+  }
+
+  .pokeInfoLine {
+    padding: 0.1rem 0.25rem 0.1rem 0.25rem;
+  }
+
+  .grass {
+    border: 12px solid #8ac53e;
+  }
+
+  /* Tipo Fogo */
+  .fire {
+    border: 12px solid #fed400;
+  }
+
+  /* Tipo Normal */
+  .normal {
+    border: 12px solid #9e9e9e;
+  }
+
+  /* Tipo Água */
+  .water {
+    border: 12px solid #2babe2;
+  }
+
+  /* Tipo Elétrico */
+  .electric {
+    border: 12px solid #f8ec35;
+  }
+
+  /* Tipo Psíquico */
+  .psychic {
+    border: 12px solid #e6e7e8;
+  }
+
+  /* Tipo Dark (Noturno) */
+  .dark {
+    border: 12px solid #4a4370;
+  }
+
+  /* Tipo Steel (Aço) */
+  .steel {
+    border: 12px solid #a1b2bb;
+  }
+
+  /* Tipo Inseto */
+  .bug {
+    border: 12px solid #d6df22;
+  }
+
+  /* Tipo Pedra */
+  .rock {
+    border: 12px solid #c0b397;
+  }
+
+  /* Tipo Fantasma */
+  .ghost {
+    border: 12px solid #1e73b8;
+  }
+
+  /* Tipo Gelo */
+  .ice {
+    border: 12px solid #93c8c8;
+  }
+
+  /* Tipo Ground (Terra) */
+  .ground {
+    border: 12px solid #fcaf40;
+  }
+
+  /* Tipo Poison (Veneno) */
+  .poison {
+    border: 12px solid #c5479a;
+  }
+
+  /* Tipo Fairy (Fada) */
+  .fairy {
+    border: 12px solid #fbd9e7;
+  }
+
+  /* Tipo Flying (Voador) */
+  .flying {
+    border: 12px solid #e2e2e1;
+  }
+
+  /* Tipo Fighting (Lutador) */
+  .fighting {
+    border: 12px solid #f47b22;
+  }
+
+  /* Tipo Dragon */
+  .dragon {
+    border: 12px solid #f47b22;
+  }
+}
