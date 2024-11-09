@@ -21,6 +21,7 @@ interface IPokemonMove {
 
 interface IPokemonDetails {
   pokemonType: string;
+  pokemonTypes: [];
   pokemonNumber: number;
   pokemonSprite: string;
   pokemonName: string;
@@ -105,10 +106,15 @@ const MovimentosCompletos = () => {
           })
         );
 
+        const pokemonTypes = data.types.map(
+          (typeInfo: any) => typeInfo.type.name
+        );
+
         return {
           pokemonNumber: pokemonIndex + 1,
           pokemonName: data.name,
           pokemonType: data.types[0].type.name,
+          pokemonTypes: pokemonTypes,
           pokemonMoves,
           pokemonSprite:
             data.sprites.versions?.["generation-iv"]?.["diamond-pearl"]
@@ -215,6 +221,7 @@ const MovimentosCompletos = () => {
                 number={pokemon.pokemonNumber}
                 name={pokemon.pokemonName}
                 pokemonType={pokemon.pokemonType}
+                pokemonTypes={pokemon.pokemonTypes}
                 moves={pokemon.pokemonMoves}
                 sprites={pokemon.pokemonSprite}
               />

@@ -110,14 +110,34 @@ const checkListVantages = (moveType: string) => {
 
 const PokemonMove: React.FC<any> = (props) => {
   const pokemonTypeClass = props.pokemonType;
-  // const pokemonTypeClass = props.pokemonType;
-  /* console.log(props); */
+  const pokemonTypes = props.pokemonTypes;
 
   return (
     <div className={`PokemonMove ${pokemonTypeClass}`}>
-      <h2 style={{ margin: "auto" }}>
-        {props.name} (#{props.number})
-      </h2>
+      <div>
+        <h3
+          className={`pokeTitle pokeInfoMove pokeInfoLine ${pokemonTypeClass}-bg`}
+          style={{ margin: "auto" }}
+        >
+          <div className="pokeTypesInfo">
+            {pokemonTypes.map((type: any, index: any) => (
+              <li
+                style={{ padding: "0" }}
+                key={index}
+                className={`pokeInfoLine `}
+              >
+                <img
+                  src={getImageForType(type)}
+                  alt={type}
+                  className="MoveTypeImg"
+                />
+              </li>
+            ))}
+          </div>
+          {props.name.charAt(0).toUpperCase() + props.name.slice(1)} (#
+          {props.number})
+        </h3>
+      </div>
       <img
         className={`PokemonImg ${pokemonTypeClass}`}
         src={props.sprites}

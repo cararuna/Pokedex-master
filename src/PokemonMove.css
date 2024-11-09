@@ -10,6 +10,16 @@
   min-width: 320px;
 }
 
+.pokeTypesInfo {
+  display: flex;
+}
+
+.pokeTitle {
+  margin: auto;
+  width: 80% !important;
+  justify-content: center;
+}
+
 /* Tipo Grama */
 .grass {
   border: 24px solid #8ac53e;
@@ -334,6 +344,11 @@
 
   .powerInfo {
     width: 1.5rem;
+  }
+
+  .MoveTypeImg {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   .grass {
