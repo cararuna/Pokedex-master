@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import PokemonMove from "./PokemonMove";
 import Search from "./Search";
+import Sprites from "./Sprites";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const maxPokemonIndex = 387; //387
@@ -29,7 +30,7 @@ interface IPokemonDetails {
 }
 
 const MovimentosCompletos = () => {
-  const [allPokemonData, setAllPokemonData] = useState<IPokemonDetails[]>([]);
+  const [allPokemonData, setAllPokemonData] = useState<any[]>([]);
   const [currentUrl, setCurrentUrl] = useState<string | null>(firstUrl);
   const [currentPage, setCurrentPage] = useState(0);
   const [isPreviousVisible, setIsPreviousVisible] = useState(false);
@@ -41,6 +42,67 @@ const MovimentosCompletos = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const generationOptions = [
+    { label: "generation I (Red-Blue)", key: "generation-i/red-blue" },
+    { label: "generation I (Yellow)", key: "generation-i/yellow" },
+    { label: "Generation II (Gold-Silver)", key: "generation-ii/gold" },
+    { label: "Generation II (silver)", key: "generation-ii/silver" },
+    { label: "Generation II (crystal)", key: "generation-ii/crystal" },
+    {
+      label: "Generation III (Emerald)",
+      key: "generation-iii/emerald",
+    },
+    {
+      label: "Generation III (Firered-Leafgreen)",
+      key: "generation-iii/firered-leafgreen",
+    },
+    {
+      label: "Generation III (Ruby-Sapphire)",
+      key: "generation-iii/ruby-sapphire",
+    },
+    {
+      label: "Generation IV (Diamond-pearl)",
+      key: "generation-iv/diamond-pearl",
+    },
+    {
+      label: "Generation IV (Heartgold-Soulsilver)",
+      key: "generation-iv/heartgold-soulsilver",
+    },
+    {
+      label: "Generation IV (Platinum)",
+      key: "generation-iv/platinum",
+    },
+
+    {
+      label: "Generation V (Black-White)",
+      key: "generation-v/black-white",
+    },
+
+    {
+      label: "Generation VI (Omegaruby-Alphasapphire)",
+      key: "generation-vi/omegaruby-alphasapphire",
+    },
+
+    {
+      label: "Generation VII (Icons)",
+      key: "generation-vii/icons",
+    },
+
+    {
+      label: "Generation VII (Ultra-sun-Ultra-moon)",
+      key: "generation-vii/ultra-sun-ultra-moon",
+    },
+
+    {
+      label: "Generation VIII (Icons)",
+      key: "generation-viii/icons",
+    },
+  ];
+
+  const [selectedGeneration, setSelectedGeneration] = useState(
+    generationOptions[8].key
+  );
 
   const fetchPokemonDetails = async (
     pokemonList: IPokemon[],
@@ -116,16 +178,16 @@ const MovimentosCompletos = () => {
           pokemonType: data.types[0].type.name,
           pokemonTypes: pokemonTypes,
           pokemonMoves,
-          pokemonSprite:
-            data.sprites.versions?.["generation-iv"]?.["diamond-pearl"]
-              .front_default,
+          sprites: data.sprites.versions,
         };
       })
     );
 
-    return pokemonDetails.filter(
-      (pokemon): pokemon is IPokemonDetails => pokemon !== null
-    );
+    return pokemonDetails.filter((pokemon): pokemon is any => pokemon !== null);
+  };
+
+  const handleGenerationSelect = (generationKey: any) => {
+    setSelectedGeneration(generationKey);
   };
 
   const loadPokemonPages = async (url: string | null) => {
@@ -193,39 +255,50 @@ const MovimentosCompletos = () => {
         setSelectValue={setSelectValue}
         placeholder={placeholder}
       />
+      <Sprites
+        list={generationOptions.map((gen) => gen.label)}
+        onSelect={(label: any) =>
+          handleGenerationSelect(
+            generationOptions.find((gen) => gen.label === label)!.key
+          )
+        }
+      />
       {!loading ? (
         <div className="pokemonMovesContainer">
           {allPokemonData
             .filter((pokemon) => {
-              // Aplica o filtro apenas se inputText não estiver vazio
-              if (inputTextState === "" && selectValue === "") return true; // Se ambos estiverem vazios, retornar todos
+              if (inputTextState === "" && selectValue === "") return true;
 
               const nameMatches = pokemon.pokemonName
                 .toLowerCase()
                 .includes(inputTextState.toLowerCase());
 
-              // Se selectValue não estiver vazio, verifica os movimentos
               const typeMatches =
                 selectValue === "" ||
                 pokemon.pokemonMoves.some(
-                  (move) =>
+                  (move: any) =>
                     move.moveType.toLowerCase() === selectValue.toLowerCase()
                 );
 
-              // Retorna verdadeiro se corresponder ao nome e/ou tipo de movimento
               return nameMatches && typeMatches;
             })
-            .map((pokemon, index) => (
-              <PokemonMove
-                key={index}
-                number={pokemon.pokemonNumber}
-                name={pokemon.pokemonName}
-                pokemonType={pokemon.pokemonType}
-                pokemonTypes={pokemon.pokemonTypes}
-                moves={pokemon.pokemonMoves}
-                sprites={pokemon.pokemonSprite}
-              />
-            ))}
+            .map((pokemon, index) => {
+              const [generation, edition] = selectedGeneration.split("/");
+              const pokemonSprite =
+                pokemon.sprites?.[generation]?.[edition]?.front_default;
+
+              return (
+                <PokemonMove
+                  key={index}
+                  number={pokemon.pokemonNumber}
+                  name={pokemon.pokemonName}
+                  pokemonType={pokemon.pokemonType}
+                  pokemonTypes={pokemon.pokemonTypes}
+                  moves={pokemon.pokemonMoves}
+                  sprites={pokemonSprite}
+                />
+              );
+            })}
         </div>
       ) : (
         <div className="loading-container">
