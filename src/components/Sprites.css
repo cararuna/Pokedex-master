@@ -12,13 +12,24 @@
 .option-item {
   padding: 10px 20px;
   cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f0f0f0;
+  border: 2px solid #3c59a5;
+  border-radius: 50px;
+  background-color: #3c59a5;
   transition: background-color 0.3s;
+  min-width: 50px;
+  color: #ffcc03;
 }
 
 .option-item.selected {
-  background-color: #4caf50;
-  color: white;
+  background-color: #ffcc03;
+  color: #3c59a5;
+  border: 2px solid #3c59a5;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
 }

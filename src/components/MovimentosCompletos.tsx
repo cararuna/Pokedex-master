@@ -44,65 +44,35 @@ const MovimentosCompletos = () => {
   };
 
   const generationOptions = [
-    { label: "generation I (Red-Blue)", key: "generation-i/red-blue" },
-    { label: "generation I (Yellow)", key: "generation-i/yellow" },
-    { label: "Generation II (Gold-Silver)", key: "generation-ii/gold" },
-    { label: "Generation II (silver)", key: "generation-ii/silver" },
-    { label: "Generation II (crystal)", key: "generation-ii/crystal" },
+    { label: "Gen. I", key: "generation-i/red-blue" },
+    { label: "Gen. II", key: "generation-ii/gold" },
     {
-      label: "Generation III (Emerald)",
-      key: "generation-iii/emerald",
-    },
-    {
-      label: "Generation III (Firered-Leafgreen)",
+      label: "Gen. III",
       key: "generation-iii/firered-leafgreen",
     },
     {
-      label: "Generation III (Ruby-Sapphire)",
-      key: "generation-iii/ruby-sapphire",
-    },
-    {
-      label: "Generation IV (Diamond-pearl)",
+      label: "Gen. IV",
       key: "generation-iv/diamond-pearl",
     },
     {
-      label: "Generation IV (Heartgold-Soulsilver)",
-      key: "generation-iv/heartgold-soulsilver",
-    },
-    {
-      label: "Generation IV (Platinum)",
-      key: "generation-iv/platinum",
-    },
-
-    {
-      label: "Generation V (Black-White)",
+      label: "Gen. V",
       key: "generation-v/black-white",
     },
-
     {
-      label: "Generation VI (Omegaruby-Alphasapphire)",
-      key: "generation-vi/omegaruby-alphasapphire",
-    },
-
-    {
-      label: "Generation VII (Icons)",
+      label: "Icons",
       key: "generation-vii/icons",
     },
-
     {
-      label: "Generation VII (Ultra-sun-Ultra-moon)",
+      label: "3D",
       key: "generation-vii/ultra-sun-ultra-moon",
-    },
-
-    {
-      label: "Generation VIII (Icons)",
-      key: "generation-viii/icons",
     },
   ];
 
   const [selectedGeneration, setSelectedGeneration] = useState(
-    generationOptions[8].key
+    generationOptions[3].key
   );
+
+  const selectedLabelGeneration = generationOptions[3].label;
 
   const fetchPokemonDetails = async (
     pokemonList: IPokemon[],
@@ -257,6 +227,7 @@ const MovimentosCompletos = () => {
       />
       <Sprites
         list={generationOptions.map((gen) => gen.label)}
+        selected={selectedLabelGeneration}
         onSelect={(label: any) =>
           handleGenerationSelect(
             generationOptions.find((gen) => gen.label === label)!.key

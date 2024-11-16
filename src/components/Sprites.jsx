@@ -1,8 +1,8 @@
 import React from "react";
 import "../components/Sprites.css";
 
-const Sprites = ({ list, onSelect }) => {
-  const [selectedOption, setSelectedOption] = React.useState(null);
+const Sprites = ({ list, onSelect, selected }) => {
+  const [selectedOption, setSelectedOption] = React.useState(selected);
 
   const handleClick = (option) => {
     setSelectedOption(option);
@@ -15,7 +15,7 @@ const Sprites = ({ list, onSelect }) => {
         <label
           key={index}
           onClick={() => handleClick(option)}
-          className={`option-item ${
+          className={`option-item d-flex justify-center ${
             selectedOption === option ? "selected" : ""
           }`}
         >
