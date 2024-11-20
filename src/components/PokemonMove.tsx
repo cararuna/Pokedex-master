@@ -155,7 +155,7 @@ const PokemonMove: React.FC<any> = (props) => {
                 alt={move.moveType}
                 className="MoveTypeImg"
               />
-              <div className={`pokeInfoLine ${move.moveType}-bg`}>
+              <div className={`pokeInfoLine textEllipsis ${move.moveType}-bg`}>
                 {move.attackName}
               </div>
             </div>
