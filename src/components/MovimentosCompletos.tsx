@@ -5,6 +5,7 @@ import { faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import PokemonMove from "./PokemonMove";
 import Search from "./Search";
 import Sprites from "./Sprites";
+import Menu from "./Menu";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const maxPokemonIndex = 387; //387
@@ -234,6 +235,7 @@ const MovimentosCompletos = () => {
           )
         }
       />
+      {/* <Menu /> */}
       {!loading ? (
         <div className="pokemonMovesContainer">
           {allPokemonData

@@ -6,6 +6,7 @@ import { Home } from "./pages/Home";
 import { Favorites } from "./pages/Favorites";
 import ListaMovementos from "./components/ListaMovementos";
 import MovimentosCompletos from "./components/MovimentosCompletos";
+import Batalha from "./components/Batalha";
 
 export default function App() {
   const [favorites, setFavorites] = useState<IPokemon[]>([]);
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/" exact component={MovimentosCompletos} />{" "}
           {/* rota trocada para de Home para MovimentosCompletos temporariamente */}
           <Route path="/favorites" exact component={Favorites} />
+          {/* <Route path="/batalha" exact component={Batalha} /> */}
           <Route
             path="/listaMovementos"
             exact

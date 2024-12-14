@@ -1,0 +1,23 @@
+.battle-button {
+  position: fixed;
+  top: 10px; /* Ajuste conforme necessário */
+  right: 10px; /* Ajuste conforme necessário */
+  background-color: #4caf50; /* Cor de fundo */
+  color: white; /* Cor do texto e ícone */
+  border: none;
+  border-radius: 50%;
+  padding: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* Para garantir que fique no topo */
+}
+
+.battle-button:hover {
+  background-color: #45a049;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.battle-button i {
+  pointer-events: none;
+}

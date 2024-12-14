@@ -1,5 +1,6 @@
 import React from "react";
 import "../../src/PokemonMove.css";
+import useAddMoves from "../hooks/useAddMoves"; // Adjust the path as necessary
 
 interface IMove {
   attackName: string;
@@ -109,6 +110,8 @@ const checkListVantages = (moveType: string) => {
 };
 
 const PokemonMove: React.FC<any> = (props) => {
+  useAddMoves(props.name, props.moves);
+
   const pokemonTypeClass = props.pokemonType;
   const pokemonTypes = props.pokemonTypes;
 
