@@ -35,10 +35,17 @@ const MovimentosCompletos = () => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(firstUrl);
   const [currentPage, setCurrentPage] = useState(0);
   const [isPreviousVisible, setIsPreviousVisible] = useState(false);
-  const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [loading, setLoading] = useState(true);
   const [inputTextState, setInputTextState] = useState("");
   const [selectValue, setSelectValue] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [flippedPokemonName, setFlippedPokemonName] = useState<string | null>(null);
+
+  const handleFlip = (pokemonName: string) => {
+    setFlippedPokemonName((prev) =>
+      prev === pokemonName ? null : pokemonName
+    );
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -150,6 +157,7 @@ const MovimentosCompletos = () => {
           pokemonTypes: pokemonTypes,
           pokemonMoves,
           sprites: data.sprites.versions,
+          abilities: data.abilities.map((a: any) => a.ability.name),
         };
       })
     );
@@ -269,6 +277,9 @@ const MovimentosCompletos = () => {
                   pokemonTypes={pokemon.pokemonTypes}
                   moves={pokemon.pokemonMoves}
                   sprites={pokemonSprite}
+                  abilities={pokemon.abilities}
+                  isFlipped={flippedPokemonName === pokemon.pokemonName}
+                  onFlip={handleFlip}
                 />
               );
             })}

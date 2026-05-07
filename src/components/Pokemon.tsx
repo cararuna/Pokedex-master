@@ -3,17 +3,21 @@ import {
   faStar,
   faEye,
   faCheckCircle,
+  faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { IPokemon, IPokemonData } from "../types/pokemon";
 import { Context } from "./GlobalContext";
+import { typeTalentTrees, innateAbilities, getTypeIcon } from "../data/talentTrees";
 
 interface IPokemonProps {
   pokemon: IPokemon;
+  isFlipped: boolean;
+  onFlip: (pokemonName: string) => void;
 }
 
-const Pokemon = ({ pokemon }: IPokemonProps) => {
+const Pokemon = ({ pokemon, isFlipped, onFlip }: IPokemonProps) => {
   const { favorites, setFavorites } = useContext(Context);
   const [pokemonData, setPokemonData] = useState<IPokemonData>();
   const [isFavorite, setIsFavorite] = useState(false);
@@ -28,11 +32,9 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
         const response = await fetch(pokemon.url);
         const data: IPokemonData = await response.json();
 
-        // Verifica se o Pokémon é favorito
         const isFav = favorites.some((fav) => fav.id === data.id);
         setIsFavorite(isFav);
 
-        // Atualiza os dados do Pokémon, mas sem os movimentos ainda
         setPokemonData({
           ...data,
           isFavorite: isFav,
@@ -95,6 +97,10 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
 
   function handleCloseModal() {
     setIsOpen(false);
+  }
+
+  function handleCardClick() {
+    onFlip(pokemon.name);
   }
 
   async function handleFavoriteClick() {
@@ -190,54 +196,140 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
     }
   };
 
+  const renderTalentTree = () => {
+    if (!pokemonData) return null;
+
+    const types = pokemonData.types.map((t) => t.type.name);
+    const pokemonInnate = innateAbilities[pokemonData.name.toLowerCase()] || [];
+
+    return (
+      <div className="talent-tree-content">
+        <h2 className="talent-tree-title">{pokemonData.name}</h2>
+
+        {types.map((typeName) => {
+          const tree = typeTalentTrees[typeName];
+          if (!tree) return null;
+
+          return (
+            <div key={typeName} className="talent-type-section">
+              <h3 className={`talent-type-header ${typeName}`}>
+                <img
+                  src={getTypeIcon(typeName)}
+                  alt={typeName}
+                  className="talent-type-icon"
+                />
+                {tree.type}
+              </h3>
+              <ul className="talent-list">
+                {tree.talents.map((talent) => (
+                  <li key={talent.name} className="talent-item">
+                    <span className="talent-name">{talent.name}</span>
+                    <span className="talent-desc">{talent.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+
+        <div className="talent-type-section innate-section">
+          <h3 className="talent-type-header innate">
+            &#11088; Habilidades Inatas
+          </h3>
+          <ul className="talent-list">
+            {pokemonInnate.length > 0
+              ? pokemonInnate.map((talent) => (
+                  <li key={talent.name} className="talent-item">
+                    <span className="talent-name">{talent.name}</span>
+                    <span className="talent-desc">{talent.description}</span>
+                  </li>
+                ))
+              : pokemonData.abilities?.map(({ ability }) => (
+                  <li key={ability.name} className="talent-item">
+                    <span className="talent-name">{ability.name}</span>
+                  </li>
+                ))}
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       {pokemonData && (
         <li className="pokeListContainer">
-          <button className="poke" id={pokemonData.types[0].type.name}>
-            <div>
-              <img
-                onClick={handleOpenModal}
-                className={pokemonData.types[0].type.name}
-                src={pokemonData.sprites?.front_default}
-                alt={pokemonData.name}
-              />
-            </div>
-            <div className="containerPokeButton">
-              <p className="topPokeButton">
-                <div className="numberPokemon">Nº {pokemonData.id}</div>
+          <div className={`card-flip-container ${isFlipped ? "flipped" : ""}`}>
+            <div className="card-flip-inner">
+              {/* FRONT */}
+              <div className="card-front">
+                <button
+                  className="poke"
+                  id={pokemonData.types[0].type.name}
+                >
+                  <div>
+                    <img
+                      onClick={handleCardClick}
+                      className={pokemonData.types[0].type.name}
+                      src={pokemonData.sprites?.front_default}
+                      alt={pokemonData.name}
+                    />
+                  </div>
+                  <div className="containerPokeButton">
+                    <p className="topPokeButton">
+                      <div className="numberPokemon">
+                        N\u00ba {pokemonData.id}
+                      </div>
 
-                <div id="buttonFavorite" onClick={handleFavoriteClick}>
-                  <FontAwesomeIcon
-                    icon={faStar}
-                    color={isFavorite ? "gold" : "white"}
-                  />
+                      <div id="buttonFavorite" onClick={handleFavoriteClick}>
+                        <FontAwesomeIcon
+                          icon={faStar}
+                          color={isFavorite ? "gold" : "white"}
+                        />
+                      </div>
+                      <div id="buttonFavorite" onClick={handleSeenClick}>
+                        <FontAwesomeIcon
+                          icon={faEye}
+                          color={isFavorite ? "gold" : "white"}
+                        />
+                      </div>
+                      <div id="buttonFavorite" onClick={handleCaughtClick}>
+                        <FontAwesomeIcon
+                          icon={faCheckCircle}
+                          color={isFavorite ? "gold" : "white"}
+                        />
+                      </div>
+                    </p>
+                    <h1 className="title" onClick={handleOpenModal}>
+                      {pokemonData.name}{" "}
+                    </h1>
+                    <div className="typeMap">
+                      {pokemonData?.types?.map(({ type }) => (
+                        <span key={type.name} className={type.name}>
+                          {type.name}{" "}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {/* BACK */}
+              <div
+                className="card-back"
+                id={pokemonData.types[0].type.name}
+              >
+                <div
+                  className="card-back-return"
+                  onClick={handleCardClick}
+                  title="Voltar"
+                >
+                  <FontAwesomeIcon icon={faRotateLeft} />
                 </div>
-                <div id="buttonFavorite" onClick={handleSeenClick}>
-                  <FontAwesomeIcon
-                    icon={faEye}
-                    color={isFavorite ? "gold" : "white"}
-                  />
-                </div>
-                <div id="buttonFavorite" onClick={handleCaughtClick}>
-                  <FontAwesomeIcon
-                    icon={faCheckCircle}
-                    color={isFavorite ? "gold" : "white"}
-                  />
-                </div>
-              </p>
-              <h1 className="title" onClick={handleOpenModal}>
-                {pokemonData.name}{" "}
-              </h1>
-              <div className="typeMap">
-                {pokemonData?.types?.map(({ type }) => (
-                  <span key={type.name} className={type.name}>
-                    {type.name}{" "}
-                  </span>
-                ))}
+                {renderTalentTree()}
               </div>
             </div>
-          </button>
+          </div>
           <Modal
             className="modal"
             isOpen={modalIsOpen}
@@ -295,16 +387,6 @@ const Pokemon = ({ pokemon }: IPokemonProps) => {
                     </div>
                   ))}
                 </div>
-                {/* <div className="info">
-                  <h2>Movimentos:</h2>
-                  <ul>
-                    {pokemonData.moveTypes?.map((move, index) => (
-                      <li key={index} className="pokeMoves">
-                        {move}
-                      </li>
-                    ))}
-                  </ul>
-                </div> */}
               </div>
             </div>
           </Modal>
