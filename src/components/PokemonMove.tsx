@@ -5,13 +5,6 @@ import { typeTalentTrees, innateAbilities, getTypeIcon } from "../data/talentTre
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotateLeft } from "@fortawesome/free-solid-svg-icons";
 
-interface IMove {
-  attackName: string;
-  moveType: string;
-  power: number;
-  pokemonType: string;
-}
-
 const getImageForType = (moveType: string) => {
   switch (moveType.toLowerCase()) {
     case "normal":
@@ -117,7 +110,6 @@ const PokemonMove: React.FC<any> = (props) => {
 
   const pokemonTypeClass = props.pokemonType;
   const pokemonTypes: string[] = props.pokemonTypes;
-  const abilities: string[] = props.abilities || [];
   const isFlipped: boolean = props.isFlipped || false;
   const onFlip: (name: string) => void = props.onFlip;
 

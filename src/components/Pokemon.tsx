@@ -21,8 +21,7 @@ const Pokemon = ({ pokemon, isFlipped, onFlip }: IPokemonProps) => {
   const { favorites, setFavorites } = useContext(Context);
   const [pokemonData, setPokemonData] = useState<IPokemonData>();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [wasSeen, setWasSeen] = useState(false);
-  const [wasCaught, setWasCaught] = useState(false);
+  const [wasSeen] = useState(false);
 
   const [modalIsOpen, setIsOpen] = useState(false);
 
@@ -46,7 +45,8 @@ const Pokemon = ({ pokemon, isFlipped, onFlip }: IPokemonProps) => {
       setIsFavorite(isFav);
       setPokemonData({ ...pokemon, isFavorite: isFav } as IPokemonData);
     }
-  }, [pokemon.url, favorites]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pokemon.url, pokemon, favorites]);
 
   function handleOpenModal() {
     if (pokemonData) {

@@ -211,7 +211,7 @@ interface IPokemonMove {
   power: number;
 }
 
-interface IPokemonDetails {
+export interface IPokemonDetails {
   pokemonNumber: number;
   pokemonSprite: string;
   pokemonName: string;
