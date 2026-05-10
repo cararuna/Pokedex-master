@@ -1,13 +1,9 @@
 import React from "react";
 import "../../src/PokemonMove.css";
-import useAddMoves from "../hooks/useAddMoves"; // Adjust the path as necessary
-
-interface IMove {
-  attackName: string;
-  moveType: string;
-  power: number;
-  pokemonType: string;
-}
+import useAddMoves from "../hooks/useAddMoves";
+import { typeTalentTrees, innateAbilities, getTypeIcon } from "../data/talentTrees";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRotateLeft } from "@fortawesome/free-solid-svg-icons";
 
 const getImageForType = (moveType: string) => {
   switch (moveType.toLowerCase()) {
@@ -48,7 +44,7 @@ const getImageForType = (moveType: string) => {
     case "rock":
       return "/rockType.png";
     default:
-      return "/normalType.png"; // Default case, caso o tipo não seja reconhecido
+      return "/normalType.png";
   }
 };
 
@@ -113,61 +109,141 @@ const PokemonMove: React.FC<any> = (props) => {
   useAddMoves(props.name, props.moves);
 
   const pokemonTypeClass = props.pokemonType;
-  const pokemonTypes = props.pokemonTypes;
+  const pokemonTypes: string[] = props.pokemonTypes;
+  const isFlipped: boolean = props.isFlipped || false;
+  const onFlip: (name: string) => void = props.onFlip;
 
-  return (
-    <div className={`PokemonMove ${pokemonTypeClass}`}>
-      <div>
-        <h3
-          className={`pokeTitle pokeInfoMove pokeInfoLine ${pokemonTypeClass}-bg`}
-          style={{ margin: "auto" }}
-        >
-          <div className="pokeTypesInfo">
-            {pokemonTypes.map((type: any, index: any) => (
-              <li
-                style={{ padding: "0" }}
-                key={index}
-                className={`pokeInfoLine `}
-              >
+  const handleCardClick = () => {
+    if (onFlip) onFlip(props.name);
+  };
+
+  const renderTalentTree = () => {
+    const pokemonInnate = innateAbilities[props.name.toLowerCase()] || [];
+
+    return (
+      <div className="talent-tree-content">
+        <h2 className="talent-tree-title">
+          {props.name.charAt(0).toUpperCase() + props.name.slice(1)}
+        </h2>
+
+        {pokemonTypes.map((typeName: string) => {
+          const tree = typeTalentTrees[typeName];
+          if (!tree) return null;
+
+          return (
+            <div key={typeName} className="talent-type-section">
+              <h3 className={`talent-type-header ${typeName}`}>
                 <img
-                  src={getImageForType(type)}
-                  alt={type}
-                  className="MoveTypeImg"
+                  src={getTypeIcon(typeName)}
+                  alt={typeName}
+                  className="talent-type-icon"
                 />
+                {tree.type}
+              </h3>
+              <ul className="talent-list">
+                {tree.talents.map((talent) => (
+                  <li key={talent.name} className="talent-item">
+                    <span className="talent-name">{talent.name}</span>
+                    <span className="talent-desc">{talent.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+
+        <div className="talent-type-section innate-section">
+          <h3 className="talent-type-header innate">
+            &#11088; Habilidades Inatas
+          </h3>
+          <ul className="talent-list">
+            {pokemonInnate.map((talent) => (
+              <li key={talent.name} className="talent-item">
+                <span className="talent-name">{talent.name}</span>
+                <span className="talent-desc">{talent.description}</span>
               </li>
             ))}
-          </div>
-          {props.name.charAt(0).toUpperCase() + props.name.slice(1)} (#
-          {props.number})
-        </h3>
+          </ul>
+        </div>
       </div>
-      <img
-        className={`PokemonImg ${pokemonTypeClass}`}
-        src={props.sprites}
-        alt={props.name}
-      />
-      <div>
-        {props.moves.map((move: any, index: any) => (
-          <li key={index} className={`pokeInfoLine `}>
-            <div
-              style={{ width: "1rem" }}
-              className={`pokeInfoMove pokeInfoLine ${move.moveType}-bg`}
-            >
-              <img
-                src={getImageForType(move.moveType)}
-                alt={move.moveType}
-                className="MoveTypeImg"
-              />
-              <div className={`pokeInfoLine textEllipsis ${move.moveType}-bg`}>
-                {move.attackName}
-              </div>
+    );
+  };
+
+  return (
+    <div className="pokemove-flip-container">
+      <div className={`pokemove-flip-inner ${isFlipped ? "flipped" : ""}`}>
+        {/* FRONT */}
+        <div className="pokemove-flip-front">
+          <div className={`PokemonMove ${pokemonTypeClass}`}>
+            <div>
+              <h3
+                className={`pokeTitle pokeInfoMove pokeInfoLine ${pokemonTypeClass}-bg`}
+                style={{ margin: "auto" }}
+              >
+                <div className="pokeTypesInfo">
+                  {pokemonTypes.map((type: any, index: any) => (
+                    <li
+                      style={{ padding: "0" }}
+                      key={index}
+                      className={`pokeInfoLine `}
+                    >
+                      <img
+                        src={getImageForType(type)}
+                        alt={type}
+                        className="MoveTypeImg"
+                      />
+                    </li>
+                  ))}
+                </div>
+                {props.name.charAt(0).toUpperCase() + props.name.slice(1)} (#
+                {props.number})
+              </h3>
             </div>
-            <div className={`pokeInfoLine powerInfo ${move.moveType}-bg`}>
-              {move.power}
+            <img
+              className={`PokemonImg ${pokemonTypeClass}`}
+              src={props.sprites}
+              alt={props.name}
+              onClick={handleCardClick}
+            />
+            <div>
+              {props.moves.map((move: any, index: any) => (
+                <li key={index} className={`pokeInfoLine `}>
+                  <div
+                    style={{ width: "1rem" }}
+                    className={`pokeInfoMove pokeInfoLine ${move.moveType}-bg`}
+                  >
+                    <img
+                      src={getImageForType(move.moveType)}
+                      alt={move.moveType}
+                      className="MoveTypeImg"
+                    />
+                    <div
+                      className={`pokeInfoLine textEllipsis ${move.moveType}-bg`}
+                    >
+                      {move.attackName}
+                    </div>
+                  </div>
+                  <div className={`pokeInfoLine powerInfo ${move.moveType}-bg`}>
+                    {move.power}
+                  </div>
+                  {checkListVantages(move.moveType)}
+                </li>
+              ))}
             </div>
-            {checkListVantages(move.moveType)}
-          </li>
-        ))}
+          </div>
+        </div>
+
+        {/* BACK */}
+        <div className={`pokemove-flip-back ${pokemonTypeClass}`}>
+          <div
+            className="card-back-return"
+            onClick={handleCardClick}
+            title="Voltar"
+          >
+            <FontAwesomeIcon icon={faRotateLeft} />
+          </div>
+          {renderTalentTree()}
+        </div>
       </div>
     </div>
   );

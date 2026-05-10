@@ -5,7 +5,6 @@ import { faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import PokemonMove from "./PokemonMove";
 import Search from "./Search";
 import Sprites from "./Sprites";
-import Menu from "./Menu";
 
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const maxPokemonIndex = 387; //387
@@ -32,13 +31,20 @@ interface IPokemonDetails {
 
 const MovimentosCompletos = () => {
   const [allPokemonData, setAllPokemonData] = useState<any[]>([]);
-  const [currentUrl, setCurrentUrl] = useState<string | null>(firstUrl);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isPreviousVisible, setIsPreviousVisible] = useState(false);
-  const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [currentUrl] = useState<string | null>(firstUrl);
+  const [currentPage] = useState(0);
+  const [, setIsPreviousVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [inputTextState, setInputTextState] = useState("");
   const [selectValue, setSelectValue] = useState("");
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [flippedPokemonName, setFlippedPokemonName] = useState<string | null>(null);
+
+  const handleFlip = (pokemonName: string) => {
+    setFlippedPokemonName((prev) =>
+      prev === pokemonName ? null : pokemonName
+    );
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -150,6 +156,7 @@ const MovimentosCompletos = () => {
           pokemonTypes: pokemonTypes,
           pokemonMoves,
           sprites: data.sprites.versions,
+          abilities: data.abilities.map((a: any) => a.ability.name),
         };
       })
     );
@@ -193,7 +200,8 @@ const MovimentosCompletos = () => {
 
   useEffect(() => {
     loadPokemonPages(currentUrl);
-  }, [currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, currentUrl]);
 
   const hasSelect = true;
 
@@ -269,6 +277,9 @@ const MovimentosCompletos = () => {
                   pokemonTypes={pokemon.pokemonTypes}
                   moves={pokemon.pokemonMoves}
                   sprites={pokemonSprite}
+                  abilities={pokemon.abilities}
+                  isFlipped={flippedPokemonName === pokemon.pokemonName}
+                  onFlip={handleFlip}
                 />
               );
             })}

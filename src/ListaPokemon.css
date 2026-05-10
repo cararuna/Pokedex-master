@@ -907,3 +907,169 @@ body .containerList img {
   color: #1d1d1d;
   opacity: 0.9;
 }
+
+/* ===== CARD FLIP ===== */
+
+.card-flip-container {
+  width: 20rem;
+  perspective: 1000px;
+}
+
+.card-flip-inner {
+  position: relative;
+  width: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.card-flip-container.flipped .card-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-front {
+  position: relative;
+  z-index: 2;
+}
+
+.card-front .poke {
+  width: 100%;
+}
+
+.card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotateY(180deg);
+  border-radius: 0.5rem;
+  padding: 0.8rem;
+  box-sizing: border-box;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  opacity: 0.95;
+}
+
+.card-back-return {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.85);
+  z-index: 10;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.card-back-return:hover {
+  color: #fff;
+  transform: scale(1.2);
+}
+
+/* ===== TALENT TREE ===== */
+
+.talent-tree-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.talent-tree-title {
+  text-transform: capitalize;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin: 0 0 0.2rem 0;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.talent-type-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.talent-type-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 0.3rem 0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.3rem;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.talent-type-header.fire { background: rgba(253, 125, 36, 0.6); }
+.talent-type-header.water { background: rgba(69, 146, 196, 0.6); }
+.talent-type-header.grass { background: rgba(155, 204, 80, 0.6); }
+.talent-type-header.electric { background: rgba(238, 213, 53, 0.6); color: #333; }
+.talent-type-header.ice { background: rgba(81, 196, 231, 0.6); }
+.talent-type-header.rock { background: rgba(163, 140, 33, 0.6); }
+.talent-type-header.ground { background: rgba(171, 152, 66, 0.6); }
+.talent-type-header.dragon { background: rgba(241, 110, 87, 0.6); }
+.talent-type-header.ghost { background: rgba(123, 98, 163, 0.6); }
+.talent-type-header.poison { background: rgba(185, 127, 201, 0.6); }
+.talent-type-header.psychic { background: rgba(254, 124, 200, 0.6); }
+.talent-type-header.flying { background: rgba(61, 199, 239, 0.6); }
+.talent-type-header.fighting { background: rgba(213, 103, 35, 0.6); }
+.talent-type-header.bug { background: rgba(114, 159, 63, 0.6); }
+.talent-type-header.normal { background: rgba(164, 172, 175, 0.6); }
+.talent-type-header.steel { background: rgba(158, 183, 184, 0.6); }
+.talent-type-header.dark { background: rgba(112, 112, 112, 0.6); }
+.talent-type-header.fairy { background: rgba(253, 185, 233, 0.6); color: #333; }
+.talent-type-header.innate { background: rgba(255, 215, 0, 0.5); color: #333; }
+
+.talent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.talent-item {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.4rem;
+  transition: background 0.2s;
+}
+
+.talent-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.talent-name {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  text-transform: capitalize;
+}
+
+.talent-desc {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-style: italic;
+}
+
+.innate-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 0.5rem;
+  margin-top: 0.2rem;
+}

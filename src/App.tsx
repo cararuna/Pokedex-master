@@ -1,12 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Context } from "./components/GlobalContext";
 import { IPokemon } from "./types/pokemon";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
-import { Home } from "./pages/Home";
 import { Favorites } from "./pages/Favorites";
-import ListaMovementos from "./components/ListaMovementos";
 import MovimentosCompletos from "./components/MovimentosCompletos";
-import Batalha from "./components/Batalha";
 
 export default function App() {
   const [favorites, setFavorites] = useState<IPokemon[]>([]);

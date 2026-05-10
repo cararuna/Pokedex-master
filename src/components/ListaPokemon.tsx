@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { IPokemon } from "../types/pokemon";
 import "../ListaPokemon.css";
 import Pokemon from "./Pokemon";
@@ -16,6 +17,16 @@ export default function ListaPokemon({
   list,
   isFavoritePage,
 }: Props) {
+  const [flippedPokemonName, setFlippedPokemonName] = useState<string | null>(
+    null
+  );
+
+  const handleFlip = (pokemonName: string) => {
+    setFlippedPokemonName((prev) =>
+      prev === pokemonName ? null : pokemonName
+    );
+  };
+
   return (
     <div className="principalPage">
       {isFavoritePage ? (
@@ -36,7 +47,12 @@ export default function ListaPokemon({
       <div className="containerList">
         <div className="pokeMap">
           {list.map((pokemon) => (
-            <Pokemon key={pokemon.name} pokemon={pokemon} />
+            <Pokemon
+              key={pokemon.name}
+              pokemon={pokemon}
+              isFlipped={flippedPokemonName === pokemon.name}
+              onFlip={handleFlip}
+            />
           ))}
         </div>
       </div>

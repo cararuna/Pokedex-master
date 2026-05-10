@@ -18,6 +18,20 @@ const useAddMoves = (name: string, moves: any[]) => {
         });
       }
 
+      if (name === "dugtrio") {
+        const newMoves = [
+          { attackName: "stone edge", moveType: "rock", power: 10 },
+        ];
+        newMoves.forEach((newMove) => {
+          const exists = moves.some(
+            (move) => move.attackName === newMove.attackName
+          );
+          if (!exists) {
+            moves.push(newMove);
+          }
+        });
+      }
+
       if (name === "alakazam") {
         const newMoves = [
           { attackName: "fire-punch", moveType: "fire", power: 8 },
