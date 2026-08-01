@@ -1,0 +1,31 @@
+{
+  "name": "@pokedex/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-modal": "^3.16.3",
+    "react-router-dom": "^7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/react-modal": "^3.16.3",
+    "@vitejs/plugin-react": "^6.0.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.0"
+  }
+}

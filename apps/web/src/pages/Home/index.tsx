@@ -6,15 +6,9 @@ import { IPokemon } from "../../types/pokemon";
 import "../Home/index.css";
 import "../../ListaPokemon.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar, faHandFist } from "@fortawesome/free-solid-svg-icons";
+import { faStar } from "@fortawesome/free-solid-svg-icons";
 const firstUrl = "https://pokeapi.co/api/v2/pokemon";
 const typeUrl = "https://pokeapi.co/api/v2/type/";
-
-interface IData {
-  id: number;
-  userId: number;
-  pokemonId: number;
-}
 
 export const Home = () => {
   const [pokemons, setPokemons] = useState([] as IPokemon[]);
@@ -99,17 +93,6 @@ export const Home = () => {
         <Link to="/favorites" className="buttonsFav">
           <button>
             <FontAwesomeIcon icon={faStar} style={{ color: "gold" }} />
-          </button>
-        </Link>
-        <Link
-          to={{
-            pathname: "/listaMovementos",
-            state: { list: pokemons },
-          }}
-          className="buttonsFav"
-        >
-          <button>
-            <FontAwesomeIcon icon={faHandFist} style={{ color: "orange" }} />
           </button>
         </Link>
       </div>
