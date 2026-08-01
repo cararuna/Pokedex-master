@@ -50,7 +50,9 @@ Sobre esse produto, três demonstrações:
 3. **Agente de IA** com harness próprio, RAG e evals
 
 Documentos de referência: [`PLANO.md`](PLANO.md) (arquitetura e fases) ·
-[`SETUP.md`](SETUP.md) (credenciais e contas) · [`docs/`](docs/) (aprofundamento por tema)
+[`SETUP.md`](SETUP.md) (credenciais e contas) ·
+[`docs/`](docs/README.md) (aprofundamento por tema — arquitetura, design system,
+agente, RAG e evals, cada um com uma seção "Se perguntarem")
 
 ---
 

@@ -348,6 +348,22 @@ muito mais forte que "eu integrei uma LLM".
 
 ## 8. Fases de execução
 
+> **Estado em 01/08/2026.** Documentação detalhada por tema em
+> [docs/](docs/README.md).
+>
+> | Fase | Situação |
+> |---|---|
+> | 0 — Fundação | ✅ concluída |
+> | 1 — Design system | ✅ núcleo (14 componentes, tokens, linter, Storybook parcial) |
+> | 2 — Supabase, ETL e API | 🔑 código pronto — **falta `apps/api/.env`** |
+> | 3 — Redesign das telas | ✅ concluída |
+> | 4 — Agente e harness | 🔑 código pronto — **falta `apps/api/.env`** |
+> | 5 — RAG | ⏳ schema pronto; falta ingestão e ferramenta |
+> | 6 — Evals | ⏳ projetada em [docs/05](docs/05-evals.md) |
+>
+> Sem bloqueio e ainda pendente: stories de Card/SearchField/Select/Dialog,
+> publicar o design system no Claude Design.
+
 ### Fase 0 — Fundação
 - [ ] `git init` na raiz, `.gitignore` (preservando o histórico de `Pokedex-master`)
 - [ ] Monorepo pnpm: `pnpm-workspace.yaml` + workspaces
