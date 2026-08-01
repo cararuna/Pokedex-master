@@ -12,6 +12,19 @@ export { Card, type CardProps } from "./components/Card";
 export { Badge, type BadgeProps } from "./components/Badge";
 export { Skeleton, type SkeletonProps } from "./components/Skeleton";
 export { SearchField, type SearchFieldProps } from "./components/SearchField";
+export { Select, type SelectProps, type SelectOption } from "./components/Select";
+export { Table } from "./components/Table";
+export { Tabs } from "./components/Tabs";
+export { Dialog } from "./components/Dialog";
+export { Tooltip, TooltipProvider, type TooltipProps } from "./components/Tooltip";
+export {
+  EmptyState,
+  StatBar,
+  Pagination,
+  type EmptyStateProps,
+  type StatBarProps,
+  type PaginationProps,
+} from "./components/Feedback";
 export {
   TypeChip,
   getTypeLabel,

@@ -5,11 +5,20 @@ import {
   Card,
   CardGrid,
   Container,
+  Dialog,
   Divider,
+  EmptyState,
   Inline,
+  Pagination,
   SearchField,
+  Select,
   Skeleton,
   Stack,
+  StatBar,
+  Table,
+  Tabs,
+  Tooltip,
+  TooltipProvider,
   TypeChip,
   POKEMON_TYPES,
   useTheme,
@@ -26,8 +35,11 @@ import {
 export function DesignSystemPage() {
   const { theme, toggle } = useTheme();
   const [busca, setBusca] = useState("");
+  const [tipo, setTipo] = useState<string>();
+  const [pagina, setPagina] = useState(3);
 
   return (
+    <TooltipProvider>
     <Container className="py-12">
       <Stack gap={12}>
         <header>
@@ -301,8 +313,138 @@ export function DesignSystemPage() {
             </Card>
           </CardGrid>
         </Section>
+
+        <Divider />
+
+        {/* ── Select, Tooltip, Dialog ─────────────────────────────────── */}
+        <Section
+          titulo="Overlays"
+          descricao="Dialog, Select e Tooltip sobre Radix. A aparência é 100% nossa; o que vem de fora é o comportamento — foco preso, foco devolvido ao gatilho, Escape, navegação por seta. Escrever isso na mão é onde implementações caseiras falham, sempre no teclado e no leitor de tela."
+        >
+          <Stack gap={5}>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Select
+                label="Filtrar por tipo"
+                placeholder="Todos os tipos"
+                value={tipo}
+                onValueChange={setTipo}
+                hint="A lista mostra o chip colorido — impossível no <select> nativo"
+                options={POKEMON_TYPES.slice(0, 8).map((t) => ({
+                  value: t,
+                  label: t,
+                  adornment: <TypeChip type={t} size="sm" iconOnly />,
+                }))}
+              />
+              <Stack gap={2} justify="end">
+                <Inline gap={3}>
+                  <Dialog>
+                    <Dialog.Trigger asChild>
+                      <Button variant="outline">Abrir diálogo</Button>
+                    </Dialog.Trigger>
+                    <Dialog.Content>
+                      <Dialog.Header>
+                        <Dialog.Title>Remover dos favoritos</Dialog.Title>
+                        <Dialog.Description>
+                          Charizard sai da sua lista. Dá para adicionar de novo
+                          a qualquer momento.
+                        </Dialog.Description>
+                      </Dialog.Header>
+                      <Dialog.Footer>
+                        <Dialog.Close asChild>
+                          <Button variant="ghost">Cancelar</Button>
+                        </Dialog.Close>
+                        <Dialog.Close asChild>
+                          <Button variant="danger">Remover</Button>
+                        </Dialog.Close>
+                      </Dialog.Footer>
+                    </Dialog.Content>
+                  </Dialog>
+
+                  <Tooltip content="Aparece no foco também, não só no hover">
+                    <Button variant="ghost">Passe o mouse ou dê Tab</Button>
+                  </Tooltip>
+                </Inline>
+              </Stack>
+            </div>
+          </Stack>
+        </Section>
+
+        <Divider />
+
+        {/* ── Tabs ────────────────────────────────────────────────────── */}
+        <Section
+          titulo="Tabs"
+          descricao="Substitui o card com flip 3D da versão antiga. O flip escondia o conteúdo da frente, não tinha estado navegável e não existia para leitor de tela — quem não via a animação não sabia que havia um verso."
+        >
+          <Tabs defaultValue="stats">
+            <Tabs.List>
+              <Tabs.Trigger value="stats">Atributos</Tabs.Trigger>
+              <Tabs.Trigger value="moves">Golpes</Tabs.Trigger>
+              <Tabs.Trigger value="talents">Talentos</Tabs.Trigger>
+            </Tabs.List>
+
+            <Tabs.Content value="stats">
+              <Stack gap={2} className="max-w-lg">
+                <StatBar label="HP" value={78} />
+                <StatBar label="Ataque" value={84} />
+                <StatBar label="Defesa" value={78} />
+                <StatBar label="Ataque Esp." value={109} />
+                <StatBar label="Defesa Esp." value={85} />
+                <StatBar label="Velocidade" value={100} />
+              </Stack>
+            </Tabs.Content>
+
+            <Tabs.Content value="moves">
+              <Table>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.Head>Golpe</Table.Head>
+                    <Table.Head>Tipo</Table.Head>
+                    <Table.Head>Poder</Table.Head>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {[
+                    { nome: "Lança-chamas", tipo: "fire" as const, poder: 90 },
+                    { nome: "Garra de Dragão", tipo: "dragon" as const, poder: 80 },
+                    { nome: "Rajada de Ar", tipo: "flying" as const, poder: 60 },
+                  ].map((m) => (
+                    <Table.Row key={m.nome} interactive>
+                      <Table.Cell className="font-medium">{m.nome}</Table.Cell>
+                      <Table.Cell>
+                        <TypeChip type={m.tipo} size="sm" />
+                      </Table.Cell>
+                      <Table.Cell className="font-mono tabular-nums">
+                        {m.poder}
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
+            </Tabs.Content>
+
+            <Tabs.Content value="talents">
+              <EmptyState
+                title="Nenhum talento cadastrado"
+                description="Os talentos por tipo e as habilidades inatas ainda vivem mockados no front. A Fase 2 migra tudo para o banco."
+                action={{ label: "Ver o plano", onClick: () => {} }}
+              />
+            </Tabs.Content>
+          </Tabs>
+        </Section>
+
+        <Divider />
+
+        {/* ── Paginação ───────────────────────────────────────────────── */}
+        <Section
+          titulo="Pagination"
+          descricao="É um <nav> com aria-label, e a página atual carrega aria-current. Sem isso, quem navega por leitor de tela ouve uma fileira de números sem saber onde está."
+        >
+          <Pagination page={pagina} totalPages={12} onPageChange={setPagina} />
+        </Section>
       </Stack>
     </Container>
+    </TooltipProvider>
   );
 }
 
