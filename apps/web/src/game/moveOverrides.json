@@ -1,0 +1,206 @@
+{
+  "venusaur": [
+    {
+      "attackName": "bulldoze",
+      "moveType": "ground",
+      "power": 8
+    },
+    {
+      "attackName": "toxic",
+      "moveType": "poison",
+      "power": 8
+    }
+  ],
+  "dugtrio": [
+    {
+      "attackName": "stone edge",
+      "moveType": "rock",
+      "power": 10
+    }
+  ],
+  "alakazam": [
+    {
+      "attackName": "fire-punch",
+      "moveType": "fire",
+      "power": 8
+    },
+    {
+      "attackName": "thunder-punch",
+      "moveType": "electric",
+      "power": 8
+    },
+    {
+      "attackName": "ice-punch",
+      "moveType": "ice",
+      "power": 8
+    }
+  ],
+  "raticate": [
+    {
+      "attackName": "dig",
+      "moveType": "ground",
+      "power": 8
+    },
+    {
+      "attackName": "flame-wheel",
+      "moveType": "fire",
+      "power": 8
+    }
+  ],
+  "raichu": [
+    {
+      "attackName": "sweet-kiss",
+      "moveType": "fairy",
+      "power": 8
+    }
+  ],
+  "wigglytuff": [
+    {
+      "attackName": "heal-pulse",
+      "moveType": "psychic",
+      "power": 8
+    },
+    {
+      "attackName": "rollout",
+      "moveType": "rock",
+      "power": 8
+    }
+  ],
+  "golduck": [
+    {
+      "attackName": "cross-chop",
+      "moveType": "fighting",
+      "power": 8
+    }
+  ],
+  "slowbro": [
+    {
+      "attackName": "belch",
+      "moveType": "poison",
+      "power": 8
+    }
+  ],
+  "magneton": [
+    {
+      "attackName": "light-screen",
+      "moveType": "psychic",
+      "power": 8
+    }
+  ],
+  "electrode": [
+    {
+      "attackName": "metal-sound",
+      "moveType": "steel",
+      "power": 8
+    }
+  ],
+  "exeggutor": [
+    {
+      "attackName": "sunnyday",
+      "moveType": "fire",
+      "power": 8
+    }
+  ],
+  "marowak": [
+    {
+      "attackName": "iron-head",
+      "moveType": "steel",
+      "power": 8
+    },
+    {
+      "attackName": "ancient-power",
+      "moveType": "rock",
+      "power": 8
+    }
+  ],
+  "electabuzz": [
+    {
+      "attackName": "low-kick",
+      "moveType": "fighting",
+      "power": 8
+    }
+  ],
+  "meganium": [
+    {
+      "attackName": "reflect",
+      "moveType": "psychic",
+      "power": 10
+    }
+  ],
+  "typhlosion": [
+    {
+      "attackName": "infernal-parade",
+      "moveType": "ghost",
+      "power": 8
+    }
+  ],
+  "furret": [
+    {
+      "attackName": "agility",
+      "moveType": "psychic",
+      "power": 8
+    }
+  ],
+  "wobbuffet": [
+    {
+      "attackName": "splash",
+      "moveType": "normal",
+      "power": 8
+    },
+    {
+      "attackName": "amnesia",
+      "moveType": "psychic",
+      "power": 8
+    },
+    {
+      "attackName": "counter",
+      "moveType": "fighting",
+      "power": 8
+    }
+  ],
+  "kingdra": [
+    {
+      "attackName": "agility",
+      "moveType": "psychic",
+      "power": 8
+    },
+    {
+      "attackName": "icy-wind",
+      "moveType": "ice",
+      "power": 8
+    }
+  ],
+  "swellow": [
+    {
+      "attackName": "agility",
+      "moveType": "psychic",
+      "power": 8
+    },
+    {
+      "attackName": "quick-guard",
+      "moveType": "fighting",
+      "power": 8
+    }
+  ],
+  "roselia": [
+    {
+      "attackName": "extra-sensory",
+      "moveType": "psychic",
+      "power": 8
+    }
+  ],
+  "swalot": [
+    {
+      "attackName": "curse",
+      "moveType": "ghost",
+      "power": 8
+    }
+  ],
+  "absol": [
+    {
+      "attackName": "mega-horn",
+      "moveType": "bug",
+      "power": 10
+    }
+  ]
+}

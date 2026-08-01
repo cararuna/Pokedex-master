@@ -60,11 +60,20 @@ export interface TypeChipProps
   size?: "sm" | "md";
   /** Oculta o texto e mantém só o ponto de cor. O nome vai para o aria-label. */
   iconOnly?: boolean;
+  /**
+   * Substitui o ponto de cor por um símbolo próprio.
+   *
+   * Existe porque este produto tem identidade visual anterior ao design
+   * system: os ícones de tipagem são os mesmos das cartas físicas do jogo de
+   * tabuleiro. O sistema acomoda esse símbolo em vez de apagá-lo — o token de
+   * cor continua governando fundo, borda e texto.
+   */
+  icon?: React.ReactNode;
 }
 
 export const TypeChip = forwardRef<HTMLSpanElement, TypeChipProps>(
   function TypeChip(
-    { type, variant = "soft", size = "md", iconOnly = false, className, ...props },
+    { type, variant = "soft", size = "md", iconOnly = false, icon, className, ...props },
     ref,
   ) {
     const label = TYPE_LABELS[type];
@@ -102,14 +111,16 @@ export const TypeChip = forwardRef<HTMLSpanElement, TypeChipProps>(
         aria-label={iconOnly ? label : undefined}
         {...props}
       >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "rounded-full bg-[var(--type)]",
-            size === "sm" ? "size-1.5" : "size-2",
-            variant === "solid" && "bg-current opacity-70",
-          )}
-        />
+        {icon ?? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "rounded-full bg-[var(--type)]",
+              size === "sm" ? "size-1.5" : "size-2",
+              variant === "solid" && "bg-current opacity-70",
+            )}
+          />
+        )}
         {!iconOnly && label}
       </span>
     );

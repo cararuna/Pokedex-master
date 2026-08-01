@@ -7,7 +7,43 @@ Se algo aqui divergir do código, **o código vence** — e corrija este arquivo
 
 ## O que é
 
-Pokédex reconstruída como portfólio técnico de três coisas:
+> **Leia isto antes de mexer em qualquer tela.** Este projeto **não é uma
+> Pokédex**. Confundir os dois já custou uma reescrita inteira.
+
+É o **companion digital de um jogo de tabuleiro** de Pokémon. O jogador está na
+mesa e precisa responder uma pergunta:
+
+> *"Quais Pokémon aprendem ataque de fogo, e com que valor?"*
+
+O produto é uma **mesa de consulta de cartas**. A tela existe para o filtro por
+**tipo de ataque**, e o número que aparece em cada golpe **não é o dano da
+série** — é o valor convertido pela regra do jogo.
+
+### As mecânicas (`apps/web/src/game/rules.ts`)
+
+| Regra | O quê |
+|---|---|
+| Conversão de poder | `ceil(dano / 10)`, teto 10, qualquer valor ≤ 7 vira 8 → escala **8, 9 ou 10** |
+| Um golpe por tipo | Fica só o mais forte de cada tipo. É o que dá sentido ao filtro |
+| Só nível | Golpes aprendidos por level-up, com dano > 0 |
+| Ajustes manuais | `game/moveOverrides.json` — golpes que o mestre adicionou fora da regra |
+| Vantagens | Tabela **do jogo**, não da série (`ghost` acerta `ghost`; `normal` não tem vantagem) |
+
+A compressão para três degraus é intencional: o valor vira dificuldade de
+rolagem, e uma faixa de 1 a 10 tornaria a maioria dos ataques irrelevante.
+
+### A carta
+
+Os **símbolos de tipagem são os mesmos das cartas físicas** do jogo. São
+identidade anterior ao design system e não podem ser trocados por ícone
+genérico — o sistema acomoda o símbolo, não o contrário.
+
+- **Frente:** ataques com símbolo, valor do jogo e vantagens
+- **Verso (giro):** árvore de talentos por tipo + habilidades inatas
+
+### Como portfólio técnico
+
+Sobre esse produto, três demonstrações:
 
 1. **Design system** — o entregável principal
 2. **Backend com dados normalizados** — substituindo fetch em cascata no cliente
