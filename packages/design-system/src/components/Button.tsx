@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { cloneElement, forwardRef, isValidElement } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/cn";
@@ -120,23 +120,58 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) {
-    const Comp = asChild ? Slot : "button";
     const isDisabled = disabled || loading;
 
+    const shared = {
+      ref,
+      className: cn(button({ variant, size, iconOnly, fullWidth }), className),
+      // `aria-busy` avisa o leitor de tela que a ação está em curso.
+      // Sem isso, o spinner é uma informação exclusivamente visual.
+      "aria-busy": loading || undefined,
+      ...props,
+    };
+
+    const leading = loading ? <Spinner /> : startIcon;
+    const trailing = loading ? null : endIcon;
+
+    /*
+      O Slot exige **exatamente um** elemento filho — ele funde as props nele.
+      Passar `{leading}{children}{trailing}` daria três filhos (dois deles
+      `undefined`/`false`) e o Slot lançaria erro.
+
+      Então, no modo asChild, os ícones são injetados *dentro* do elemento
+      filho, em vez de irmãos dele. Assim `<Button asChild startIcon={...}>`
+      continua funcionando envolvendo um <a> ou um <Link>.
+
+      `disabled` também não é repassado: não existe em <a>, e o React o
+      emitiria como atributo inválido no DOM.
+    */
+    if (asChild) {
+      return (
+        <Slot {...shared} data-disabled={isDisabled || undefined}>
+          {isValidElement<{ children?: React.ReactNode }>(children) ? (
+            cloneElement(
+              children,
+              undefined,
+              <>
+                {leading}
+                {children.props.children}
+                {trailing}
+              </>,
+            )
+          ) : (
+            children
+          )}
+        </Slot>
+      );
+    }
+
     return (
-      <Comp
-        ref={ref}
-        className={cn(button({ variant, size, iconOnly, fullWidth }), className)}
-        disabled={isDisabled}
-        // `aria-busy` avisa o leitor de tela que a ação está em curso.
-        // Sem isso, o spinner é uma informação exclusivamente visual.
-        aria-busy={loading || undefined}
-        {...props}
-      >
-        {loading ? <Spinner /> : startIcon}
+      <button {...shared} disabled={isDisabled}>
+        {leading}
         {children}
-        {!loading && endIcon}
-      </Comp>
+        {trailing}
+      </button>
     );
   },
 );

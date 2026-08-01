@@ -164,6 +164,20 @@ export const ComoLink: Story = {
       <Button asChild variant="outline">
         <a href="#favoritos">Meus favoritos</a>
       </Button>
+      {/*
+        Regressão coberta: o Slot do Radix exige exatamente um filho. A
+        primeira versão passava startIcon, children e endIcon como irmãos,
+        e esta combinação — asChild + ícone — derrubava a árvore inteira.
+        Os ícones agora são injetados dentro do elemento filho.
+      */}
+      <Button asChild variant="soft" startIcon={<StarIcon />}>
+        <a href="#favoritos">Com ícone</a>
+      </Button>
+      <Button asChild variant="ghost" iconOnly>
+        <a href="#config" aria-label="Configurações">
+          <ArrowIcon />
+        </a>
+      </Button>
     </Inline>
   ),
 };
