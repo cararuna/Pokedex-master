@@ -22,6 +22,7 @@ import {
 } from "../../game/rules";
 import { GameCard } from "./GameCard";
 import { TypeIcon } from "./TypeIcon";
+import { AgentPanel } from "../agent-chat/AgentPanel";
 
 const POKEMON = dataset as unknown as GamePokemon[];
 const POR_PAGINA = 24;
@@ -215,6 +216,7 @@ function Cabecalho({
           </div>
 
           <Inline gap={1}>
+            <AgentPanel />
             <Button asChild variant="ghost" size="sm">
               <a href="/design-system">Design system</a>
             </Button>

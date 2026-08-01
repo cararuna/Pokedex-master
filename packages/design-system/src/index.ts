@@ -16,6 +16,7 @@ export { Select, type SelectProps, type SelectOption } from "./components/Select
 export { Table } from "./components/Table";
 export { Tabs } from "./components/Tabs";
 export { Dialog } from "./components/Dialog";
+export { Drawer } from "./components/Drawer";
 export { Tooltip, TooltipProvider, type TooltipProps } from "./components/Tooltip";
 export {
   EmptyState,

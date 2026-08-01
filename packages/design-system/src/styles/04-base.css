@@ -225,6 +225,44 @@
   }
 }
 
+/* Painel lateral. Desliza no eixo horizontal, sem escala: o painel não
+   "aparece", ele entra vindo da borda — e o movimento precisa contar isso. */
+@keyframes drawer-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-out-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes drawer-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-out-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
 /* ── Utilitários ─────────────────────────────────────────────────────────── */
 @utility sr-only {
   position: absolute;
