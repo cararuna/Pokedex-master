@@ -116,6 +116,18 @@
      não existe breakpoint escrito à mão para a grade. */
   --grid-card-min: 17rem;
   --grid-gap: var(--space-5);
+
+  /* ── Carta de jogo ──────────────────────────────────────────────────────
+     Altura fixa, igual em todas as cartas e nas duas faces.
+
+     Não é `min-height`: carta de baralho tem tamanho único. Altura variável
+     faz a grade virar uma escada e, no giro, a carta mudaria de tamanho no
+     meio da animação.
+
+     34rem cabe o pior caso (9 ataques — steelix, octillery, dusclops) sem
+     rolagem. Cartas com menos ataques sobram espaço, e isso é preferível:
+     numa mesa, rolar uma carta de consulta é pior que espaço vazio. */
+  --game-card-height: 34rem;
 }
 
 /* No escuro, o cartão perde a sombra e ganha borda.

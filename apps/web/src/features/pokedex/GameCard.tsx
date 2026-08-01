@@ -58,19 +58,24 @@ export function GameCard({ pokemon, spriteKey, highlightMoveType }: Props) {
 
   return (
     <div
-      className="group [perspective:1600px]"
+      // Altura fixa vinda do token, igual em toda carta e nas duas faces.
+      // Fica no elemento externo para que a grade reserve o espaço certo
+      // antes de qualquer conteúdo renderizar.
+      className="group h-[var(--game-card-height)] [perspective:1600px]"
       style={{ "--type": `var(--color-type-${primary})` } as React.CSSProperties}
     >
       <div
         className={[
-          "relative min-h-[30rem] w-full",
+          "relative h-full w-full",
           "transition-transform duration-[520ms] [transform-style:preserve-3d]",
           "ease-[cubic-bezier(0.22,1,0.36,1)]",
           "motion-reduce:transition-none",
           flipped ? "[transform:rotateY(180deg)]" : "",
         ].join(" ")}
       >
-        {/* ── FRENTE ────────────────────────────────────────────────────── */}
+        {/* As duas faces ocupam o mesmo retângulo, sobrepostas. A frente
+            também é absoluta — se fosse `relative`, ela ditaria a altura e
+            cartas com mais ataques ficariam mais altas que as outras. */}
         <Face hidden={flipped}>
           <FrenteDaCarta
             pokemon={pokemon}
@@ -82,7 +87,6 @@ export function GameCard({ pokemon, spriteKey, highlightMoveType }: Props) {
           />
         </Face>
 
-        {/* ── VERSO ─────────────────────────────────────────────────────── */}
         <Face back hidden={!flipped} id={backId}>
           <VersoDaCarta pokemon={pokemon} onFlip={() => setFlipped(false)} />
         </Face>
@@ -116,7 +120,7 @@ function Face({
       inert={hidden ? "" : undefined}
       aria-hidden={hidden || undefined}
       className={[
-        back ? "absolute inset-0" : "relative",
+        "absolute inset-0",
         "flex flex-col overflow-hidden",
         "rounded-[var(--card-radius)] border border-[var(--card-border)]",
         "bg-[var(--card-bg)] shadow-[var(--card-shadow)]",
@@ -152,7 +156,7 @@ function FrenteDaCarta({
           tipo à distância sem tomar a carta. */}
       <div aria-hidden="true" className="h-[3px] w-full bg-[var(--type)]" />
 
-      <header className="flex items-start justify-between gap-2 px-4 pt-3.5">
+      <header className="flex shrink-0 items-start justify-between gap-2 px-4 pt-3.5">
         <div className="flex min-w-0 flex-col gap-1">
           <span className="font-mono text-2xs tabular-nums text-text-subtle">
             N.º {String(pokemon.dexNumber).padStart(3, "0")}
@@ -194,8 +198,12 @@ function FrenteDaCarta({
         )}
       </div>
 
-      {/* Golpes — o conteúdo que importa na mesa */}
-      <div className="flex-1 border-t border-border-subtle px-3 py-2">
+      {/* Golpes — o conteúdo que importa na mesa.
+          `min-h-0` é obrigatório: sem ele um filho flex não encolhe abaixo do
+          próprio conteúdo, o overflow nunca ativa e a lista estoura a carta.
+          A rolagem aqui é rede de segurança — em 34rem os 9 ataques do pior
+          caso já cabem. */}
+      <div className="min-h-0 flex-1 overflow-y-auto border-t border-border-subtle px-3 py-2">
         <p className="px-1 pb-1.5 font-mono text-2xs uppercase tracking-widest text-text-subtle">
           Ataques
         </p>
@@ -216,7 +224,7 @@ function FrenteDaCarta({
         )}
       </div>
 
-      <footer className="border-t border-border-subtle px-3 py-2">
+      <footer className="shrink-0 border-t border-border-subtle px-3 py-2">
         <button
           type="button"
           onClick={onFlip}
@@ -301,7 +309,7 @@ function VersoDaCarta({
     <>
       <div aria-hidden="true" className="h-[3px] w-full bg-[var(--type)]" />
 
-      <header className="flex items-center justify-between gap-2 border-b border-border-subtle px-4 py-3">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border-subtle px-4 py-3">
         <h3 className="truncate font-display text-base font-semibold tracking-tight text-text">
           {formatName(pokemon.slug)}
         </h3>
@@ -315,7 +323,9 @@ function VersoDaCarta({
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      {/* O verso rola de verdade: a árvore de talentos de um Pokémon de dois
+          tipos mais as inatas passa de 34rem com frequência. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-4">
           {pokemon.types.map((type) => {
             const tree = typeTalentTrees[type];
