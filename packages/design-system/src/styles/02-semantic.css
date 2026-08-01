@@ -1,0 +1,311 @@
+/* ============================================================================
+   CAMADA 2 — SEMÂNTICA
+   ============================================================================
+
+   Aqui os primitivos ganham papel. `--ink-800` vira `--text`; `--forest-700`
+   vira `--accent-solid`. Um componente pede "a cor de texto", não "cinza 800".
+
+   É esta indireção que faz o tema escuro existir: o modo escuro não reescreve
+   componente nenhum, só reaponta o mapeamento abaixo para outros degraus da
+   rampa. Trocar a marca inteira é editar este arquivo, e só ele.
+
+   Sobre `@theme inline`:
+   sem `inline`, o Tailwind copia o *valor* do token no momento do build e o
+   utilitário congela na cor clara. Com `inline`, o utilitário emite
+   `var(--surface)` — que é reavaliado quando [data-theme] muda no runtime.
+   É o detalhe que faz a diferença entre um tema trocável e um tema estático.
+   ============================================================================ */
+
+/* Variante `dark:` amarrada ao atributo, não à media query.
+   Media query não permite o usuário escolher; o atributo permite os dois
+   (o script de tema resolve a preferência do SO e escreve o atributo). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ────────────────────────────────────────────────────────────────────────────
+   TEMA CLARO — o padrão
+   ──────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Superfícies — em ordem de elevação */
+  --surface: var(--paper-100); /* fundo da página        */
+  --surface-raised: var(--paper-50); /* cartão                 */
+  --surface-overlay: #ffffff; /* diálogo, popover       */
+  --surface-sunken: var(--paper-300); /* campo, trecho de código*/
+  --surface-hover: var(--paper-200);
+  --surface-active: var(--paper-300);
+
+  /* Texto — três níveis. Além disso vira hierarquia que ninguém enxerga. */
+  --text: var(--ink-900);
+  --text-muted: var(--ink-600);
+  --text-subtle: var(--ink-500);
+  --text-on-solid: var(--paper-50); /* sobre acento/estado    */
+  --text-inverse: var(--ink-50);
+
+  /* Bordas — o traço fino que substitui a borda de 24px do CSS antigo */
+  --border: var(--ink-200);
+  --border-subtle: var(--ink-100);
+  --border-strong: var(--ink-300);
+  --border-interactive: var(--ink-400); /* hover de campo */
+
+  /* Superfície invertida — tooltip, toast. Escura no tema claro e vice-versa. */
+  --surface-inverse: var(--ink-900);
+
+  /* Acento — a marca */
+  --accent-solid: var(--forest-700);
+  --accent-solid-hover: var(--forest-800);
+  --accent-solid-active: var(--forest-900);
+  --accent-soft: var(--forest-100);
+  --accent-soft-hover: var(--forest-200);
+  --accent-text: var(--forest-700); /* acento legível em texto*/
+  --accent-border: var(--forest-300);
+
+  /* Destaque — latão. Favorito, ornamento, ênfase. */
+  --highlight-solid: var(--brass-600);
+  --highlight-soft: var(--brass-100);
+  --highlight-text: var(--brass-700);
+  --highlight-border: var(--brass-300);
+
+  /* Estado */
+  --success-solid: var(--moss-600);
+  --success-soft: var(--moss-100);
+  --success-text: var(--moss-700);
+
+  --warning-solid: var(--amber-600);
+  --warning-soft: var(--amber-100);
+  --warning-text: var(--amber-700);
+
+  --danger-solid: var(--rust-600);
+  --danger-soft: var(--rust-100);
+  --danger-text: var(--rust-700);
+
+  --info-solid: var(--slate-600);
+  --info-soft: var(--slate-100);
+  --info-text: var(--slate-700);
+
+  /* Foco — token próprio, nunca herdado do acento.
+     Se o anel de foco for a cor da marca, ele some justamente no botão
+     primário, que é onde mais importa. */
+  --focus-ring: var(--forest-500);
+  --focus-ring-offset: var(--surface);
+
+  /* Utilitários */
+  --overlay-scrim: rgb(31 28 24 / 0.42);
+  --skeleton-base: var(--ink-100);
+  --skeleton-shine: var(--paper-50);
+
+  /* ── Tipos elementais ─────────────────────────────────────────────────────
+     Alias 1:1 dos primitivos. Mapeamento sem troca porque a identidade de um
+     tipo é constante: Fogo é a mesma cor nos dois temas — o que muda em volta
+     é o contraste da superfície.
+
+     Ficam aqui, em :root, e não no @theme: o Tailwind remove do bundle todo
+     token do @theme que nenhum utilitário referencia, e o TypeChip lê estes
+     valores em tempo de execução (`var(--color-type-fire)` montado a partir
+     do dado). Tree-shaking não enxerga isso e apagaria os 18. */
+  --color-type-normal: var(--type-normal);
+  --color-type-fire: var(--type-fire);
+  --color-type-water: var(--type-water);
+  --color-type-grass: var(--type-grass);
+  --color-type-electric: var(--type-electric);
+  --color-type-ice: var(--type-ice);
+  --color-type-fighting: var(--type-fighting);
+  --color-type-poison: var(--type-poison);
+  --color-type-ground: var(--type-ground);
+  --color-type-flying: var(--type-flying);
+  --color-type-psychic: var(--type-psychic);
+  --color-type-bug: var(--type-bug);
+  --color-type-rock: var(--type-rock);
+  --color-type-ghost: var(--type-ghost);
+  --color-type-dragon: var(--type-dragon);
+  --color-type-dark: var(--type-dark);
+  --color-type-steel: var(--type-steel);
+  --color-type-fairy: var(--type-fairy);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   TEMA ESCURO
+   ──────────────────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* No escuro, elevação sobe em direção à luz — o inverso do claro.
+     Superfície mais alta = mais clara, não mais sombreada: sombra não
+     aparece sobre fundo escuro, então quem comunica elevação é o valor. */
+  --surface: var(--ink-950);
+  --surface-raised: var(--ink-900);
+  --surface-overlay: var(--ink-800);
+  --surface-sunken: #0b0a09;
+  --surface-hover: var(--ink-800);
+  --surface-active: var(--ink-700);
+
+  /* Texto branco puro sobre fundo escuro vibra e cansa. O topo da rampa
+     de tinta é levemente rebaixado de propósito. */
+  --text: var(--ink-100);
+  --text-muted: var(--ink-300);
+  --text-subtle: var(--ink-400);
+  --text-on-solid: var(--paper-50);
+  --text-inverse: var(--ink-900);
+
+  --border: var(--ink-800);
+  --border-subtle: var(--ink-900);
+  --border-strong: var(--ink-700);
+  --border-interactive: var(--ink-600);
+
+  /* No escuro a tooltip clareia em vez de escurecer. */
+  --surface-inverse: var(--ink-700);
+
+  /* O acento clareia no escuro. O forest-700 do tema claro sobre fundo
+     quase preto ficaria em ~2:1 — invisível. */
+  --accent-solid: var(--forest-500);
+  --accent-solid-hover: var(--forest-400);
+  --accent-solid-active: var(--forest-300);
+  --accent-soft: var(--forest-950);
+  --accent-soft-hover: var(--forest-900);
+  --accent-text: var(--forest-300);
+  --accent-border: var(--forest-800);
+
+  --highlight-solid: var(--brass-500);
+  --highlight-soft: var(--brass-950);
+  --highlight-text: var(--brass-300);
+  --highlight-border: var(--brass-800);
+
+  --success-solid: var(--moss-500);
+  --success-soft: #1a2617;
+  --success-text: #8fc07d;
+
+  --warning-solid: var(--amber-500);
+  --warning-soft: #2a2010;
+  --warning-text: #e0b45c;
+
+  --danger-solid: var(--rust-500);
+  --danger-soft: #2c1512;
+  --danger-text: #e08a76;
+
+  --info-solid: var(--slate-500);
+  --info-soft: #141d26;
+  --info-text: #8fb0cc;
+
+  --focus-ring: var(--forest-400);
+  --focus-ring-offset: var(--surface);
+
+  --overlay-scrim: rgb(0 0 0 / 0.65);
+  --skeleton-base: var(--ink-800);
+  --skeleton-shine: var(--ink-700);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   REGISTRO NO TAILWIND
+   Só o que está aqui vira utilitário. As rampas primitivas ficam de fora —
+   `bg-ink-700` não existe, e é essa ausência que faz a regra ser cumprida
+   pelo compilador em vez de por combinação entre pessoas.
+   ──────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Zera as paletas padrão do Tailwind. Sem isso, `bg-red-500` continua
+     disponível e o design system vira sugestão. */
+  --color-*: initial;
+
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-text-on-solid: var(--text-on-solid);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-surface-inverse: var(--surface-inverse);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-border-interactive: var(--border-interactive);
+
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-solid-hover: var(--accent-solid-hover);
+  --color-accent-solid-active: var(--accent-solid-active);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-hover: var(--accent-soft-hover);
+  --color-accent-text: var(--accent-text);
+  --color-accent-border: var(--accent-border);
+
+  --color-highlight-solid: var(--highlight-solid);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-highlight-text: var(--highlight-text);
+  --color-highlight-border: var(--highlight-border);
+
+  --color-success-solid: var(--success-solid);
+  --color-success-soft: var(--success-soft);
+  --color-success-text: var(--success-text);
+  --color-warning-solid: var(--warning-solid);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-text: var(--warning-text);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-text: var(--danger-text);
+  --color-info-solid: var(--info-solid);
+  --color-info-soft: var(--info-soft);
+  --color-info-text: var(--info-text);
+
+  --color-focus-ring: var(--focus-ring);
+  --color-scrim: var(--overlay-scrim);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Tipografia */
+  --font-display: var(--ff-display);
+  --font-sans: var(--ff-sans);
+  --font-mono: var(--ff-mono);
+
+  --text-2xs: var(--fs-2xs);
+  --text-xs: var(--fs-xs);
+  --text-sm: var(--fs-sm);
+  --text-base: var(--fs-base);
+  --text-lg: var(--fs-lg);
+  --text-xl: var(--fs-xl);
+  --text-2xl: var(--fs-2xl);
+  --text-3xl: var(--fs-3xl);
+  --text-4xl: var(--fs-4xl);
+  --text-5xl: var(--fs-5xl);
+
+  --leading-none: var(--lh-none);
+  --leading-tight: var(--lh-tight);
+  --leading-snug: var(--lh-snug);
+  --leading-normal: var(--lh-normal);
+  --leading-relaxed: var(--lh-relaxed);
+
+  --tracking-tighter: var(--ls-tighter);
+  --tracking-tight: var(--ls-tight);
+  --tracking-normal: var(--ls-normal);
+  --tracking-wide: var(--ls-wide);
+  --tracking-wider: var(--ls-wider);
+  --tracking-widest: var(--ls-widest);
+
+  /* Forma e profundidade */
+  --radius-none: var(--r-none);
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-pill: var(--r-pill);
+
+  --shadow-xs: var(--sh-xs);
+  --shadow-sm: var(--sh-sm);
+  --shadow-md: var(--sh-md);
+  --shadow-lg: var(--sh-lg);
+  --shadow-xl: var(--sh-xl);
+
+  /* Base de 4px. Mesma grade dos primitivos --space-*, então `p-4` e
+     `var(--space-4)` são o mesmo 16px por construção, não por coincidência. */
+  --spacing: 0.25rem;
+
+  /* Movimento.
+     Os primitivos usam prefixo --ez-* justamente porque --ease-* é namespace
+     do Tailwind: nomear igual produziria `--ease-out: var(--ease-out)`, uma
+     definição circular que o navegador descarta em silêncio. */
+  --ease-out: var(--ez-out);
+  --ease-in: var(--ez-in);
+  --ease-in-out: var(--ez-in-out);
+  --ease-spring: var(--ez-spring);
+}

@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import Modal from "react-modal";
+import "@pokedex/design-system/styles.css";
 import App from "./App";
 
 const container = document.getElementById("root");

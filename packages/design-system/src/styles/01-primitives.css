@@ -1,0 +1,239 @@
+/* ============================================================================
+   CAMADA 1 — PRIMITIVOS
+   ============================================================================
+
+   Material bruto. Rampas de cor, escalas de espaço e tipografia — sem nenhuma
+   noção de onde serão usados. "ink-700" não sabe que é a cor de um texto.
+
+   ┌────────────────────────────────────────────────────────────────────────┐
+   │ REGRA: nenhum componente referencia esta camada.                       │
+   │ Se um componente usa --ink-700 direto, o tema não é mais trocável e    │
+   │ o sistema vira um monte de CSS com nome bonito.                        │
+   │ Componente consome a camada 2 (semântica). Sem exceção.                │
+   └────────────────────────────────────────────────────────────────────────┘
+
+   Estes tokens ficam fora do @theme de propósito: não devem gerar utilitário
+   do Tailwind. Não existe `bg-ink-700` — existe `bg-surface-raised`.
+
+   Direção visual: catálogo de história natural. Papel marfim quente, tinta
+   quase preta, verde botânico e latão. Nada de neon.
+   ============================================================================ */
+
+:root {
+  /* ── Tinta — neutro quente, levemente terroso ────────────────────────────
+     Um cinza puro (#808080) ao lado do papel marfim parece sujo, azulado.
+     Toda a rampa carrega o mesmo viés quente do papel. */
+  --ink-50: #f7f6f3;
+  --ink-100: #edebe6;
+  --ink-200: #ddd9d1;
+  --ink-300: #c4beb2;
+  --ink-400: #a39c8d;
+  --ink-500: #827b6c;
+  --ink-600: #665f53;
+  --ink-700: #4c463d;
+  --ink-800: #332f29;
+  --ink-900: #1f1c18;
+  --ink-950: #121110;
+
+  /* ── Papel — superfícies claras ─────────────────────────────────────────
+     Separado da rampa de tinta porque superfície e texto evoluem em direções
+     diferentes: aqui os passos são mínimos, para empilhar cartões sem sujar. */
+  --paper-50: #fdfcfa;
+  --paper-100: #faf8f4;
+  --paper-200: #f4f1ea;
+  --paper-300: #ebe7dd;
+
+  /* ── Floresta — acento primário ──────────────────────────────────────────
+     Verde botânico profundo. Escolhido no lugar do vermelho da Pokédex por
+     dois motivos: o vermelho brigaria com o token de perigo, e verde sobre
+     marfim é a paleta de gabinete de história natural que a UI persegue. */
+  --forest-50: #f1f6f3;
+  --forest-100: #ddeae2;
+  --forest-200: #bcd5c7;
+  --forest-300: #92b8a5;
+  --forest-400: #669683;
+  --forest-500: #487968;
+  --forest-600: #386153;
+  --forest-700: #2e4e44;
+  --forest-800: #274038;
+  --forest-900: #223630;
+  --forest-950: #101e1a;
+
+  /* ── Latão — acento secundário ──────────────────────────────────────────
+     Destaque, estado de favorito, detalhe de ornamento. Nunca em texto
+     corrido: não alcança 4.5:1 sobre papel nos tons médios. */
+  --brass-50: #fbf7ec;
+  --brass-100: #f6edd3;
+  --brass-200: #edd9a4;
+  --brass-300: #e2c070;
+  --brass-400: #d9a94a;
+  --brass-500: #c98f2f;
+  --brass-600: #ae7025;
+  --brass-700: #8b5220;
+  --brass-800: #744221;
+  --brass-900: #63381f;
+  --brass-950: #391c0e;
+
+  /* ── Estado ─────────────────────────────────────────────────────────────
+     Rampas curtas — só os degraus que a UI realmente usa. */
+  --moss-100: #dcecd7;
+  --moss-500: #4f7a3f;
+  --moss-600: #3f6332;
+  --moss-700: #335028;
+
+  --amber-100: #fbecd0;
+  --amber-500: #b8801f;
+  --amber-600: #96661a;
+  --amber-700: #7a5316;
+
+  --rust-100: #f8ddd9;
+  --rust-500: #b8442f;
+  --rust-600: #983728;
+  --rust-700: #7c2e21;
+
+  --slate-100: #dce6ee;
+  --slate-500: #4a6b87;
+  --slate-600: #3b566d;
+  --slate-700: #314658;
+
+  /* ── Espaço — base 4px ──────────────────────────────────────────────────
+     Escala com passos crescentes: fina no começo (ajuste de ícone e chip),
+     larga no fim (respiro entre seções). Uma escala linear obriga a inventar
+     valores fora do sistema nos extremos. */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-1: 0.25rem; /*  4px */
+  --space-2: 0.5rem; /*  8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+  --space-32: 8rem; /* 128px */
+
+  /* ── Raio ───────────────────────────────────────────────────────────────
+     Deliberadamente contido. Raio grande lê como "app de celular"; o alvo
+     aqui é livro impresso. O maior valor não passa de 12px, exceto o pill. */
+  --r-none: 0;
+  --r-xs: 2px;
+  --r-sm: 3px;
+  --r-md: 5px;
+  --r-lg: 8px;
+  --r-xl: 12px;
+  --r-pill: 999px;
+  --r-circle: 50%;
+
+  /* ── Sombra ─────────────────────────────────────────────────────────────
+     Duas camadas cada: uma sombra de contato curta e fechada, e uma difusa
+     e ampla. Sombra de camada única sempre parece adesivo colado na tela.
+     Matiz quente (não preto puro) para não furar o papel marfim. */
+  --sh-xs: 0 1px 1px rgb(31 28 24 / 0.04);
+  --sh-sm:
+    0 1px 2px rgb(31 28 24 / 0.05), 0 1px 3px rgb(31 28 24 / 0.04);
+  --sh-md:
+    0 2px 4px rgb(31 28 24 / 0.05), 0 4px 12px rgb(31 28 24 / 0.06);
+  --sh-lg:
+    0 4px 8px rgb(31 28 24 / 0.06), 0 12px 28px rgb(31 28 24 / 0.08);
+  --sh-xl:
+    0 8px 16px rgb(31 28 24 / 0.07), 0 24px 56px rgb(31 28 24 / 0.10);
+
+  /* ── Tipografia ─────────────────────────────────────────────────────────
+     Fraunces (serifada variável) no display, Inter na interface.
+     Fraunces tem eixo de tamanho óptico: o desenho da letra muda conforme o
+     corpo, em vez de só escalar — é o que faz um título grande respirar. */
+  --ff-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --ff-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ff-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Escala tipográfica — razão ~1.2 (terça menor).
+     Mais contida que a 1.25 usual: com serifada de display, saltos grandes
+     ficam dramáticos demais para um catálogo. */
+  --fs-2xs: 0.6875rem; /* 11px */
+  --fs-xs: 0.75rem; /* 12px */
+  --fs-sm: 0.875rem; /* 14px */
+  --fs-base: 1rem; /* 16px */
+  --fs-lg: 1.125rem; /* 18px */
+  --fs-xl: 1.375rem; /* 22px */
+  --fs-2xl: 1.75rem; /* 28px */
+  --fs-3xl: 2.25rem; /* 36px */
+  --fs-4xl: 3rem; /* 48px */
+  --fs-5xl: 3.75rem; /* 60px */
+
+  --lh-none: 1;
+  --lh-tight: 1.2;
+  --lh-snug: 1.35;
+  --lh-normal: 1.55;
+  --lh-relaxed: 1.7;
+
+  --ls-tighter: -0.03em;
+  --ls-tight: -0.015em;
+  --ls-normal: 0;
+  --ls-wide: 0.02em;
+  --ls-wider: 0.06em;
+  --ls-widest: 0.14em;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ── Movimento ──────────────────────────────────────────────────────────
+     Curto por princípio. Acima de ~250ms uma transição de interface deixa
+     de parecer resposta e passa a parecer espera. */
+  --dur-instant: 80ms;
+  --dur-fast: 130ms;
+  --dur-normal: 190ms;
+  --dur-slow: 280ms;
+  --dur-slower: 420ms;
+
+  --ez-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ez-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ez-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ez-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Tipos elementais ───────────────────────────────────────────────────
+     18 matizes, uma por tipo. Versões dessaturadas e escurecidas das cores
+     canônicas: as originais são de plástico de brinquedo e, no CSS antigo,
+     inundavam o cartão inteiro atrás de uma borda de 24px.
+
+     Todas calibradas no mesmo intervalo de luminância, para que:
+       · nenhum tipo grite mais alto que outro numa grade;
+       · texto branco passe 4.5:1 sobre qualquer uma delas.
+     Aqui elas são pigmento de chip, não cor de fundo de cartão. */
+  --type-normal: #8a8578;
+  --type-fire: #c2542b;
+  --type-water: #3a6ea5;
+  --type-grass: #4e8b45;
+  --type-electric: #a67c1e;
+  --type-ice: #4a8794;
+  --type-fighting: #a34638;
+  --type-poison: #7d4a87;
+  --type-ground: #8f6c3a;
+  --type-flying: #6e7fb0;
+  --type-psychic: #b4527a;
+  --type-bug: #647f2e;
+  --type-rock: #7a6c47;
+  --type-ghost: #5d5480;
+  --type-dragon: #4b4fa0;
+  --type-dark: #4a4340;
+  --type-steel: #61707b;
+  --type-fairy: #b5658a;
+
+  /* ── Camadas ────────────────────────────────────────────────────────────
+     Nomeado e centralizado. É o que impede o z-index: 9999 de aparecer. */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-header: 200;
+  --z-overlay: 300;
+  --z-dialog: 400;
+  --z-popover: 500;
+  --z-tooltip: 600;
+  --z-toast: 700;
+}

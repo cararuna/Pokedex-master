@@ -1,0 +1,29 @@
+/* ============================================================================
+   DESIGN SYSTEM — ponto de entrada
+   ============================================================================
+
+   A ordem importa e não é arbitrária:
+
+     tailwind      motor de utilitários
+     01 primitivos material bruto            — não gera utilitário
+     02 semântica  papel + tema              — gera os utilitários
+     03 componente decisões por família
+     04 base       elementos nus
+
+   Cada camada só pode olhar para a anterior. Componente → semântica →
+   primitivo. Pular um degrau (componente lendo primitivo) quebra a troca de
+   tema, e é a única regra do sistema que não admite exceção.
+   ============================================================================ */
+
+@import "tailwindcss";
+
+/* Onde procurar classes. O Tailwind v4 detecta sozinho a partir da raiz do
+   projeto, mas num monorepo o pacote é consumido de fora — sem estas linhas,
+   as classes usadas em apps/web não entram no CSS gerado. */
+@source "../";
+@source "../../../../apps/web/src";
+
+@import "./01-primitives.css";
+@import "./02-semantic.css";
+@import "./03-components.css";
+@import "./04-base.css";
