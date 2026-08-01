@@ -35,7 +35,12 @@ const GAP: Record<SpaceToken, string> = {
  */
 interface StackProps extends React.HTMLAttributes<HTMLElement> {
   gap?: SpaceToken;
-  align?: "start" | "center" | "end" | "stretch";
+  /**
+   * `baseline` alinha pela linha de base do texto, não pela caixa. É o que
+   * mantém um rótulo pequeno e um valor grande assentados na mesma linha —
+   * com `center`, textos de corpos diferentes ficam visivelmente tortos.
+   */
+  align?: "start" | "center" | "end" | "stretch" | "baseline";
   justify?: "start" | "center" | "end" | "between";
   as?: "div" | "section" | "ul" | "li" | "nav";
 }
@@ -55,6 +60,7 @@ export const Stack = forwardRef<HTMLElement, StackProps>(function Stack(
         align === "center" && "items-center",
         align === "end" && "items-end",
         align === "stretch" && "items-stretch",
+        align === "baseline" && "items-baseline",
         justify === "center" && "justify-center",
         justify === "end" && "justify-end",
         justify === "between" && "justify-between",
@@ -82,6 +88,7 @@ export const Inline = forwardRef<HTMLElement, StackProps & { wrap?: boolean }>(
           align === "center" && "items-center",
           align === "end" && "items-end",
           align === "stretch" && "items-stretch",
+        align === "baseline" && "items-baseline",
           justify === "center" && "justify-center",
           justify === "end" && "justify-end",
           justify === "between" && "justify-between",
