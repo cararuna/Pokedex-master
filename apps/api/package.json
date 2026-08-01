@@ -1,0 +1,25 @@
+{
+  "name": "@pokedex/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "seed": "tsx scripts/seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.12",
+    "@supabase/supabase-js": "^2.111.0",
+    "dotenv": "^17.4.2",
+    "hono": "^4.12.33",
+    "openai": "^7.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
