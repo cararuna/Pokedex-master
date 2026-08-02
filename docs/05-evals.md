@@ -1,6 +1,72 @@
 # 05 — Evals
 
-> **Estado:** projetado, não implementado. Depende da API estar no ar.
+> **Estado:** implementado e rodando. 13 testes em 6 conjuntos.
+>
+> ```bash
+> pnpm dev:api                      # a API precisa estar no ar
+> pnpm --filter @pokedex/evals eval
+> pnpm --filter @pokedex/evals view # relatório navegável
+> ```
+
+## Resultados medidos
+
+### O que os evals encontraram
+
+Na primeira execução, **12 de 13**. A falha foi a mais valiosa do projeto:
+
+```
+"Como funciona a árvore de talentos no jogo?"   → status max_steps
+  [0] buscar_documentacao({area:"regras", pergunta:"como funciona a árvore de talentos"})
+  [1] buscar_documentacao({pergunta:"árvore de talentos tipo habilidades adquirir"})
+  [2] buscar_documentacao({pergunta:"talentos três por tipo verso carta"})
+  [3] buscar_documentacao({pergunta:"como Pokémon ganha talentos progressão evolução"})
+  46.724 tokens · US$ 0,056
+```
+
+A documentação **lista** os talentos mas não explica a mecânica de aquisição. Em
+vez de dizer "não encontrei", o agente reformulou a busca quatro vezes até
+estourar o orçamento.
+
+Dois defeitos, não um:
+
+1. **O agente insistia.** Corrigido no prompt (v2): proibição explícita de
+   repetir busca reformulada, mais a mesma instrução repetida no *resultado* da
+   ferramenta — onde ela chega no momento da decisão. Os trechos passaram a ser
+   truncados em 1.200 caracteres, porque o histórico acumula.
+
+2. **O status era enganoso.** Estouro de orçamento era reportado como
+   `max_steps`. São causas diferentes e pedem investigação diferente — laço de
+   ferramenta é problema de prompt; estouro de orçamento costuma ser resultado
+   grande demais. Virou `token_budget` (migration-003).
+
+### Scorecard por versão de prompt
+
+| Versão | Aprovados | Custo da suíte | Tokens | Latência mediana |
+|---|---|---|---|---|
+| v1 | 12/13 (92%) | US$ 0,1935 | 117.967 | 7.254 ms |
+| **v2** | **13/13 (100%)** | **US$ 0,1603** | **81.879** | 8.065 ms |
+
+No teste que falhava: **46.724 → 7.377 tokens**, US$ 0,056 → US$ 0,017. Uma
+mudança de prompt cortou 84% do custo daquela consulta.
+
+### Comparação entre modelos — suíte completa
+
+| Modelo | Aprovados | Custo/pergunta | Latência mediana |
+|---|---|---|---|
+| `anthropic/claude-sonnet-4.5` | **13/13** | US$ 0,01233 | 8.065 ms |
+| `google/gemini-2.5-flash` | 12/13 | **US$ 0,00060** | **5.038 ms** |
+
+**O Gemini custa 20× menos e é 37% mais rápido, com uma falha só** — e cosmética:
+ao recusar pergunta fora de escopo, ele declina educadamente mas não oferece o
+que sabe fazer. A rubrica exige as duas coisas.
+
+Na prática: com US$ 5 de crédito, o Sonnet dá ~400 perguntas; o Gemini, ~8.000.
+
+Este é o argumento mais forte a favor do OpenRouter. Trocar de modelo é uma
+linha no `.env`, e a comparação sai de dado em vez de opinião.
+
+> Amostra pequena — 13 testes. A tabela indica direção, não prova. Para decidir
+> de verdade, o conjunto precisaria de dezenas de casos por categoria.
 
 ## O problema
 

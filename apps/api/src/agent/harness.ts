@@ -62,7 +62,7 @@ export interface RunResult {
   steps: number;
   totalTokens: number;
   costUsd: number | null;
-  status: "ok" | "error" | "max_steps" | "timeout";
+  status: "ok" | "error" | "max_steps" | "token_budget" | "timeout";
   runId: string | null;
 }
 
@@ -147,7 +147,14 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
         return await finalizar("timeout", "A consulta demorou demais. Tente algo mais específico.");
       }
       if (totalTokens > tokenBudget) {
-        return await finalizar("max_steps", "A consulta ficou complexa demais. Tente dividir em partes.");
+        // Status próprio: estourar orçamento e estourar número de passos são
+        // causas diferentes e pedem investigação diferente. Reportar as duas
+        // como "max_steps" esconde qual delas aconteceu — foi o que atrapalhou
+        // o diagnóstico da primeira falha encontrada nos evals.
+        return await finalizar(
+          "token_budget",
+          "A consulta consumiu o orçamento de tokens. Tente uma pergunta mais específica.",
+        );
       }
 
       onEvent?.({ type: "step", index: passo });

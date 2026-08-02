@@ -268,12 +268,21 @@ const buscarDocumentacao: Tool = {
 
     return {
       encontrado: true,
+      // Instrução no próprio resultado, e não só no system prompt: aqui ela
+      // chega junto do dado, no momento em que o modelo decide o próximo passo.
+      instrucao:
+        "Responda com estes trechos. Se não cobrem a pergunta, diga o que " +
+        "não está documentado — não refaça a busca com outra redação.",
       trechos: trechos.map((t) => ({
         // A fonte vai junto para a resposta poder citar de onde veio.
         fonte: t.heading_path ?? t.title,
         arquivo: t.path,
         similaridade: Number(t.similarity.toFixed(3)),
-        conteudo: t.content,
+        // Truncado: cada trecho inteiro pode passar de 2.400 caracteres, e
+        // como o histórico acumula, quatro buscas chegaram a 46k tokens numa
+        // execução real. 1.200 preserva o argumento do parágrafo.
+        conteudo:
+          t.content.length > 1200 ? t.content.slice(0, 1200) + "…" : t.content,
       })),
     };
   },

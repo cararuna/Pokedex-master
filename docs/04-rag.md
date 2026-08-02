@@ -1,8 +1,11 @@
 # 04 — RAG
 
-> **Estado:** projetado, não implementado. O schema e a função de busca já
-> existem em [`schema.sql`](../apps/api/src/db/schema.sql). Falta a ingestão e
-> a ferramenta.
+> **Estado:** implementado e rodando. 116 chunks indexados a partir de docs/,
+> CLAUDE.md, PLANO.md e das descrições de talentos e habilidades.
+>
+> 
+>
+> Custo da indexação completa: **US$ 0,0004**.
 
 ## O que RAG resolve — e o que não resolve
 

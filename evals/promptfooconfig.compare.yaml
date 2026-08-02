@@ -16,7 +16,7 @@
 description: Custo x qualidade entre modelos
 
 providers:
-  - id: https://localhost:8787/agent/ask
+  - id: http://localhost:8787/agent/ask
     label: sonnet-4.5
     config:
       method: POST
@@ -26,7 +26,7 @@ providers:
         model: anthropic/claude-sonnet-4.5
       transformResponse: json
 
-  - id: https://localhost:8787/agent/ask
+  - id: http://localhost:8787/agent/ask
     label: gpt-4.1-mini
     config:
       method: POST
@@ -36,7 +36,7 @@ providers:
         model: openai/gpt-4.1-mini
       transformResponse: json
 
-  - id: https://localhost:8787/agent/ask
+  - id: http://localhost:8787/agent/ask
     label: gemini-2.5-flash
     config:
       method: POST
@@ -58,7 +58,7 @@ tests:
     assert:
       - type: javascript
         value: |
-          const r = JSON.parse(output);
+          const r = typeof output === "string" ? JSON.parse(output) : output;
           return r.answer.toLowerCase().includes("chariz") ? true
             : { pass: false, score: 0, reason: "não achou os Pokémon certos" };
 
@@ -67,6 +67,9 @@ tests:
       pergunta: "Fantasma tem vantagem contra fantasma nesse jogo?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Afirma que SIM, fantasma tem vantagem contra fantasma neste jogo.
 
@@ -82,6 +85,9 @@ tests:
       pergunta: "Por que o valor de um ataque é comprimido em três degraus?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Explica que o valor vira dificuldade de rolagem e que uma faixa de
           1 a 10 tornaria a maioria dos ataques irrelevante.

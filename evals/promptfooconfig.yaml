@@ -21,7 +21,7 @@ providers:
   # Alvo é o endpoint HTTP do próprio agente, não a LLM crua. É isso que faz o
   # eval medir o SISTEMA — prompt, ferramentas, banco e harness juntos — e não
   # só o modelo. Um agente pode ter um modelo excelente e ferramentas ruins.
-  - id: https://localhost:8787/agent/ask
+  - id: http://localhost:8787/agent/ask
     label: agente
     config:
       method: POST
@@ -46,7 +46,7 @@ defaultTest:
       threshold: 25000
     - type: javascript
       value: |
-        const r = JSON.parse(output);
+        const r = typeof output === "string" ? JSON.parse(output) : output;
         return r.status === "ok"
           ? true
           : { pass: false, score: 0, reason: `status ${r.status}` };
@@ -62,7 +62,7 @@ tests:
     assert:
       - type: javascript
         value: |
-          const r = JSON.parse(output);
+          const r = typeof output === "string" ? JSON.parse(output) : output;
           const t = r.answer.toLowerCase();
           return t.includes("charizard") || t.includes("charmander")
             ? true
@@ -78,7 +78,7 @@ tests:
     assert:
       - type: javascript
         value: |
-          const r = JSON.parse(output);
+          const r = typeof output === "string" ? JSON.parse(output) : output;
           const t = r.answer.toLowerCase();
           const esperados = ["future sight", "aura sphere", "swift", "ancient power"];
           const achados = esperados.filter(e => t.includes(e));
@@ -134,6 +134,9 @@ tests:
       pergunta: "Fantasma tem vantagem contra fantasma nesse jogo?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           A resposta afirma que SIM, o tipo fantasma (ghost) TEM vantagem contra
           fantasma neste jogo de tabuleiro. Responder que não tem, ou hesitar,
@@ -146,6 +149,9 @@ tests:
       - type: not-contains
         value: "90"
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           A resposta usa a escala do jogo (8, 9 ou 10) ou informa que o
           Charizard não aprende esse ataque. NÃO apresenta valores de dano da
@@ -156,6 +162,9 @@ tests:
       pergunta: "Qual o ataque mais forte do jogo e quanto ele causa?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Qualquer valor numérico de ataque citado está entre 8 e 10.
           Valores como 100, 120 ou 250 indicam que respondeu com dados da série.
@@ -171,13 +180,16 @@ tests:
       - type: not-contains
         value: "Paris"
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Diz educadamente que só ajuda com o jogo de tabuleiro e oferece o que
           consegue fazer. NÃO responde a pergunta de geografia.
       # Recusar não deve custar uma consulta ao banco.
       - type: javascript
         value: |
-          const r = JSON.parse(output);
+          const r = typeof output === "string" ? JSON.parse(output) : output;
           return r.steps === 0
             ? true
             : { pass: false, score: 0.5, reason: `chamou ferramenta ${r.steps}x sem necessidade` };
@@ -191,6 +203,9 @@ tests:
       pergunta: "Quem é mais forte?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Pede esclarecimento sobre o critério (valor de ataque, tipo,
           habilidade) ou sobre quais Pokémon comparar. NÃO escolhe um critério
@@ -202,6 +217,9 @@ tests:
     assert:
       # Miraidon é #1008, fora do recorte de 386 do jogo.
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Informa que não encontrou esse Pokémon nos dados do jogo. NÃO inventa
           ataques nem valores.
@@ -215,6 +233,9 @@ tests:
       pergunta: "Por que o valor de um ataque é comprimido em três degraus?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Explica que o valor vira dificuldade de rolagem na mesa e que uma
           faixa de 1 a 10 tornaria a maioria dos ataques irrelevante.
@@ -224,6 +245,9 @@ tests:
       pergunta: "Existe algum talento ou habilidade que remove status da equipe?"
     assert:
       - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
         value: >
           Cita uma habilidade ou talento concreto relacionado a remover status,
           com nome. Uma resposta genérica sem nome é falha.
