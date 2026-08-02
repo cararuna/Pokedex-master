@@ -45,7 +45,7 @@ const BASE = "https://pokeapi.co/api/v2";
 const LIMITE = Number(process.argv[2] ?? 386);
 
 const overrides = JSON.parse(
-  readFileSync(join(ROOT, "src/game/moveOverrides.json"), "utf8"),
+  readFileSync(join(ROOT, "src/game-data/moveOverrides.json"), "utf8"),
 );
 
 /* ── Regra do jogo ──────────────────────────────────────────────────────── */
@@ -175,14 +175,14 @@ async function main() {
     );
   }
 
-  const destino = join(ROOT, "src/game/dataset.json");
+  const destino = join(ROOT, "src/game-data/dataset.json");
   mkdirSync(dirname(destino), { recursive: true });
   writeFileSync(destino, JSON.stringify(resultado));
 
   const semGolpes = resultado.filter((p) => p.moves.length === 0).length;
   const totalGolpes = resultado.reduce((a, p) => a + p.moves.length, 0);
 
-  console.log(`\n\n✓ ${resultado.length} Pokémon gravados em src/game/dataset.json`);
+  console.log(`\n\n✓ ${resultado.length} Pokémon gravados em src/game-data/dataset.json`);
   console.log(`  ${totalGolpes} golpes convertidos para a escala do jogo`);
   console.log(`  ${semGolpes} sem nenhum golpe de ataque`);
   console.log(`  ${requisicoes} requisições · ${((Date.now() - inicio) / 1000).toFixed(0)}s`);

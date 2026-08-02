@@ -41,6 +41,15 @@ const agenteConfigurado = () =>
  */
 const app = new Hono();
 
+/**
+ * CORS só importa em desenvolvimento, onde o front (:3000) e a API (:8787)
+ * são origens diferentes. Publicados, os dois vivem no mesmo domínio da
+ * Vercel e o navegador nem envia preflight.
+ *
+ * `WEB_ORIGIN` continua explícito em vez de `*`: liberar qualquer origem numa
+ * API que fala com o banco é abrir para qualquer site chamar em nome de quem
+ * estiver navegando.
+ */
 app.use(
   "*",
   cors({
@@ -103,11 +112,33 @@ app.get("/pokemon", async (c) => {
     const { data, error, count } = await q;
     if (error) return c.json({ erro: error.message }, 500);
 
+    // Com filtro por tipo, a consulta parte de pokemon_moves — então os demais
+    // golpes de cada Pokémon precisam de uma segunda busca. Uma só, com IN,
+    // e não uma por Pokémon.
+    const ids = [...new Set((data ?? []).map((r: any) => r.pokemon.id))];
+    const golpesPorPokemon = new Map<number, any[]>();
+
+    if (ids.length) {
+      const { data: todos } = await db
+        .from("pokemon_moves")
+        .select("pokemon_id, attack_name, move_type, game_power")
+        .in("pokemon_id", ids);
+
+      for (const g of todos ?? []) {
+        const lista = golpesPorPokemon.get(g.pokemon_id) ?? [];
+        lista.push(g);
+        golpesPorPokemon.set(g.pokemon_id, lista);
+      }
+    }
+
     return c.json({
       total: count ?? 0,
       pagina,
       itens: (data ?? []).map((r: any) => ({
         ...r.pokemon,
+        pokemon_moves: (golpesPorPokemon.get(r.pokemon.id) ?? []).sort(
+          (a, b) => b.game_power - a.game_power,
+        ),
         ataque_destacado: {
           nome: r.attack_name,
           tipo: r.move_type,
@@ -117,9 +148,14 @@ app.get("/pokemon", async (c) => {
     });
   }
 
+  // Os golpes vêm junto, por join. A frente da carta mostra todos eles — sem
+  // isso o front faria 24 requisições de detalhe por página, que é exatamente
+  // o padrão que esta migração veio eliminar.
   let q = db
     .from("pokemon")
-    .select("id, slug, dex_number, types, sprites", { count: "exact" })
+    .select("id, slug, dex_number, types, sprites, pokemon_moves(attack_name, move_type, game_power)", {
+      count: "exact",
+    })
     .order("dex_number")
     .range(de, de + por_pagina - 1);
 
@@ -128,7 +164,18 @@ app.get("/pokemon", async (c) => {
   const { data, error, count } = await q;
   if (error) return c.json({ erro: error.message }, 500);
 
-  return c.json({ total: count ?? 0, pagina, itens: data ?? [] });
+  return c.json({
+    total: count ?? 0,
+    pagina,
+    itens: (data ?? []).map((p: any) => ({
+      ...p,
+      // Ordenado aqui e não no banco: o PostgREST não ordena tabela aninhada,
+      // e a carta lista do mais forte para o mais fraco.
+      pokemon_moves: [...(p.pokemon_moves ?? [])].sort(
+        (a, b) => b.game_power - a.game_power,
+      ),
+    })),
+  });
 });
 
 /** Ficha completa: golpes, habilidades inatas e talentos dos seus tipos. */
@@ -265,16 +312,28 @@ app.post("/agent/ask", async (c) => {
   return c.json(resultado);
 });
 
-serve({ fetch: app.fetch, port: serverEnv.PORT }, (info) => {
-  console.log(`\n  API em http://localhost:${info.port}`);
-  console.log(`  Catálogo: pronto`);
-  console.log(
-    `  Agente:   ${
-      agenteConfigurado()
-        ? process.env.OPENROUTER_MODEL
-        : "não configurado (falta OPENROUTER_API_KEY)"
-    }\n`,
-  );
-});
+/**
+ * Só sobe um servidor HTTP quando executado diretamente.
+ *
+ * Na Vercel este módulo é importado por `api/[[...route]].ts`, que entrega o
+ * `fetch` do app para o runtime serverless. Chamar `serve()` ali tentaria
+ * abrir uma porta dentro de uma função — que não tem porta, e falharia no
+ * cold start.
+ *
+ * `VERCEL` é definida pela própria plataforma no build e no runtime.
+ */
+if (!process.env.VERCEL) {
+  serve({ fetch: app.fetch, port: serverEnv.PORT }, (info) => {
+    console.log(`\n  API em http://localhost:${info.port}`);
+    console.log(`  Catálogo: pronto`);
+    console.log(
+      `  Agente:   ${
+        agenteConfigurado()
+          ? process.env.OPENROUTER_MODEL
+          : "não configurado (falta OPENROUTER_API_KEY)"
+      }\n`,
+    );
+  });
+}
 
 export default app;

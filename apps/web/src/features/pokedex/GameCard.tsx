@@ -1,5 +1,5 @@
-import { useId, useState } from "react";
-import { Tooltip } from "@pokedex/design-system";
+import { useEffect, useId, useState } from "react";
+import { Skeleton, Tooltip } from "@pokedex/design-system";
 import {
   formatMoveName,
   formatName,
@@ -9,8 +9,17 @@ import {
   type GamePokemon,
   type GameType,
 } from "../../game/rules";
-import { innateAbilities, typeTalentTrees } from "../../game/talentTrees";
+import { obterPokemon, type ApiPokemonDetail } from "../../lib/api";
 import { TypeIcon } from "./TypeIcon";
+
+/**
+ * Cache do verso, por sessão.
+ *
+ * Talentos e habilidades vinham de `talentTrees.ts`, importado no bundle.
+ * Agora vêm do banco — mas só quando a carta é virada. Carregá-los na
+ * listagem multiplicaria por 24 um dado que a maioria das cartas nunca mostra.
+ */
+const versoCache = new Map<string, ApiPokemonDetail>();
 
 /**
  * Carta de referência do jogo de tabuleiro.
@@ -88,7 +97,11 @@ export function GameCard({ pokemon, spriteKey, highlightMoveType }: Props) {
         </Face>
 
         <Face back hidden={!flipped} id={backId}>
-          <VersoDaCarta pokemon={pokemon} onFlip={() => setFlipped(false)} />
+          <VersoDaCarta
+            pokemon={pokemon}
+            onFlip={() => setFlipped(false)}
+            ativo={flipped}
+          />
         </Face>
       </div>
     </div>
@@ -299,11 +312,41 @@ function MoveRow({ move, destacado }: { move: GameMove; destacado: boolean }) {
 function VersoDaCarta({
   pokemon,
   onFlip,
+  ativo,
 }: {
   pokemon: GamePokemon;
   onFlip: () => void;
+  /** Só busca quando a carta é realmente virada. */
+  ativo: boolean;
 }) {
-  const inatas = innateAbilities[pokemon.slug] ?? [];
+  const [dados, setDados] = useState<ApiPokemonDetail | null>(
+    () => versoCache.get(pokemon.slug) ?? null,
+  );
+  const [erro, setErro] = useState(false);
+
+  useEffect(() => {
+    if (!ativo || dados) return;
+
+    const controller = new AbortController();
+    obterPokemon(pokemon.slug, controller.signal)
+      .then((d) => {
+        versoCache.set(pokemon.slug, d);
+        setDados(d);
+      })
+      .catch((e) => {
+        // Abortar ao fechar a carta não é erro — só cancelamento.
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setErro(true);
+      });
+
+    return () => controller.abort();
+  }, [ativo, dados, pokemon.slug]);
+
+  const inatas = dados?.habilidades_inatas ?? [];
+  const talentosPorTipo = new Map<string, ApiPokemonDetail["talentos"]>();
+  for (const t of dados?.talentos ?? []) {
+    talentosPorTipo.set(t.type, [...(talentosPorTipo.get(t.type) ?? []), t]);
+  }
 
   return (
     <>
@@ -326,10 +369,21 @@ function VersoDaCarta({
       {/* O verso rola de verdade: a árvore de talentos de um Pokémon de dois
           tipos mais as inatas passa de 34rem com frequência. */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        {erro ? (
+          <p className="py-4 text-xs text-danger-text">
+            Não foi possível carregar os talentos.
+          </p>
+        ) : !dados ? (
+          <div className="flex flex-col gap-2" aria-busy="true">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={i} height={38} />
+            ))}
+          </div>
+        ) : (
         <div className="flex flex-col gap-4">
           {pokemon.types.map((type) => {
-            const tree = typeTalentTrees[type];
-            if (!tree) return null;
+            const talentos = talentosPorTipo.get(type);
+            if (!talentos?.length) return null;
 
             return (
               <section key={type}>
@@ -338,7 +392,7 @@ function VersoDaCarta({
                   {TYPE_LABELS[type]}
                 </h4>
                 <ul className="flex flex-col gap-1.5">
-                  {tree.talents.map((t) => (
+                  {talentos.map((t) => (
                     <TalentItem
                       key={t.name}
                       nome={t.name}
@@ -368,6 +422,7 @@ function VersoDaCarta({
             </section>
           )}
         </div>
+        )}
       </div>
     </>
   );

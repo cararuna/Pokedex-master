@@ -21,7 +21,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { db } from "../src/db/client";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
-const WEB = join(AQUI, "../../web/src/game");
+/** Dados do jogo. Vivem no backend desde que o front passou a ler da API. */
+const DADOS = join(AQUI, "../src/game-data");
+/** rules.ts segue no front: é a fonte da regra que a interface também aplica. */
+const REGRAS = join(AQUI, "../../web/src/game");
 
 /**
  * O `import()` dinâmico exige URL, não caminho de sistema de arquivos. No
@@ -29,8 +32,8 @@ const WEB = join(AQUI, "../../web/src/game");
  * o `D:` como esquema de protocolo — daí `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
  * `pathToFileURL` resolve, e é inócuo no Linux e no macOS.
  */
-const moduloDoJogo = (arquivo: string) =>
-  pathToFileURL(join(WEB, arquivo)).href;
+const moduloDeDados = (arquivo: string) => pathToFileURL(join(DADOS, arquivo)).href;
+const moduloDeRegras = (arquivo: string) => pathToFileURL(join(REGRAS, arquivo)).href;
 
 interface GameMove {
   attackName: string;
@@ -53,7 +56,7 @@ interface GamePokemon {
  * seed nunca fica defasado em relação ao que a tela mostra.
  */
 async function carregarTalentos() {
-  const mod = await import(moduloDoJogo("talentTrees.ts"));
+  const mod = await import(moduloDeDados("talentTrees.ts"));
   return {
     typeTalentTrees: mod.typeTalentTrees as Record<
       string,
@@ -67,7 +70,7 @@ async function carregarTalentos() {
 }
 
 async function carregarVantagens() {
-  const mod = await import(moduloDoJogo("rules.ts"));
+  const mod = await import(moduloDeRegras("rules.ts"));
   return mod.TYPE_ADVANTAGES as Record<string, string[]>;
 }
 
@@ -146,7 +149,7 @@ async function main() {
   console.log("Carregando dados do frontend…");
 
   const pokemon = JSON.parse(
-    readFileSync(join(WEB, "dataset.json"), "utf8"),
+    readFileSync(join(DADOS, "dataset.json"), "utf8"),
   ) as GamePokemon[];
   const { typeTalentTrees, innateAbilities } = await carregarTalentos();
   const advantages = await carregarVantagens();

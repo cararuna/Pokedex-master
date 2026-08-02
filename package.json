@@ -18,5 +18,8 @@
     "seed": "pnpm --filter @pokedex/api seed",
     "ingest": "pnpm --filter @pokedex/api ingest",
     "eval": "pnpm --filter @pokedex/evals eval"
+  },
+  "dependencies": {
+    "hono": "^4.12.33"
   }
 }

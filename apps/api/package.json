@@ -8,7 +8,8 @@
     "start": "tsx src/index.ts",
     "seed": "tsx scripts/seed.ts",
     "typecheck": "tsc --noEmit",
-    "ingest": "tsx scripts/ingest-docs.ts"
+    "ingest": "tsx scripts/ingest-docs.ts",
+    "build-dataset": "tsx scripts/build-dataset.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.12",

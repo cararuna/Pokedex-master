@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   CardGrid,
@@ -12,20 +12,51 @@ import {
   TooltipProvider,
   useTheme,
 } from "@pokedex/design-system";
-import dataset from "../../game/dataset.json";
 import {
   POKEMON_TYPES,
   SPRITE_SETS,
   TYPE_LABELS,
+  type GameMove,
   type GamePokemon,
   type GameType,
 } from "../../game/rules";
+import { listarPokemon, ApiOfflineError, type ApiPokemon } from "../../lib/api";
 import { GameCard } from "./GameCard";
 import { TypeIcon } from "./TypeIcon";
 import { AgentPanel } from "../agent-chat/AgentPanel";
 
-const POKEMON = dataset as unknown as GamePokemon[];
 const POR_PAGINA = 24;
+
+/**
+ * Converte o formato da API para o que a carta consome.
+ *
+ * A API usa snake_case, como as colunas do Postgres; o front usa camelCase.
+ * Traduzir aqui, num lugar só, evita espalhar `dex_number` e `game_power`
+ * pelos componentes — e mantém `GameCard` indiferente à origem do dado.
+ */
+function paraCarta(p: ApiPokemon & { pokemon_moves?: unknown[] }): GamePokemon {
+  const golpes = (p.pokemon_moves ?? []) as {
+    attack_name: string;
+    move_type: string;
+    game_power: number;
+  }[];
+
+  return {
+    id: p.id,
+    dexNumber: p.dex_number,
+    slug: p.slug,
+    types: p.types as GameType[],
+    abilities: [],
+    sprites: p.sprites,
+    moves: golpes.map(
+      (m): GameMove => ({
+        attackName: m.attack_name,
+        moveType: m.move_type as GameType,
+        power: m.game_power,
+      }),
+    ),
+  };
+}
 
 /**
  * Consulta de cartas do jogo de tabuleiro.
@@ -49,36 +80,54 @@ export function PokedexPage() {
   const [spriteKey, setSpriteKey] = useState<string>("generation-iii");
   const [pagina, setPagina] = useState(1);
 
-  const filtrados = useMemo(() => {
-    const termo = busca.trim().toLowerCase();
+  const [visiveis, setVisiveis] = useState<GamePokemon[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [erro, setErro] = useState<string | null>(null);
 
-    return POKEMON.filter((p) => {
-      // O filtro central: aprende ataque deste tipo?
-      if (tipoDeAtaque !== "all") {
-        if (!p.moves.some((m) => m.moveType === tipoDeAtaque)) return false;
-      }
-      if (!termo) return true;
-      return p.slug.includes(termo) || String(p.dexNumber) === termo;
-    }).sort((a, b) => {
-      // Com filtro ativo, os de maior valor naquele tipo vêm primeiro — é a
-      // pergunta real do jogador: "quem bate mais forte de fogo?"
-      if (tipoDeAtaque !== "all") {
-        const va = a.moves.find((m) => m.moveType === tipoDeAtaque)?.power ?? 0;
-        const vb = b.moves.find((m) => m.moveType === tipoDeAtaque)?.power ?? 0;
-        if (va !== vb) return vb - va;
-      }
-      return a.dexNumber - b.dexNumber;
-    });
-  }, [busca, tipoDeAtaque]);
+  /**
+   * Busca no servidor, com atraso.
+   *
+   * O filtro deixou de rodar em memória: agora é `ilike` no Postgres. Sem o
+   * atraso, cada tecla digitada viraria uma requisição — "charizard" mandaria
+   * nove, e a resposta da última não é necessariamente a que chega por último.
+   * O AbortController resolve a corrida; os 300ms evitam a rajada.
+   */
+  useEffect(() => {
+    const controller = new AbortController();
+    const atraso = busca ? 300 : 0;
 
-  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
-  const paginaSegura = Math.min(pagina, totalPaginas);
-  const visiveis = filtrados.slice(
-    (paginaSegura - 1) * POR_PAGINA,
-    paginaSegura * POR_PAGINA,
-  );
+    const timer = setTimeout(() => {
+      setErro(null);
+      listarPokemon(
+        { busca, tipoDeAtaque, pagina, porPagina: POR_PAGINA },
+        controller.signal,
+      )
+        .then((r) => {
+          setVisiveis(r.itens.map(paraCarta));
+          setTotal(r.total);
+        })
+        .catch((e) => {
+          if (e instanceof DOMException && e.name === "AbortError") return;
+          setVisiveis([]);
+          setErro(
+            e instanceof ApiOfflineError
+              ? "A API não está no ar. Suba com `pnpm dev:api`."
+              : e instanceof Error
+                ? e.message
+                : "Falha ao carregar.",
+          );
+        });
+    }, atraso);
 
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [busca, tipoDeAtaque, pagina]);
+
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const temFiltro = busca !== "" || tipoDeAtaque !== "all";
+  const carregando = visiveis === null;
 
   function limpar() {
     setBusca("");
@@ -136,12 +185,19 @@ export function PokedexPage() {
 
             <Inline justify="between" align="center">
               <p className="text-sm text-text-muted" aria-live="polite">
-                <strong className="font-semibold text-text">
-                  {filtrados.length}
-                </strong>{" "}
-                {filtrados.length === 1 ? "Pokémon" : "Pokémon"}
-                {tipoDeAtaque !== "all" && (
-                  <> aprendem ataque de {TYPE_LABELS[tipoDeAtaque as GameType]}</>
+                {carregando ? (
+                  "Consultando…"
+                ) : (
+                  <>
+                    <strong className="font-semibold text-text">{total}</strong>{" "}
+                    Pokémon
+                    {tipoDeAtaque !== "all" && (
+                      <>
+                        {" "}
+                        aprendem ataque de {TYPE_LABELS[tipoDeAtaque as GameType]}
+                      </>
+                    )}
+                  </>
                 )}
               </p>
               {temFiltro && (
@@ -151,7 +207,24 @@ export function PokedexPage() {
               )}
             </Inline>
 
-            {visiveis.length === 0 ? (
+            {erro ? (
+              <EmptyState
+                title="Não foi possível carregar"
+                description={erro}
+                action={{ label: "Tentar de novo", onClick: () => location.reload() }}
+              />
+            ) : carregando ? (
+              // Placeholders com a altura fixa da carta: a grade não desloca
+              // quando o resultado chega.
+              <CardGrid className="[--grid-card-min:19rem]">
+                {Array.from({ length: POR_PAGINA }, (_, i) => (
+                  <div
+                    key={i}
+                    className="h-[var(--game-card-height)] animate-pulse rounded-[var(--card-radius)] border border-border bg-surface-raised"
+                  />
+                ))}
+              </CardGrid>
+            ) : visiveis.length === 0 ? (
               <EmptyState
                 title="Nenhum Pokémon encontrado"
                 description={
@@ -179,7 +252,7 @@ export function PokedexPage() {
                 </CardGrid>
 
                 <Pagination
-                  page={paginaSegura}
+                  page={pagina}
                   totalPages={totalPaginas}
                   onPageChange={(p) => {
                     setPagina(p);
