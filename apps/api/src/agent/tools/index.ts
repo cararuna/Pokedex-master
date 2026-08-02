@@ -221,12 +221,71 @@ const regraDeConversao: Tool = {
   },
 };
 
+/* ── Busca em texto livre ─────────────────────────────────────────────────── */
+
+/**
+ * A única ferramenta com RAG. Todas as outras são SQL.
+ *
+ * A separação é a decisão de arquitetura mais importante do agente: dado
+ * estruturado tem ferramenta com SQL, texto livre tem RAG. Perguntar "quem
+ * bate 10 de fogo" a um índice vetorial devolveria os trechos mais parecidos
+ * com a frase — não a resposta. Vetor não conta, não ordena, não compara.
+ */
+const buscarDocumentacao: Tool = {
+  name: "buscar_documentacao",
+  description:
+    "Busca em texto livre na documentação do projeto e nas descrições de " +
+    "talentos e habilidades. Use para perguntas conceituais ou de regra em " +
+    "prosa: 'como funciona a árvore de talentos', 'por que o valor é " +
+    "comprimido', 'qual talento remove status', 'como o design system organiza " +
+    "os tokens'. NÃO use para consultar Pokémon, ataques ou valores — para " +
+    "isso existem as ferramentas de SQL, que são exatas.",
+  schema: z.object({
+    pergunta: z
+      .string()
+      .describe("A pergunta em linguagem natural, como a pessoa fez"),
+    area: z
+      .enum(["design-system", "arquitetura", "regras"])
+      .optional()
+      .describe("Restringe a busca. Omita quando estiver em dúvida."),
+    limite: z.number().min(1).max(8).default(5),
+  }),
+  async execute({ pergunta, area, limite }) {
+    const { buscarTrechos } = await import("../../rag/search");
+    const trechos = await buscarTrechos(pergunta, { limite, kind: area ?? null });
+
+    if (trechos.length === 0) {
+      // Importante devolver isto explicitamente: a busca vetorial sempre traz
+      // os k mais próximos, então "nada relevante" precisa ser dito, senão o
+      // modelo assume que o vazio é a resposta.
+      return {
+        encontrado: false,
+        aviso:
+          "Nenhum trecho suficientemente relevante. Diga que não encontrou " +
+          "na documentação em vez de deduzir.",
+      };
+    }
+
+    return {
+      encontrado: true,
+      trechos: trechos.map((t) => ({
+        // A fonte vai junto para a resposta poder citar de onde veio.
+        fonte: t.heading_path ?? t.title,
+        arquivo: t.path,
+        similaridade: Number(t.similarity.toFixed(3)),
+        conteudo: t.content,
+      })),
+    };
+  },
+};
+
 export const tools: Tool[] = [
   buscarPokemon,
   fichaDoPokemon,
   vantagemDeTipo,
   talentosDoTipo,
   regraDeConversao,
+  buscarDocumentacao,
 ];
 
 export const toolsByName = new Map(tools.map((t) => [t.name, t]));

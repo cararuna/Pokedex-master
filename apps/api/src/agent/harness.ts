@@ -37,6 +37,14 @@ export interface RunOptions {
   tokenBudget?: number;
   /** Teto de tempo total, em ms. */
   timeoutMs?: number;
+  /**
+   * Sobrescreve o modelo desta execução.
+   *
+   * Existe para os evals: permite rodar o mesmo conjunto de testes contra
+   * vários modelos sem reiniciar a API nem tocar no .env — que é o que torna
+   * a comparação de custo versus qualidade viável.
+   */
+  model?: string;
   /** Recebe cada evento — usado pelo endpoint SSE. */
   onEvent?: (event: AgentEvent) => void;
 }
@@ -116,11 +124,12 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
     maxSteps = 8,
     tokenBudget = 30_000,
     timeoutMs = 60_000,
+    model = MODEL,
     onEvent,
   } = options;
 
   const inicio = Date.now();
-  const runId = await iniciarTrace({ sessionId, userMessage: message, model: MODEL });
+  const runId = await iniciarTrace({ sessionId, userMessage: message, model });
 
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -145,7 +154,7 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
       const t0 = Date.now();
 
       const completion = await llm.chat.completions.create({
-        model: MODEL,
+        model,
         messages,
         tools: toOpenAITools(),
         // "auto" e não "required": muita pergunta ("o que você faz?") não

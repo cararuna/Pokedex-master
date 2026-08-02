@@ -186,6 +186,17 @@ app.get("/vantagens", async (c) => {
 const chatSchema = z.object({
   message: z.string().min(1).max(2000),
   sessionId: z.string().optional(),
+  /**
+   * Override de modelo, usado pelos evals para comparar custo x qualidade.
+   *
+   * Restrito ao formato "fornecedor/modelo" do OpenRouter: sem isso, o corpo
+   * da requisição vira um campo livre e qualquer cliente poderia apontar a
+   * conta para o modelo mais caro do catálogo.
+   */
+  model: z
+    .string()
+    .regex(/^[a-z0-9-]+\/[a-z0-9.:-]+$/i, "ID de modelo inválido")
+    .optional(),
 });
 
 /**
@@ -218,6 +229,7 @@ app.post("/agent/chat", async (c) => {
     await runAgent({
       message: body.data.message,
       sessionId: body.data.sessionId,
+      model: body.data.model,
       onEvent: (event) => {
         void stream.writeSSE({
           event: event.type,
@@ -247,6 +259,7 @@ app.post("/agent/ask", async (c) => {
   const resultado = await runAgent({
     message: body.data.message,
     sessionId: body.data.sessionId,
+    model: body.data.model,
   });
 
   return c.json(resultado);

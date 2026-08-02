@@ -60,7 +60,7 @@ const llmSchema = z.object({
    * comparar custo e qualidade nos evals vira mudança de config, não de código.
    */
   OPENROUTER_MODEL: z.string().default("anthropic/claude-sonnet-4.5"),
-  OPENROUTER_EMBEDDING_MODEL: z.string().default("cohere/embed-v1"),
+  OPENROUTER_EMBEDDING_MODEL: z.string().default("openai/text-embedding-3-small"),
 });
 
 let llmCache: z.infer<typeof llmSchema> | null = null;

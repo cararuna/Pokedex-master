@@ -1,0 +1,229 @@
+# =============================================================================
+# Evals do agente
+# =============================================================================
+#
+# Teste automatizado para saída não-determinística. A mesma pergunta gera
+# textos diferentes, todos possivelmente corretos — então asserimos o que é
+# verificável e usamos rubrica de LLM só onde não dá.
+#
+# Pré-requisitos:
+#   1. API no ar          pnpm dev:api
+#   2. Banco populado     pnpm --filter @pokedex/api seed
+#   3. Docs indexados     pnpm --filter @pokedex/api ingest
+#
+# Rodar:  pnpm --filter @pokedex/evals eval
+# Ver:    pnpm --filter @pokedex/evals view
+# =============================================================================
+
+description: Agente do companion de jogo de tabuleiro
+
+providers:
+  # Alvo é o endpoint HTTP do próprio agente, não a LLM crua. É isso que faz o
+  # eval medir o SISTEMA — prompt, ferramentas, banco e harness juntos — e não
+  # só o modelo. Um agente pode ter um modelo excelente e ferramentas ruins.
+  - id: https://localhost:8787/agent/ask
+    label: agente
+    config:
+      method: POST
+      headers:
+        Content-Type: application/json
+      body:
+        message: "{{pergunta}}"
+      # O harness devolve { answer, steps, totalTokens, costUsd, status, runId }
+      transformResponse: json
+
+# Um único bloco defaultTest. Declarar duas vezes faz o YAML manter só o
+# último e descartar o outro em silêncio.
+defaultTest:
+  options:
+    # Quem julga as rubricas. Sai por variável de ambiente pela mesma razão do
+    # agente: dá para trocar o juiz sem tocar nos testes.
+    provider: openrouter:anthropic/claude-sonnet-4.5
+  assert:
+    # Teto de latência: numa mesa de jogo, resposta correta em 30 segundos
+    # ainda é regressão.
+    - type: latency
+      threshold: 25000
+    - type: javascript
+      value: |
+        const r = JSON.parse(output);
+        return r.status === "ok"
+          ? true
+          : { pass: false, score: 0, reason: `status ${r.status}` };
+
+tests:
+  # ───────────────────────────────────────────────────────────────────────────
+  # 1. FACTUAL — a resposta confere com o banco?
+  # ───────────────────────────────────────────────────────────────────────────
+
+  - description: "factual · quem bate 10 de fogo"
+    vars:
+      pergunta: "Quem aprende ataque de fogo com valor 10? Liste alguns."
+    assert:
+      - type: javascript
+        value: |
+          const r = JSON.parse(output);
+          const t = r.answer.toLowerCase();
+          return t.includes("charizard") || t.includes("charmander")
+            ? true
+            : { pass: false, score: 0, reason: "não citou nenhum dos Pokémon corretos" };
+      # O dano da série NUNCA deve aparecer. Se aparecer, o modelo respondeu
+      # de memória em vez de consultar — é o sintoma mais objetivo disso.
+      - type: not-contains
+        value: "110"
+
+  - description: "factual · ficha completa"
+    vars:
+      pergunta: "Quais os ataques do Mewtwo?"
+    assert:
+      - type: javascript
+        value: |
+          const r = JSON.parse(output);
+          const t = r.answer.toLowerCase();
+          const esperados = ["future sight", "aura sphere", "swift", "ancient power"];
+          const achados = esperados.filter(e => t.includes(e));
+          return achados.length >= 3
+            ? true
+            : { pass: false, score: achados.length / 4,
+                reason: `citou ${achados.length}/4 ataques reais` };
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 2. SELEÇÃO DE FERRAMENTA — chegou pelo caminho certo?
+  #
+  # A métrica mais reveladora. Um agente pode acertar a resposta pelo caminho
+  # errado — e aí acertou por sorte, e vai errar quando o dado mudar.
+  # ───────────────────────────────────────────────────────────────────────────
+
+  - description: "tool · vantagem usa a ferramenta de vantagem"
+    vars:
+      pergunta: "Contra o que o tipo fantasma tem vantagem?"
+    assert:
+      - type: javascript
+        value: file://asserts/usou-ferramenta.js
+        config:
+          esperada: vantagem_de_tipo
+
+  - description: "tool · busca por tipo de ataque usa buscar_pokemon"
+    vars:
+      pergunta: "Quais Pokémon aprendem ataque de gelo?"
+    assert:
+      - type: javascript
+        value: file://asserts/usou-ferramenta.js
+        config:
+          esperada: buscar_pokemon
+
+  - description: "tool · pergunta conceitual usa RAG, não SQL"
+    vars:
+      pergunta: "Como funciona a árvore de talentos no jogo?"
+    assert:
+      - type: javascript
+        value: file://asserts/usou-ferramenta.js
+        config:
+          esperada: buscar_documentacao
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 3. CONHECIMENTO PRÉVIO ERRADO — o caso crítico deste domínio
+  #
+  # O modelo CONHECE Pokémon. Sabe que na série fantasma não acerta fantasma e
+  # que Lança-chamas tem 90 de poder. Nos dois casos, está errado aqui.
+  # Este é o conjunto que mais justifica ter eval neste projeto.
+  # ───────────────────────────────────────────────────────────────────────────
+
+  - description: "prévio · fantasma acerta fantasma (difere da série)"
+    vars:
+      pergunta: "Fantasma tem vantagem contra fantasma nesse jogo?"
+    assert:
+      - type: llm-rubric
+        value: >
+          A resposta afirma que SIM, o tipo fantasma (ghost) TEM vantagem contra
+          fantasma neste jogo de tabuleiro. Responder que não tem, ou hesitar,
+          é falha — é a regra da série, não a deste jogo.
+
+  - description: "prévio · não cita dano da série"
+    vars:
+      pergunta: "Quanto de dano faz o Lança-chamas do Charizard?"
+    assert:
+      - type: not-contains
+        value: "90"
+      - type: llm-rubric
+        value: >
+          A resposta usa a escala do jogo (8, 9 ou 10) ou informa que o
+          Charizard não aprende esse ataque. NÃO apresenta valores de dano da
+          série de videogame como se fossem do jogo de tabuleiro.
+
+  - description: "prévio · escala do jogo, não da série"
+    vars:
+      pergunta: "Qual o ataque mais forte do jogo e quanto ele causa?"
+    assert:
+      - type: llm-rubric
+        value: >
+          Qualquer valor numérico de ataque citado está entre 8 e 10.
+          Valores como 100, 120 ou 250 indicam que respondeu com dados da série.
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 4. FORA DE ESCOPO — recusa e redireciona?
+  # ───────────────────────────────────────────────────────────────────────────
+
+  - description: "escopo · recusa pergunta sem relação"
+    vars:
+      pergunta: "Qual a capital da França?"
+    assert:
+      - type: not-contains
+        value: "Paris"
+      - type: llm-rubric
+        value: >
+          Diz educadamente que só ajuda com o jogo de tabuleiro e oferece o que
+          consegue fazer. NÃO responde a pergunta de geografia.
+      # Recusar não deve custar uma consulta ao banco.
+      - type: javascript
+        value: |
+          const r = JSON.parse(output);
+          return r.steps === 0
+            ? true
+            : { pass: false, score: 0.5, reason: `chamou ferramenta ${r.steps}x sem necessidade` };
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 5. AMBIGUIDADE — pergunta em vez de chutar?
+  # ───────────────────────────────────────────────────────────────────────────
+
+  - description: "ambíguo · pede critério"
+    vars:
+      pergunta: "Quem é mais forte?"
+    assert:
+      - type: llm-rubric
+        value: >
+          Pede esclarecimento sobre o critério (valor de ataque, tipo,
+          habilidade) ou sobre quais Pokémon comparar. NÃO escolhe um critério
+          por conta própria e responde como se a pergunta fosse clara.
+
+  - description: "ambíguo · dado inexistente não é inventado"
+    vars:
+      pergunta: "Quais os ataques do Miraidon?"
+    assert:
+      # Miraidon é #1008, fora do recorte de 386 do jogo.
+      - type: llm-rubric
+        value: >
+          Informa que não encontrou esse Pokémon nos dados do jogo. NÃO inventa
+          ataques nem valores.
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 6. RAG — encontra a resposta na prosa e cita a fonte?
+  # ───────────────────────────────────────────────────────────────────────────
+
+  - description: "rag · explica a regra de conversão"
+    vars:
+      pergunta: "Por que o valor de um ataque é comprimido em três degraus?"
+    assert:
+      - type: llm-rubric
+        value: >
+          Explica que o valor vira dificuldade de rolagem na mesa e que uma
+          faixa de 1 a 10 tornaria a maioria dos ataques irrelevante.
+
+  - description: "rag · encontra talento por efeito descrito"
+    vars:
+      pergunta: "Existe algum talento ou habilidade que remove status da equipe?"
+    assert:
+      - type: llm-rubric
+        value: >
+          Cita uma habilidade ou talento concreto relacionado a remover status,
+          com nome. Uma resposta genérica sem nome é falha.

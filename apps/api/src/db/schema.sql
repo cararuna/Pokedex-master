@@ -148,10 +148,11 @@ create table document_chunks (
   document_id  integer not null references documents (id) on delete cascade,
   content      text not null,
   heading_path text,
-  -- 1024 dimensões: é o tamanho do embed-v1 da Cohere e do Qwen3-Embedding,
-  -- os modelos que o OpenRouter serve. Trocar de modelo exige recriar a
-  -- coluna, então o embedder fica atrás de uma interface no código.
-  embedding    vector(1024),
+  -- 1536 dimensões: tamanho do openai/text-embedding-3-small, um dos poucos
+  -- modelos de embedding realmente servidos pelo OpenRouter. Trocar de modelo
+  -- exige recriar a coluna e reindexar — vetores de modelos diferentes não são
+  -- comparáveis. Por isso o embedder fica atrás de uma interface no código.
+  embedding    vector(1536),
   tokens       integer
 );
 
@@ -202,7 +203,7 @@ create index agent_steps_run_idx on agent_steps (run_id, step_index);
   `1 - distância`, que é o número que faz sentido para quem consome.
 */
 create or replace function match_chunks (
-  query_embedding vector(1024),
+  query_embedding vector(1536),
   match_count     integer default 5,
   filter_kind     text default null
 )
