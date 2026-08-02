@@ -1,11 +1,31 @@
 # 04 — RAG
 
-> **Estado:** implementado e rodando. 116 chunks indexados a partir de docs/,
-> CLAUDE.md, PLANO.md e das descrições de talentos e habilidades.
+> **Estado:** implementado e rodando. 116 chunks indexados a partir de `docs/`,
+> `CLAUDE.md`, `PLANO.md` e das descrições de talentos e habilidades.
 >
-> 
+> ```bash
+> pnpm --filter @pokedex/api ingest
+> ```
 >
 > Custo da indexação completa: **US$ 0,0004**.
+
+## Medido em execução
+
+Busca verificada isoladamente, antes de envolver o agente:
+
+| Pergunta | Similaridade | Trecho encontrado |
+|---|---|---|
+| "por que o valor é comprimido em três degraus" | 0.606 | a regra de conversão, no `CLAUDE.md` |
+| "existe habilidade que remove status da equipe" | 0.524 | Equilíbrio Mágico · Semente de sanguessuga |
+| "por que usou @theme inline" | 0.690 | a seção exata do design system |
+| "qual a receita de bolo de cenoura" | — | nada acima do piso |
+
+O segundo caso é o que mostra o valor. A palavra "remove" **não aparece igual**
+nos talentos encontrados — "Sempre que um Pokémon da sua equipe receber um
+status…". Busca por palavra-chave não acharia isso.
+
+O quarto mostra o piso funcionando: sem ele, a pergunta traria os trechos menos
+ruins e o modelo responderia com base neles.
 
 ## O que RAG resolve — e o que não resolve
 
@@ -88,7 +108,22 @@ const { data } = await llm.embeddings.create({
 });
 ```
 
-A coluna é `vector(1024)`, tamanho do `embed-v1` da Cohere e do Qwen3-Embedding.
+### Os modelos que existem de verdade
+
+Vários tutoriais citam `cohere/embed-v1`. **Ele não existe no OpenRouter** — o
+schema deste projeto nasceu com `vector(1024)` por causa disso e precisou de
+migração. Os IDs testados via API:
+
+| Modelo | Dimensões | |
+|---|---|---|
+| `openai/text-embedding-3-small` | 1536 | ✅ em uso |
+| `openai/text-embedding-3-large` | 3072 | |
+| `qwen/qwen3-embedding-8b` | 4096 | |
+| `google/gemini-embedding-001` | 3072 | |
+| `cohere/embed-v1` | — | não existe |
+| `mistralai/mistral-embed` | — | não existe |
+
+A coluna é `vector(1536)`.
 
 > **Cuidado:** trocar de modelo de embedding exige **recriar a coluna e
 > reindexar tudo**. Vetores de modelos diferentes não são comparáveis — a
@@ -103,7 +138,7 @@ busca vive numa função e é chamada por RPC:
 
 ```sql
 create function match_chunks (
-  query_embedding vector(1024),
+  query_embedding vector(1536),
   match_count     integer default 5,
   filter_kind     text default null
 ) returns table (content text, heading_path text, title text, path text, similarity float)
@@ -132,12 +167,11 @@ Com poucas centenas de chunks — nosso caso — o IVFFlat degrada para busca
 linear de qualquer forma, e ainda exige o passo de treino. HNSW é a escolha
 óbvia nesta escala.
 
-## O que falta implementar
+## O que ainda não tem
 
-1. `scripts/ingest-docs.ts` — percorre `docs/` e o design system, divide por
-   heading, gera embeddings, grava
-2. Ferramenta `buscar_documentacao` no registro do agente
-3. Reindexação: por ora manual; um hook de commit seria o passo seguinte
+Reindexação é manual — `pnpm ingest` depois de editar a documentação. Um hook
+de commit seria o passo seguinte, mas com 116 chunks e US$ 0,0004 por rodada,
+automatizar isso resolveria um problema que ainda não existe.
 
 ## Se perguntarem
 
