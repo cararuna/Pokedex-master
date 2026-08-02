@@ -21,8 +21,13 @@ export const llm = new OpenAI({
   defaultHeaders: {
     // O OpenRouter usa estes cabeçalhos para atribuir uso e listar o app no
     // ranking público. São opcionais, mas ajudam a rastrear consumo.
+    //
+    // Somente ASCII: cabeçalho HTTP é ByteString (latin-1). Acento ou
+    // travessão fazem o fetch lançar antes mesmo de sair a requisição —
+    // "Pokédex — companion" quebrava com "character at index 8 has a value
+    // of 8212", que é o travessão.
     "HTTP-Referer": serverEnv.WEB_ORIGIN,
-    "X-Title": "Pokédex — companion de jogo de tabuleiro",
+    "X-Title": "Pokedex board game companion",
   },
   // O SDK já faz recuo exponencial. 2 tentativas cobrem instabilidade
   // passageira sem transformar um erro real numa espera longa.
