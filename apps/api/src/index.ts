@@ -3,9 +3,29 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import { serverEnv, llmEnv } from "./env";
+import { serverEnv } from "./env";
 import { db } from "./db/client";
-import { runAgent } from "./agent/harness";
+
+/**
+ * O agente é carregado sob demanda.
+ *
+ * `import` estático faria o cliente do OpenRouter ser construído na partida —
+ * e a API inteira deixaria de subir sem a chave, inclusive as rotas de
+ * catálogo, que não usam LLM nenhuma. Com o import dinâmico, o servidor sobe
+ * e serve o catálogo normalmente; só as rotas do agente falham, e com uma
+ * mensagem que diz o que está faltando.
+ */
+async function carregarAgente() {
+  const [{ runAgent }, { llmEnv }] = await Promise.all([
+    import("./agent/harness"),
+    import("./env"),
+  ]);
+  return { runAgent, modelo: llmEnv().OPENROUTER_MODEL };
+}
+
+/** Configurado é diferente de funcionando — aqui só checamos a presença. */
+const agenteConfigurado = () =>
+  Boolean(process.env.OPENROUTER_API_KEY?.startsWith("sk-or-"));
 
 /**
  * API do companion.
@@ -29,7 +49,14 @@ app.use(
   }),
 );
 
-app.get("/health", (c) => c.json({ ok: true, model: llmEnv().OPENROUTER_MODEL }));
+app.get("/health", (c) =>
+  c.json({
+    ok: true,
+    catalogo: true,
+    agente: agenteConfigurado(),
+    model: agenteConfigurado() ? process.env.OPENROUTER_MODEL : null,
+  }),
+);
 
 /* ── Catálogo ─────────────────────────────────────────────────────────────── */
 
@@ -178,6 +205,15 @@ app.post("/agent/chat", async (c) => {
     return c.json({ erro: "Mensagem inválida", detalhes: body.error.issues }, 400);
   }
 
+  if (!agenteConfigurado()) {
+    return c.json(
+      { erro: "Agente não configurado: falta OPENROUTER_API_KEY em apps/api/.env" },
+      503,
+    );
+  }
+
+  const { runAgent } = await carregarAgente();
+
   return streamSSE(c, async (stream) => {
     await runAgent({
       message: body.data.message,
@@ -199,6 +235,15 @@ app.post("/agent/ask", async (c) => {
     return c.json({ erro: "Mensagem inválida" }, 400);
   }
 
+  if (!agenteConfigurado()) {
+    return c.json(
+      { erro: "Agente não configurado: falta OPENROUTER_API_KEY em apps/api/.env" },
+      503,
+    );
+  }
+
+  const { runAgent } = await carregarAgente();
+
   const resultado = await runAgent({
     message: body.data.message,
     sessionId: body.data.sessionId,
@@ -209,7 +254,14 @@ app.post("/agent/ask", async (c) => {
 
 serve({ fetch: app.fetch, port: serverEnv.PORT }, (info) => {
   console.log(`\n  API em http://localhost:${info.port}`);
-  console.log(`  Modelo: ${llmEnv().OPENROUTER_MODEL}\n`);
+  console.log(`  Catálogo: pronto`);
+  console.log(
+    `  Agente:   ${
+      agenteConfigurado()
+        ? process.env.OPENROUTER_MODEL
+        : "não configurado (falta OPENROUTER_API_KEY)"
+    }\n`,
+  );
 });
 
 export default app;

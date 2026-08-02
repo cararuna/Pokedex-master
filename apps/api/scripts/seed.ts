@@ -17,11 +17,20 @@
 
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { db } from "../src/db/client";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const WEB = join(AQUI, "../../web/src/game");
+
+/**
+ * O `import()` dinâmico exige URL, não caminho de sistema de arquivos. No
+ * Windows um caminho absoluto começa com `D:\`, e o carregador ESM interpreta
+ * o `D:` como esquema de protocolo — daí `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
+ * `pathToFileURL` resolve, e é inócuo no Linux e no macOS.
+ */
+const moduloDoJogo = (arquivo: string) =>
+  pathToFileURL(join(WEB, arquivo)).href;
 
 interface GameMove {
   attackName: string;
@@ -44,7 +53,7 @@ interface GamePokemon {
  * seed nunca fica defasado em relação ao que a tela mostra.
  */
 async function carregarTalentos() {
-  const mod = await import(join(WEB, "talentTrees.ts"));
+  const mod = await import(moduloDoJogo("talentTrees.ts"));
   return {
     typeTalentTrees: mod.typeTalentTrees as Record<
       string,
@@ -58,7 +67,7 @@ async function carregarTalentos() {
 }
 
 async function carregarVantagens() {
-  const mod = await import(join(WEB, "rules.ts"));
+  const mod = await import(moduloDoJogo("rules.ts"));
   return mod.TYPE_ADVANTAGES as Record<string, string[]>;
 }
 
