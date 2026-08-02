@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { env } from "../env";
+import { llmEnv, serverEnv } from "../env";
 
 /**
  * Cliente de LLM — SDK da OpenAI apontado para o OpenRouter.
@@ -13,13 +13,15 @@ import { env } from "../env";
  * É o que torna viável rodar o mesmo eval contra quatro modelos e comparar
  * custo versus qualidade (Fase 6).
  */
+const env = llmEnv();
+
 export const llm = new OpenAI({
   apiKey: env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
     // O OpenRouter usa estes cabeçalhos para atribuir uso e listar o app no
     // ranking público. São opcionais, mas ajudam a rastrear consumo.
-    "HTTP-Referer": env.WEB_ORIGIN,
+    "HTTP-Referer": serverEnv.WEB_ORIGIN,
     "X-Title": "Pokédex — companion de jogo de tabuleiro",
   },
   // O SDK já faz recuo exponencial. 2 tentativas cobrem instabilidade

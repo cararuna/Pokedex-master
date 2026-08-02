@@ -3,7 +3,10 @@
 -- ============================================================================
 --
 -- Rode este arquivo inteiro no SQL Editor do Supabase antes do `pnpm seed`.
--- É idempotente: pode rodar de novo sem quebrar nada.
+--
+--   ⚠  DESTRUTIVO. Começa apagando as tabelas existentes (ver bloco abaixo).
+--      Rodar de novo zera o banco e exige `pnpm seed` outra vez.
+--      Não é idempotente — é uma reconstrução.
 --
 -- O que muda de arquitetura ao trazer isto para o banco:
 --
@@ -22,9 +25,43 @@
 
 create extension if not exists vector;
 
+-- ── ATENÇÃO: reconstrução destrutiva ───────────────────────────────────────
+--
+-- Este bloco APAGA as tabelas do dump cru da PokeAPI que existia neste projeto:
+--
+--   pokemon            386 linhas   (incluindo a coluna flag_capturado)
+--   pokemon_moves   96.467 linhas   (learnset completo, com nível e versão)
+--   moves              563 linhas   (com accuracy, pp, damage_class)
+--   types               18 linhas
+--   pokemon_abilities  965 linhas
+--
+-- Autorizado explicitamente. Os dados são regeneráveis a partir do ETL em
+-- apps/web/scripts/build-dataset.mjs, exceto accuracy, pp, damage_class e
+-- level_learned_at, que o ETL atual não captura.
+--
+-- `cascade` é necessário porque há chaves estrangeiras entre elas.
+-- ---------------------------------------------------------------------------
+
+drop table if exists pokemon_abilities cascade;
+drop table if exists pokemon_moves     cascade;
+drop table if exists pokemon           cascade;
+drop table if exists moves             cascade;
+drop table if exists types             cascade;
+drop table if exists abilities         cascade;
+drop table if exists type_advantages   cascade;
+drop table if exists type_talents      cascade;
+
+-- Tabelas de RAG e trace, caso uma execução anterior as tenha criado.
+drop table if exists document_chunks cascade;
+drop table if exists documents       cascade;
+drop table if exists agent_steps     cascade;
+drop table if exists agent_runs      cascade;
+
+drop function if exists match_chunks (vector, integer, text);
+
 -- ── Domínio ────────────────────────────────────────────────────────────────
 
-create table if not exists pokemon (
+create table pokemon (
   id          integer primary key,
   dex_number  integer not null,
   slug        text    not null unique,
@@ -33,9 +70,9 @@ create table if not exists pokemon (
   created_at  timestamptz not null default now()
 );
 
-create index if not exists pokemon_slug_idx on pokemon (slug);
+create index pokemon_slug_idx on pokemon (slug);
 -- GIN em array permite `where types @> '{fire}'` usar índice.
-create index if not exists pokemon_types_idx on pokemon using gin (types);
+create index pokemon_types_idx on pokemon using gin (types);
 
 /*
   Golpes já convertidos para a escala do tabuleiro.
@@ -45,7 +82,7 @@ create index if not exists pokemon_types_idx on pokemon using gin (types);
   um segundo golpe de fogo para o mesmo Pokémon — a regra não depende mais de
   ninguém lembrar dela no código do ETL.
 */
-create table if not exists pokemon_moves (
+create table pokemon_moves (
   pokemon_id  integer not null references pokemon (id) on delete cascade,
   move_type   text    not null,
   attack_name text    not null,
@@ -55,7 +92,7 @@ create table if not exists pokemon_moves (
   primary key (pokemon_id, move_type)
 );
 
-create index if not exists pokemon_moves_type_idx
+create index pokemon_moves_type_idx
   on pokemon_moves (move_type, game_power desc);
 
 /*
@@ -63,7 +100,7 @@ create index if not exists pokemon_moves_type_idx
   Difere em pontos deliberados: `ghost` acerta `ghost`, e `normal` não tem
   vantagem contra nada.
 */
-create table if not exists type_advantages (
+create table type_advantages (
   attacking_type text not null,
   defending_type text not null,
   primary key (attacking_type, defending_type)
@@ -71,14 +108,14 @@ create table if not exists type_advantages (
 
 -- ── Habilidades ────────────────────────────────────────────────────────────
 
-create table if not exists abilities (
+create table abilities (
   id          serial primary key,
   key         text not null unique,
   name        text not null,
   description text not null
 );
 
-create table if not exists pokemon_abilities (
+create table pokemon_abilities (
   pokemon_slug text    not null,
   ability_id   integer not null references abilities (id) on delete cascade,
   position     smallint not null,
@@ -86,7 +123,7 @@ create table if not exists pokemon_abilities (
 );
 
 /* Talentos por tipo — 3 por tipo, na ordem da árvore. */
-create table if not exists type_talents (
+create table type_talents (
   id          serial primary key,
   type        text not null,
   name        text not null,
@@ -97,7 +134,7 @@ create table if not exists type_talents (
 
 -- ── RAG (Fase 5) ───────────────────────────────────────────────────────────
 
-create table if not exists documents (
+create table documents (
   id         serial primary key,
   source     text not null,
   path       text not null unique,
@@ -106,7 +143,7 @@ create table if not exists documents (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists document_chunks (
+create table document_chunks (
   id           serial primary key,
   document_id  integer not null references documents (id) on delete cascade,
   content      text not null,
@@ -123,12 +160,12 @@ create table if not exists document_chunks (
   dados. Com poucas centenas de chunks — que é o nosso caso — o IVFFlat
   degrada para busca linear de qualquer forma.
 */
-create index if not exists document_chunks_embedding_idx
+create index document_chunks_embedding_idx
   on document_chunks using hnsw (embedding vector_cosine_ops);
 
 -- ── Observabilidade do agente (Fase 4) ─────────────────────────────────────
 
-create table if not exists agent_runs (
+create table agent_runs (
   id           uuid primary key default gen_random_uuid(),
   session_id   text,
   user_message text not null,
@@ -141,7 +178,7 @@ create table if not exists agent_runs (
   created_at   timestamptz not null default now()
 );
 
-create table if not exists agent_steps (
+create table agent_steps (
   id          serial primary key,
   run_id      uuid not null references agent_runs (id) on delete cascade,
   step_index  smallint not null,
@@ -153,7 +190,7 @@ create table if not exists agent_steps (
   latency_ms  integer
 );
 
-create index if not exists agent_steps_run_idx on agent_steps (run_id, step_index);
+create index agent_steps_run_idx on agent_steps (run_id, step_index);
 
 -- ── Busca vetorial ─────────────────────────────────────────────────────────
 

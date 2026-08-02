@@ -86,7 +86,54 @@ function verificar(etapa: string, error: { message: string } | null) {
   }
 }
 
+/**
+ * Confere que o schema aplicado é o esperado antes de carregar qualquer coisa.
+ *
+ * Existe porque este projeto já teve um dump com nomes de tabela iguais e
+ * colunas diferentes. Um upsert contra a estrutura errada falha com mensagem
+ * obscura do PostgREST, no meio da carga, com o banco pela metade. Aqui a
+ * falha é imediata e diz o que fazer.
+ */
+async function conferirSchema() {
+  const esperado: Record<string, string[]> = {
+    pokemon: ["id", "dex_number", "slug", "types", "sprites"],
+    pokemon_moves: ["pokemon_id", "move_type", "attack_name", "game_power"],
+    type_advantages: ["attacking_type", "defending_type"],
+    abilities: ["key", "name", "description"],
+    pokemon_abilities: ["pokemon_slug", "ability_id", "position"],
+    type_talents: ["type", "name", "description", "position"],
+  };
+
+  const problemas: string[] = [];
+
+  for (const [tabela, colunas] of Object.entries(esperado)) {
+    // `limit(1)` e NÃO `head: true`. Com head, o PostgREST descarta o corpo:
+    // a mensagem do erro vem vazia, e — pior — uma tabela inexistente devolve
+    // 204 sem erro nenhum, o que deixaria passar schema faltando.
+    const { error } = await db.from(tabela).select(colunas.join(",")).limit(1);
+    if (error) {
+      problemas.push(
+        `  ${tabela.padEnd(18)} ${error.message || error.code || "estrutura inesperada"}`,
+      );
+    }
+  }
+
+  if (problemas.length) {
+    console.error("\n✗ O schema no banco não corresponde ao esperado:\n");
+    console.error(problemas.join("\n"));
+    console.error(
+      "\n  Rode apps/api/src/db/schema.sql no SQL Editor do Supabase.",
+    );
+    console.error("  Atenção: ele é destrutivo, apaga as tabelas atuais.\n");
+    process.exit(1);
+  }
+
+  console.log("✓ Schema conferido\n");
+}
+
 async function main() {
+  await conferirSchema();
+
   console.log("Carregando dados do frontend…");
 
   const pokemon = JSON.parse(

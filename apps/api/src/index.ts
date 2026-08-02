@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import { env } from "./env";
+import { serverEnv, llmEnv } from "./env";
 import { db } from "./db/client";
 import { runAgent } from "./agent/harness";
 
@@ -24,12 +24,12 @@ const app = new Hono();
 app.use(
   "*",
   cors({
-    origin: env.WEB_ORIGIN,
+    origin: serverEnv.WEB_ORIGIN,
     allowMethods: ["GET", "POST", "OPTIONS"],
   }),
 );
 
-app.get("/health", (c) => c.json({ ok: true, model: env.OPENROUTER_MODEL }));
+app.get("/health", (c) => c.json({ ok: true, model: llmEnv().OPENROUTER_MODEL }));
 
 /* ── Catálogo ─────────────────────────────────────────────────────────────── */
 
@@ -207,9 +207,9 @@ app.post("/agent/ask", async (c) => {
   return c.json(resultado);
 });
 
-serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+serve({ fetch: app.fetch, port: serverEnv.PORT }, (info) => {
   console.log(`\n  API em http://localhost:${info.port}`);
-  console.log(`  Modelo: ${env.OPENROUTER_MODEL}\n`);
+  console.log(`  Modelo: ${llmEnv().OPENROUTER_MODEL}\n`);
 });
 
 export default app;

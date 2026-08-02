@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { env } from "../env";
+import { supabaseEnv } from "../env";
 
 /**
  * Cliente do Supabase com a service_role.
@@ -12,6 +12,8 @@ import { env } from "../env";
  * `persistSession: false` porque não há usuário logado nesta conexão: é
  * processo de servidor, não navegador.
  */
+const env = supabaseEnv();
+
 export const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
