@@ -221,6 +221,141 @@ const regraDeConversao: Tool = {
   },
 };
 
+/**
+ * Busca de Pokémon **pelo efeito** de uma habilidade ou talento.
+ *
+ * Existe porque faltava o caminho de volta. As outras ferramentas vão de
+ * Pokémon para habilidade (`ficha_do_pokemon`) ou de tipo para talento
+ * (`talentos_do_tipo`). Nenhuma respondia a pergunta que um jogador realmente
+ * faz na mesa:
+ *
+ *   "quem consegue envenenar com mais força?"
+ *   "quem tem habilidade que remove status?"
+ *
+ * A busca é textual sobre nome e descrição, e devolve os dois caminhos pelos
+ * quais um efeito chega a um Pokémon no jogo:
+ *
+ *   habilidade inata  → ligada a Pokémon específicos (pokemon_abilities)
+ *   talento de tipo   → disponível a qualquer Pokémon daquele tipo
+ *
+ * A distinção importa na mesa: uma inata o Pokémon já tem; um talento ele
+ * precisa adquirir, e só se for do tipo certo.
+ */
+const buscarPorEfeito: Tool = {
+  name: "buscar_por_efeito",
+  description:
+    "Encontra Pokémon a partir do EFEITO de uma habilidade ou talento. Use " +
+    "quando a pergunta for sobre capacidade e não sobre ataque: 'quem envenena " +
+    "com mais força', 'quem remove status', 'quem é imune a sono', 'quem " +
+    "aumenta a defesa da equipe'. Busca no nome e na descrição das habilidades " +
+    "inatas e dos talentos de tipo, e devolve quais Pokémon têm cada uma. " +
+    "Passe termos do efeito, não o nome do Pokémon.",
+  schema: z.object({
+    efeito: z
+      .string()
+      .describe(
+        "Palavra ou expressão do efeito procurado, ex.: 'poison', 'veneno', " +
+          "'remove status', 'imune'. Prefira termos curtos.",
+      ),
+    tipo: z
+      .string()
+      .optional()
+      .describe("Restringe os talentos a um tipo elemental, ex.: 'poison'"),
+    limite: z.number().min(1).max(30).default(15),
+  }),
+  async execute({ efeito, tipo, limite }) {
+    const termo = efeito.trim();
+    // `or` do PostgREST usa vírgula como separador — um termo com vírgula
+    // quebraria a expressão inteira.
+    const seguro = termo.replace(/[,()]/g, " ");
+    const filtro = `name.ilike.%${seguro}%,description.ilike.%${seguro}%`;
+
+    const [{ data: inatas, error: e1 }, { data: talentos, error: e2 }] =
+      await Promise.all([
+        db.from("abilities").select("id, name, description").or(filtro).limit(limite),
+        (() => {
+          let q = db
+            .from("type_talents")
+            .select("type, name, description")
+            .or(filtro)
+            .limit(limite);
+          if (tipo) q = q.eq("type", tipo.toLowerCase());
+          return q;
+        })(),
+      ]);
+
+    if (e1) throw new Error(e1.message);
+    if (e2) throw new Error(e2.message);
+
+    // Uma consulta só para todos os vínculos, em vez de uma por habilidade.
+    const ids = (inatas ?? []).map((h) => h.id);
+    const porHabilidade = new Map<number, string[]>();
+
+    if (ids.length) {
+      const { data: vinculos } = await db
+        .from("pokemon_abilities")
+        .select("pokemon_slug, ability_id")
+        .in("ability_id", ids);
+
+      for (const v of vinculos ?? []) {
+        const lista = porHabilidade.get(v.ability_id) ?? [];
+        lista.push(v.pokemon_slug);
+        porHabilidade.set(v.ability_id, lista);
+      }
+    }
+
+    // Talentos de tipo valem para qualquer Pokémon daquele tipo. Devolvemos
+    // uma amostra e a contagem — a lista completa de 56 nomes não ajuda numa
+    // resposta de chat e ainda infla o contexto.
+    const tiposEnvolvidos = [...new Set((talentos ?? []).map((t) => t.type))];
+    const porTipo = new Map<string, { total: number; exemplos: string[] }>();
+
+    for (const t of tiposEnvolvidos) {
+      const { data: pk, count } = await db
+        .from("pokemon")
+        .select("slug", { count: "exact" })
+        .contains("types", [t])
+        .order("dex_number")
+        .limit(8);
+      porTipo.set(t, { total: count ?? 0, exemplos: (pk ?? []).map((p) => p.slug) });
+    }
+
+    const habilidadesInatas = (inatas ?? [])
+      .map((h) => ({
+        habilidade: h.name,
+        efeito: h.description,
+        pokemon: porHabilidade.get(h.id) ?? [],
+      }))
+      // Habilidade sem Pokémon vinculado não ajuda a responder "quem".
+      .filter((h) => h.pokemon.length > 0);
+
+    const talentosDeTipo = (talentos ?? []).map((t) => ({
+      talento: t.name,
+      efeito: t.description,
+      tipo: t.type,
+      disponivel_para: porTipo.get(t.type),
+    }));
+
+    if (habilidadesInatas.length === 0 && talentosDeTipo.length === 0) {
+      return {
+        encontrado: false,
+        aviso: `Nada com "${termo}" no nome ou na descrição. Tente outro termo do efeito.`,
+      };
+    }
+
+    return {
+      encontrado: true,
+      // O modelo precisa saber que são dois mecanismos diferentes, senão
+      // apresenta talento de tipo como se o Pokémon já tivesse a habilidade.
+      como_ler:
+        "habilidades_inatas: o Pokémon JÁ TEM. " +
+        "talentos_de_tipo: qualquer Pokémon daquele tipo PODE ADQUIRIR.",
+      habilidades_inatas: habilidadesInatas,
+      talentos_de_tipo: talentosDeTipo,
+    };
+  },
+};
+
 /* ── Busca em texto livre ─────────────────────────────────────────────────── */
 
 /**
@@ -293,6 +428,7 @@ export const tools: Tool[] = [
   fichaDoPokemon,
   vantagemDeTipo,
   talentosDoTipo,
+  buscarPorEfeito,
   regraDeConversao,
   buscarDocumentacao,
 ];

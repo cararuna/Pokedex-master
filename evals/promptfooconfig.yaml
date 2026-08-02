@@ -121,6 +121,30 @@ tests:
         config:
           esperada: buscar_documentacao
 
+  - description: "tool · efeito de habilidade usa buscar_por_efeito"
+    vars:
+      pergunta: "Quais Pokémon envenenam com mais força?"
+    assert:
+      - type: javascript
+        value: file://asserts/usou-ferramenta.js
+        config:
+          esperada: buscar_por_efeito
+
+  # Regressão: antes de existir buscar_por_efeito, o agente respondia que a
+  # ferramenta de busca "não permite filtrar por talentos" e desistia. O dado
+  # estava no banco; faltava o caminho de habilidade para Pokémon.
+  - description: "efeito · responde quem envenena mais forte, com nomes"
+    vars:
+      pergunta: "Quais Pokémon conseguem aplicar veneno com mais força, seja dobrando os tokens ou tendo mais chance de aplicar?"
+    assert:
+      - type: llm-rubric
+        transform: output.answer
+        value: >
+          Cita NOMES de Pokémon concretos (ex.: Victreebel, Grimer, Muk,
+          Bulbasaur, Vileplume) associados a habilidades de veneno. Dizer que
+          não consegue filtrar por talento, ou responder só com nomes de
+          talentos sem nenhum Pokémon, é falha.
+
   # ───────────────────────────────────────────────────────────────────────────
   # 3. CONHECIMENTO PRÉVIO ERRADO — o caso crítico deste domínio
   #
