@@ -5,19 +5,10 @@
  * a migração: o dado deixa de viajar no bundle e passa a vir do Supabase,
  * paginado.
  *
- * ── Como a URL base é resolvida ─────────────────────────────────────────
- *
- *   desenvolvimento   http://localhost:8787   front e API em portas distintas
- *   produção          /api                    mesmo domínio, sem CORS
- *
- * A base relativa em produção não é detalhe: com domínio absoluto, cada
- * preview deploy da Vercel apontaria para a API de produção, e trocar de
- * domínio exigiria rebuild. Relativo, cada deploy fala com a própria API.
+ * A URL base vem de `api-base.ts`, compartilhada com o cliente do agente.
  */
 
-const BASE =
-  import.meta.env.VITE_API_URL ??
-  (import.meta.env.DEV ? "http://localhost:8787" : "/api");
+import { API_BASE as BASE } from "./api-base";
 
 export interface ApiMove {
   attack_name: string;
