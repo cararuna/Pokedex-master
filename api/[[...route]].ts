@@ -14,7 +14,6 @@
  */
 
 import { Hono } from "hono";
-import { handle } from "hono/vercel";
 import app from "../apps/api/src/index";
 
 /**
@@ -25,14 +24,29 @@ import app from "../apps/api/src/index";
  * de mesmo nome, e o deploy falha com "the pattern doesn't match any
  * Serverless Functions". Exportar daqui evita o problema por completo.
  *
- * Node e não Edge: o cliente do Supabase e o SDK da OpenAI dependem de APIs
- * que o runtime Edge não expõe.
+ * O harness tem timeout interno de 60s; a plataforma precisa acompanhar.
  */
-export const runtime = "nodejs";
-
-/** O harness tem timeout interno de 60s; a plataforma precisa acompanhar. */
 export const maxDuration = 60;
 
 const vercel = new Hono().route("/api", app);
 
-export default handle(vercel);
+/**
+ * O formato do export é o que decide como a Vercel chama a função.
+ *
+ * Um `export default` que seja uma **função** é lido como handler Node clássico
+ * e recebe `(IncomingMessage, ServerResponse)`. Um `export default` que seja um
+ * **objeto com `fetch`** é lido como Web Handler e recebe um `Request` padrão.
+ *
+ * Exportar `handle()` do `hono/vercel` cai no primeiro caso: aquele adaptador é
+ * do Next.js, onde a convenção já é Web. Aqui a função recebia um
+ * `IncomingMessage` onde esperava um `Request` e estourava no cold start —
+ * FUNCTION_INVOCATION_FAILED em toda rota, `/health` incluído.
+ *
+ * `app.fetch` já é Web padrão, então o objeto abaixo dispensa adaptador. O
+ * wrapper existe para passar só o `Request`: o segundo argumento do `fetch` do
+ * Hono é o `env` das rotas, e entregar o contexto da plataforma ali mudaria o
+ * significado de `c.env` sem necessidade.
+ */
+export default {
+  fetch: (request: Request) => vercel.fetch(request),
+};
