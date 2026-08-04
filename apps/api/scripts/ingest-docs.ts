@@ -19,9 +19,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { db } from "../src/db/client";
-import { chunkMarkdown } from "../src/rag/chunk";
-import { openRouterEmbedder } from "../src/rag/embedder";
+import { db } from "../src/db/client.js";
+import { chunkMarkdown } from "../src/rag/chunk.js";
+import { openRouterEmbedder } from "../src/rag/embedder.js";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(AQUI, "../../..");
