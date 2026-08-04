@@ -397,7 +397,7 @@ const CARDS: Card_[] = [
     grupo: "Components",
     subtitulo: "SearchField e Select · mesma altura vinda de --control-*",
     conteudo: (
-      <Stack gap={7}>
+      <Stack gap={8}>
         <Stack gap={3}>
           <Rotulo>Os três tamanhos, lado a lado com o botão</Rotulo>
           <Stack gap={4}>
@@ -460,7 +460,7 @@ const CARDS: Card_[] = [
     grupo: "Components",
     subtitulo: "<table> de verdade · aba sublinhada, nunca cápsula",
     conteudo: (
-      <Stack gap={7}>
+      <Stack gap={8}>
         <Stack gap={3}>
           <Rotulo>Table — números em tabular-nums para a coluna alinhar</Rotulo>
           <Table>
@@ -527,7 +527,7 @@ const CARDS: Card_[] = [
     grupo: "Components",
     subtitulo: "Vazio não é erro — e as duas telas não podem parecer iguais",
     conteudo: (
-      <Stack gap={7}>
+      <Stack gap={8}>
         <div className="grid grid-cols-2 gap-5">
           <EmptyState
             title="No Pokémon found"
