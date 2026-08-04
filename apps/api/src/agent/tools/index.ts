@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { db } from "../../db/client";
+import { db, linhas } from "../../db/client";
 
 /**
  * Registro de ferramentas.
@@ -25,6 +25,37 @@ export interface Tool<TArgs = any> {
   description: string;
   schema: z.ZodType<TArgs>;
   execute: (args: TArgs) => Promise<unknown>;
+}
+
+/* ── Formato das linhas consultadas ───────────────────────────────────────── */
+
+interface LinhaPokemon {
+  slug: string;
+  dex_number: number;
+  types: string[];
+}
+
+interface LinhaGolpe {
+  attack_name: string;
+  move_type: string;
+  game_power: number;
+}
+
+/** `select` com relação: o Pokémon vem aninhado dentro do golpe. */
+interface LinhaGolpeComPokemon extends LinhaGolpe {
+  pokemon: LinhaPokemon;
+}
+
+interface LinhaHabilidade {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface LinhaTalento {
+  type: string;
+  name: string;
+  description: string;
 }
 
 /* ── Consultas de domínio ─────────────────────────────────────────────────── */
@@ -72,7 +103,7 @@ const buscarPokemon: Tool = {
       const { data, error } = await q;
       if (error) throw new Error(error.message);
 
-      return (data ?? []).map((r: any) => ({
+      return linhas<LinhaGolpeComPokemon>(data).map((r) => ({
         slug: r.pokemon.slug,
         numero: r.pokemon.dex_number,
         tipos: r.pokemon.types,
@@ -134,12 +165,14 @@ const fichaDoPokemon: Tool = {
       slug: p.slug,
       numero: p.dex_number,
       tipos: p.types,
-      ataques: (golpes ?? []).map((g) => ({
+      ataques: linhas<LinhaGolpe>(golpes).map((g) => ({
         nome: g.attack_name,
         tipo: g.move_type,
         valor_no_jogo: g.game_power,
       })),
-      habilidades_inatas: (habilidades ?? []).map((h: any) => h.abilities),
+      habilidades_inatas: linhas<{ abilities: Omit<LinhaHabilidade, "id"> }>(
+        habilidades,
+      ).map((h) => h.abilities),
     };
   },
 };
@@ -162,7 +195,9 @@ const vantagemDeTipo: Tool = {
     if (error) throw new Error(error.message);
     return {
       tipo_de_ataque,
-      tem_vantagem_contra: (data ?? []).map((r) => r.defending_type),
+      tem_vantagem_contra: linhas<{ defending_type: string }>(data).map(
+        (r) => r.defending_type,
+      ),
     };
   },
 };
@@ -287,8 +322,11 @@ const buscarPorEfeito: Tool = {
     if (e1) throw new Error(e1.message);
     if (e2) throw new Error(e2.message);
 
+    const habilidades = linhas<LinhaHabilidade>(inatas);
+    const talentosEncontrados = linhas<LinhaTalento>(talentos);
+
     // Uma consulta só para todos os vínculos, em vez de uma por habilidade.
-    const ids = (inatas ?? []).map((h) => h.id);
+    const ids = habilidades.map((h) => h.id);
     const porHabilidade = new Map<number, string[]>();
 
     if (ids.length) {
@@ -297,7 +335,7 @@ const buscarPorEfeito: Tool = {
         .select("pokemon_slug, ability_id")
         .in("ability_id", ids);
 
-      for (const v of vinculos ?? []) {
+      for (const v of linhas<{ pokemon_slug: string; ability_id: number }>(vinculos)) {
         const lista = porHabilidade.get(v.ability_id) ?? [];
         lista.push(v.pokemon_slug);
         porHabilidade.set(v.ability_id, lista);
@@ -307,7 +345,7 @@ const buscarPorEfeito: Tool = {
     // Talentos de tipo valem para qualquer Pokémon daquele tipo. Devolvemos
     // uma amostra e a contagem — a lista completa de 56 nomes não ajuda numa
     // resposta de chat e ainda infla o contexto.
-    const tiposEnvolvidos = [...new Set((talentos ?? []).map((t) => t.type))];
+    const tiposEnvolvidos = [...new Set(talentosEncontrados.map((t) => t.type))];
     const porTipo = new Map<string, { total: number; exemplos: string[] }>();
 
     for (const t of tiposEnvolvidos) {
@@ -317,10 +355,13 @@ const buscarPorEfeito: Tool = {
         .contains("types", [t])
         .order("dex_number")
         .limit(8);
-      porTipo.set(t, { total: count ?? 0, exemplos: (pk ?? []).map((p) => p.slug) });
+      porTipo.set(t, {
+        total: count ?? 0,
+        exemplos: linhas<{ slug: string }>(pk).map((p) => p.slug),
+      });
     }
 
-    const habilidadesInatas = (inatas ?? [])
+    const habilidadesInatas = habilidades
       .map((h) => ({
         habilidade: h.name,
         efeito: h.description,
@@ -329,7 +370,7 @@ const buscarPorEfeito: Tool = {
       // Habilidade sem Pokémon vinculado não ajuda a responder "quem".
       .filter((h) => h.pokemon.length > 0);
 
-    const talentosDeTipo = (talentos ?? []).map((t) => ({
+    const talentosDeTipo = talentosEncontrados.map((t) => ({
       talento: t.name,
       efeito: t.description,
       tipo: t.type,
