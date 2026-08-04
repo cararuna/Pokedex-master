@@ -1,7 +1,21 @@
 {
-  "buildCommand": "CI=false react-scripts build",
-  "outputDirectory": "build",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @pokedex/web build",
+  "outputDirectory": "apps/web/dist",
+
+  "functions": {
+    "api/[[...route]].ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }

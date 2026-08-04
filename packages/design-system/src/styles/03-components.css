@@ -1,0 +1,139 @@
+/* ============================================================================
+   CAMADA 3 — TOKENS DE COMPONENTE
+   ============================================================================
+
+   O nível mais específico. Aqui moram as decisões que valem para uma família
+   de componentes: a altura de um controle, o respiro interno de um cartão,
+   a espessura do anel de foco.
+
+   Por que existir, se a camada 2 já resolve cor:
+   sem ela, "a altura do botão médio" fica repetida em Button, Select, Input
+   e SearchField — e os quatro saem de sincronia no primeiro ajuste. Com ela,
+   `--control-height-md` é editado num lugar e os quatro acompanham.
+
+   Regra de origem: esta camada consome a camada 2 (semântica) e as escalas
+   numéricas da camada 1. Nunca uma cor primitiva.
+   ============================================================================ */
+
+:root {
+  /* ── Controles ──────────────────────────────────────────────────────────
+     Compartilhado por Button, Input, Select, SearchField. É o que mantém um
+     botão e um campo lado a lado exatamente com a mesma altura — desalinho
+     de 2px numa toolbar é o tipo de coisa que denuncia sistema improvisado. */
+  --control-height-sm: 2rem; /* 32px */
+  --control-height-md: 2.5rem; /* 40px */
+  --control-height-lg: 3rem; /* 48px */
+
+  --control-padding-x-sm: var(--space-3);
+  --control-padding-x-md: var(--space-4);
+  --control-padding-x-lg: var(--space-5);
+
+  --control-gap-sm: var(--space-1);
+  --control-gap-md: var(--space-2);
+  --control-gap-lg: var(--space-2);
+
+  --control-radius: var(--r-md);
+  --control-font-size-sm: var(--fs-sm);
+  --control-font-size-md: var(--fs-sm);
+  --control-font-size-lg: var(--fs-base);
+  --control-font-weight: var(--fw-medium);
+
+  --control-border-width: 1px;
+  --control-transition:
+    background-color var(--dur-fast) var(--ez-out),
+    border-color var(--dur-fast) var(--ez-out),
+    color var(--dur-fast) var(--ez-out),
+    box-shadow var(--dur-fast) var(--ez-out);
+
+  /* ── Foco ───────────────────────────────────────────────────────────────
+     Um token só, aplicado igual em tudo que recebe foco. Anel de foco
+     inconsistente é a falha de acessibilidade mais comum em design system —
+     e a mais fácil de evitar. */
+  --focus-ring-width: 2px;
+  --focus-ring-offset-width: 2px;
+  --focus-ring-shadow:
+    0 0 0 var(--focus-ring-offset-width) var(--focus-ring-offset),
+    0 0 0 calc(var(--focus-ring-offset-width) + var(--focus-ring-width))
+      var(--focus-ring);
+
+  /* ── Campo ──────────────────────────────────────────────────────────────- */
+  --field-bg: var(--surface-raised);
+  --field-bg-disabled: var(--surface-sunken);
+  --field-border: var(--border-strong);
+  --field-border-hover: var(--border-interactive);
+  --field-placeholder: var(--text-subtle);
+  --field-radius: var(--r-md);
+
+  /* ── Cartão ─────────────────────────────────────────────────────────────- */
+  --card-bg: var(--surface-raised);
+  --card-border: var(--border);
+  --card-radius: var(--r-lg);
+  --card-padding: var(--space-5);
+  --card-padding-compact: var(--space-4);
+  --card-gap: var(--space-4);
+  --card-shadow: var(--sh-sm);
+  --card-shadow-hover: var(--sh-md);
+  --card-transition:
+    box-shadow var(--dur-normal) var(--ez-out),
+    border-color var(--dur-normal) var(--ez-out),
+    transform var(--dur-normal) var(--ez-out);
+
+  /* ── Chip / Badge ───────────────────────────────────────────────────────- */
+  --chip-height: 1.375rem; /* 22px */
+  --chip-padding-x: var(--space-2);
+  --chip-radius: var(--r-xs);
+  --chip-font-size: var(--fs-2xs);
+  --chip-font-weight: var(--fw-medium);
+  --chip-tracking: var(--ls-wider);
+
+  /* ── Overlay (diálogo, gaveta, popover) ─────────────────────────────────- */
+  --overlay-bg: var(--surface-overlay);
+  --overlay-radius: var(--r-xl);
+  --overlay-padding: var(--space-6);
+  --overlay-shadow: var(--sh-xl);
+  --overlay-max-width: 32rem;
+  --overlay-enter-duration: var(--dur-normal);
+  --overlay-exit-duration: var(--dur-fast);
+
+  --tooltip-bg: var(--surface-inverse);
+  --tooltip-text: var(--text-inverse);
+  --tooltip-radius: var(--r-sm);
+  --tooltip-font-size: var(--fs-xs);
+  --tooltip-padding: var(--space-1) var(--space-2);
+
+  /* ── Layout ─────────────────────────────────────────────────────────────
+     Largura máxima em `ch` e não em `px`: a medida que importa para leitura
+     é quantos caracteres cabem na linha, não quantos pixels. */
+  --container-max: 76rem;
+  --container-padding: var(--space-6);
+  --container-padding-mobile: var(--space-4);
+  --prose-max: 68ch;
+
+  --header-height: 4rem;
+
+  /* ── Grade de cartões ───────────────────────────────────────────────────
+     Largura mínima da coluna. O `auto-fill` do CSS resolve a quantidade —
+     não existe breakpoint escrito à mão para a grade. */
+  --grid-card-min: 17rem;
+  --grid-gap: var(--space-5);
+
+  /* ── Carta de jogo ──────────────────────────────────────────────────────
+     Altura fixa, igual em todas as cartas e nas duas faces.
+
+     Não é `min-height`: carta de baralho tem tamanho único. Altura variável
+     faz a grade virar uma escada e, no giro, a carta mudaria de tamanho no
+     meio da animação.
+
+     34rem cabe o pior caso (9 ataques — steelix, octillery, dusclops) sem
+     rolagem. Cartas com menos ataques sobram espaço, e isso é preferível:
+     numa mesa, rolar uma carta de consulta é pior que espaço vazio. */
+  --game-card-height: 34rem;
+}
+
+/* No escuro, o cartão perde a sombra e ganha borda.
+   Sombra sobre fundo quase preto não produz separação nenhuma — o que
+   separa é o contraste de valor entre a superfície e a linha. */
+[data-theme="dark"] {
+  --card-shadow: none;
+  --card-shadow-hover: none;
+}

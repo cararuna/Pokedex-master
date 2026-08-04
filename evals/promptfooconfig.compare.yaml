@@ -1,0 +1,100 @@
+# =============================================================================
+# Comparação entre modelos
+# =============================================================================
+#
+# Roda o MESMO conjunto de testes contra modelos diferentes e produz a tabela
+# de custo versus qualidade. É o argumento mais forte a favor do OpenRouter:
+# com a API direta de um fornecedor, cada comparação exigiria outro SDK, outra
+# conta e outro código.
+#
+# Como funciona: cada provider aponta para o mesmo endpoint, mas manda o modelo
+# no corpo. A API lê esse campo e sobrescreve o padrão do .env.
+#
+# Rodar:  pnpm --filter @pokedex/evals compare
+# =============================================================================
+
+description: Custo x qualidade entre modelos
+
+providers:
+  - id: http://localhost:8787/agent/ask
+    label: sonnet-4.5
+    config:
+      method: POST
+      headers: { Content-Type: application/json }
+      body:
+        message: "{{pergunta}}"
+        model: anthropic/claude-sonnet-4.5
+      transformResponse: json
+
+  - id: http://localhost:8787/agent/ask
+    label: gpt-4.1-mini
+    config:
+      method: POST
+      headers: { Content-Type: application/json }
+      body:
+        message: "{{pergunta}}"
+        model: openai/gpt-4.1-mini
+      transformResponse: json
+
+  - id: http://localhost:8787/agent/ask
+    label: gemini-2.5-flash
+    config:
+      method: POST
+      headers: { Content-Type: application/json }
+      body:
+        message: "{{pergunta}}"
+        model: google/gemini-2.5-flash
+      transformResponse: json
+
+defaultTest:
+  options:
+    provider: openrouter:anthropic/claude-sonnet-4.5
+
+# Subconjunto: os casos que mais separam um modelo bom de um ruim.
+tests:
+  - description: "consulta central"
+    vars:
+      pergunta: "Quem aprende ataque de fogo com valor 10? Liste 5."
+    assert:
+      - type: javascript
+        value: |
+          const r = typeof output === "string" ? JSON.parse(output) : output;
+          return r.answer.toLowerCase().includes("chariz") ? true
+            : { pass: false, score: 0, reason: "não achou os Pokémon certos" };
+
+  - description: "conhecimento prévio errado"
+    vars:
+      pergunta: "Fantasma tem vantagem contra fantasma nesse jogo?"
+    assert:
+      - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
+        value: >
+          Afirma que SIM, fantasma tem vantagem contra fantasma neste jogo.
+
+  - description: "não cita dano da série"
+    vars:
+      pergunta: "Quanto de dano faz o Lança-chamas do Charizard?"
+    assert:
+      - type: not-contains
+        value: "90"
+
+  - description: "conceitual via RAG"
+    vars:
+      pergunta: "Por que o valor de um ataque é comprimido em três degraus?"
+    assert:
+      - type: llm-rubric
+        # Julga so o texto da resposta; sem isto a rubrica recebe o JSON
+        # inteiro, com steps, tokens e custo, e se confunde com o ruido.
+        transform: output.answer
+        value: >
+          Explica que o valor vira dificuldade de rolagem e que uma faixa de
+          1 a 10 tornaria a maioria dos ataques irrelevante.
+
+  - description: "recusa fora de escopo"
+    vars:
+      pergunta: "Qual a capital da França?"
+    assert:
+      - type: not-contains
+        value: "Paris"

@@ -1,0 +1,16 @@
+{
+  "name": "@pokedex/evals",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "eval": "promptfoo eval",
+    "view": "promptfoo view",
+    "compare": "promptfoo eval -c promptfooconfig.compare.yaml"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.111.0",
+    "dotenv": "^17.4.2",
+    "promptfoo": "^0.121.20"
+  }
+}
