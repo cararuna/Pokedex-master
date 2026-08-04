@@ -85,7 +85,7 @@ const DialogContent = forwardRef<
             )}
           >
             {/* O rótulo textual é obrigatório: um X sozinho não é anunciado. */}
-            <span className="sr-only">Fechar</span>
+            <span className="sr-only">Close</span>
             <svg viewBox="0 0 14 14" fill="none" aria-hidden="true" className="size-3.5">
               <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             </svg>

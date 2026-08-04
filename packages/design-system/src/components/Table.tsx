@@ -25,7 +25,7 @@ const TableRoot = forwardRef<
     <div
       tabIndex={0}
       role="region"
-      aria-label="Tabela com rolagem horizontal"
+      aria-label="Horizontally scrollable table"
       className={cn(
         "w-full overflow-x-auto",
         "rounded-[var(--r-md)] border border-border",

@@ -4,6 +4,7 @@ import {
   Button,
   Drawer,
   Inline,
+  Markdown,
   Stack,
 } from "@pokedex/design-system";
 import {
@@ -34,19 +35,28 @@ interface Mensagem {
   meta?: { passos: number; tokens: number; custoUsd: number | null };
 }
 
-const NOMES_DE_FERRAMENTA: Record<string, string> = {
-  buscar_pokemon: "Buscando Pokémon",
-  ficha_do_pokemon: "Abrindo a ficha",
-  vantagem_de_tipo: "Consultando vantagens",
-  talentos_do_tipo: "Consultando talentos",
-  explicar_regra_de_conversao: "Revendo a regra de conversão",
+/**
+ * Rótulo humano para cada ferramenta.
+ *
+ * A chave é o nome interno, que continua em snake_case porque é o que o modelo
+ * chama. O que aparece na tela é a tradução — quem está na mesa não precisa
+ * saber que existe uma função chamada `explicar_regra_de_conversao`.
+ */
+const TOOL_LABELS: Record<string, string> = {
+  buscar_pokemon: "Searching Pokémon",
+  ficha_do_pokemon: "Opening the card",
+  vantagem_de_tipo: "Checking type advantages",
+  talentos_do_tipo: "Checking type abilities",
+  buscar_por_efeito: "Searching by effect",
+  buscar_documentacao: "Reading the rules",
+  explicar_regra_de_conversao: "Reviewing the conversion rule",
 };
 
-const EXEMPLOS = [
-  "Quem aprende ataque de fogo com valor 10?",
-  "Contra o que o tipo fantasma tem vantagem?",
-  "Mostra a ficha do Charizard",
-  "Por que um ataque vale 8 e não 3?",
+const EXAMPLES = [
+  "Who learns a fire attack with value 10?",
+  "What is the ghost type strong against?",
+  "Show me Charizard's card",
+  "Why is an attack worth 8 and not 3?",
 ];
 
 export function AgentPanel() {
@@ -102,7 +112,7 @@ export function AgentPanel() {
         signal: controller.signal,
         onEvent: (evento: AgentEvent) => {
           if (evento.type === "tool_call") {
-            const rotulo = NOMES_DE_FERRAMENTA[evento.name] ?? evento.name;
+            const rotulo = TOOL_LABELS[evento.name] ?? evento.name;
             atividades.push(rotulo);
             setAtividadeAtual([...atividades]);
           }
@@ -130,7 +140,7 @@ export function AgentPanel() {
               {
                 id: crypto.randomUUID(),
                 autor: "agente",
-                texto: `Não consegui responder: ${evento.message}`,
+                texto: `I could not answer: ${evento.message}`,
               },
             ]);
           }
@@ -145,8 +155,8 @@ export function AgentPanel() {
           id: crypto.randomUUID(),
           autor: "agente",
           texto: offline
-            ? "A API do agente não está no ar. Suba com `pnpm dev:api` — e confira se o apps/api/.env está preenchido."
-            : `Erro: ${e instanceof Error ? e.message : String(e)}`,
+            ? "The agent API is not responding. Start it with `pnpm dev:api` and check that apps/api/.env is filled in."
+            : `Error: ${e instanceof Error ? e.message : String(e)}`,
         },
       ]);
     } finally {
@@ -160,24 +170,24 @@ export function AgentPanel() {
     <Drawer open={aberto} onOpenChange={setAberto}>
       <Drawer.Trigger asChild>
         <Button variant="soft" size="sm" startIcon={<SparkIcon />}>
-          Perguntar
+          Ask
         </Button>
       </Drawer.Trigger>
 
       <Drawer.Content aria-describedby={undefined}>
         <Drawer.Header>
           <Stack gap={0}>
-            <Drawer.Title>Assistente de mesa</Drawer.Title>
+            <Drawer.Title>Table assistant</Drawer.Title>
             <span className="text-2xs text-text-subtle">
               {saude?.online
-                ? `Conectado · ${saude.model}`
+                ? `Connected · ${saude.model}`
                 : saude === null
-                  ? "Verificando…"
+                  ? "Checking…"
                   : "API offline"}
             </span>
           </Stack>
           <Drawer.Close asChild>
-            <Button variant="ghost" size="sm" iconOnly aria-label="Fechar assistente">
+            <Button variant="ghost" size="sm" iconOnly aria-label="Close assistant">
               <CloseIcon />
             </Button>
           </Drawer.Close>
@@ -187,15 +197,15 @@ export function AgentPanel() {
           {mensagens.length === 0 ? (
             <Stack gap={4}>
               <p className="text-sm leading-relaxed text-text-muted">
-                Pergunte sobre as cartas, os ataques e as regras do jogo. As
-                respostas vêm do banco de dados da partida — não da memória do
-                modelo.
+                Ask about the cards, the attacks and the rules of the game.
+                Answers come from the game database — not from the model's
+                memory.
               </p>
               <Stack gap={2}>
                 <p className="font-mono text-2xs uppercase tracking-widest text-text-subtle">
-                  Exemplos
+                  Examples
                 </p>
-                {EXEMPLOS.map((ex) => (
+                {EXAMPLES.map((ex) => (
                   <button
                     key={ex}
                     type="button"
@@ -234,7 +244,7 @@ export function AgentPanel() {
             className="flex items-end gap-2"
           >
             <label htmlFor="agent-input" className="sr-only">
-              Sua pergunta
+              Your question
             </label>
             <textarea
               id="agent-input"
@@ -249,12 +259,12 @@ export function AgentPanel() {
                 }
               }}
               rows={2}
-              placeholder="Quem aprende ataque de gelo?"
+              placeholder="Who learns an ice attack?"
               disabled={ocupado}
               className="min-h-[2.5rem] flex-1 resize-none rounded-[var(--field-radius)] border border-[var(--field-border)] bg-[var(--field-bg)] px-3 py-2 text-sm text-text transition-colors hover:border-[var(--field-border-hover)] disabled:opacity-60 focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring-shadow)]"
             />
             <Button type="submit" size="md" loading={ocupado} disabled={!entrada.trim()}>
-              Enviar
+              Send
             </Button>
           </form>
         </Drawer.Footer>
@@ -284,14 +294,15 @@ function Bolha({ mensagem }: { mensagem: Mensagem }) {
                 ))}
               </Inline>
             )}
-            <div className="whitespace-pre-wrap text-sm leading-relaxed text-text">
-              {mensagem.texto}
-            </div>
+            {/* O modelo responde em Markdown: listas de Pokémon, nomes em
+                negrito, às vezes uma tabela. Sem renderizar, os `**` apareciam
+                crus e a resposta parecia saída de terminal. */}
+            <Markdown>{mensagem.texto}</Markdown>
             {mensagem.meta && (
               <p className="font-mono text-2xs text-text-subtle">
-                {mensagem.meta.passos} passo
+                {mensagem.meta.passos} step
                 {mensagem.meta.passos === 1 ? "" : "s"} ·{" "}
-                {mensagem.meta.tokens.toLocaleString("pt-BR")} tokens
+                {mensagem.meta.tokens.toLocaleString("en-US")} tokens
                 {mensagem.meta.custoUsd !== null &&
                   ` · US$ ${mensagem.meta.custoUsd.toFixed(5)}`}
               </p>
@@ -322,7 +333,7 @@ function Atividade({ rotulos }: { rotulos: string[] }) {
       {rotulos.length === 0 && (
         <Inline gap={2} align="center">
           <span className="size-1.5 animate-pulse rounded-full bg-accent-solid" />
-          <span className="text-xs text-text-muted">Pensando…</span>
+          <span className="text-xs text-text-muted">Thinking…</span>
         </Inline>
       )}
     </Stack>

@@ -111,9 +111,23 @@ Não invista em melhorar os CSS legados; eles vão ser deletados.
 
 ## Convenções
 
-**Idioma.** Código, tipos e nomes de arquivo em **inglês**. Comentários, documentação e
-texto de interface em **português**. O código legado mistura os dois (`MovimentosCompletos`,
-`ListaPokemon`) — ao reescrever um arquivo, padronize; não renomeie o que não está tocando.
+**Idioma.** Três camadas, e a divisão é deliberada:
+
+| Camada | Língua | Por quê |
+|---|---|---|
+| Código, tipos, nomes de arquivo | inglês | convenção do ecossistema |
+| **Texto de interface** e resposta do agente | **inglês** | a mesa já fala inglês: `Flare Blitz`, `Fire`, `Heat Wave`. Rótulo em português ao lado disso fazia a tela falar duas línguas |
+| Comentários, `docs/`, mensagem de commit | português | é a língua de quem mantém |
+
+O `SYSTEM_PROMPT` também é inglês — o agente responde na língua da tela.
+
+As duas mecânicas de habilidade têm nome fixo na interface e na API:
+**innate abilities** (o Pokémon já tem) e **type abilities** (qualquer Pokémon
+daquele tipo pode adquirir). No banco as tabelas seguem `abilities` e
+`type_talents`; a tradução acontece na borda da API.
+
+O código legado mistura os dois (`MovimentosCompletos`, `ListaPokemon`) — ao
+reescrever um arquivo, padronize; não renomeie o que não está tocando.
 
 **Design system.** A regra que sustenta tudo: **componente nunca referencia token primitivo.**
 `Button` usa `--color-accent-solid`, jamais `--accent-600`. É isso que permite trocar tema
