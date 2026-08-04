@@ -2,10 +2,16 @@
  * Entrypoint serverless da Vercel.
  *
  * A Vercel trata qualquer arquivo em `/api` na raiz como função. O nome
- * `[[...route]]` é a rota curinga opcional: uma única função atende
- * `/api/pokemon`, `/api/agent/chat` e tudo mais, em vez de um arquivo por
- * endpoint. Assim o app Hono continua sendo um só — o mesmo que roda em
- * `pnpm dev:api` — e não existe uma versão "de produção" divergente.
+ * `[...route]` é a rota curinga: uma única função atende `/api/pokemon`,
+ * `/api/agent/chat` e tudo mais, em vez de um arquivo por endpoint. Assim o
+ * app Hono continua sendo um só — o mesmo que roda em `pnpm dev:api` — e não
+ * existe uma versão "de produção" divergente.
+ *
+ * Um colchete, e não dois. `[[...route]]` é a curinga *opcional*, e essa é uma
+ * convenção do Next.js: fora dele a Vercel casava só o primeiro segmento.
+ * `/api/pokemon` respondia e `/api/pokemon/bulbasaur` dava 404 — o verso da
+ * carta ficava sem talentos e o chat do agente aparecia como offline, os dois
+ * pela mesma causa.
  *
  * O `.route("/api", app)` monta o app sob o prefixo. Em desenvolvimento o
  * servidor local serve na raiz (`http://localhost:8787/pokemon`); em produção
