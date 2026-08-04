@@ -1,9 +1,10 @@
 {
+  "//moduleResolution": "nodenext, e não bundler, porque este código roda no Node de verdade — sem empacotador que conserte especificador. Sob bundler o TypeScript aceita `from \"./env\"`, e aí o import só quebra em produção: em ESM o Node não completa extensão nem resolve diretório. Com nodenext o compilador cobra a extensão explícita, e o erro aparece aqui em vez de num cold start.",
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

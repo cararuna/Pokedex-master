@@ -10,8 +10,8 @@
  * sabem em qual dos dois estão rodando.
  */
 import { serve } from "@hono/node-server";
-import app, { agenteConfigurado } from "./index";
-import { serverEnv } from "./env";
+import app, { agenteConfigurado } from "./index.js";
+import { serverEnv } from "./env.js";
 
 serve({ fetch: app.fetch, port: serverEnv.PORT }, (info) => {
   console.log(`\n  API em http://localhost:${info.port}`);

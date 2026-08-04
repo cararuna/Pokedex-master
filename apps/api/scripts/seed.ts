@@ -18,7 +18,7 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { db } from "../src/db/client";
+import { db } from "../src/db/client.js";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 /** Dados do jogo. Vivem no backend desde que o front passou a ler da API. */

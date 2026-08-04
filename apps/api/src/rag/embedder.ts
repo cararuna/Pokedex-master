@@ -1,5 +1,5 @@
-import { llm } from "../agent/llm";
-import { llmEnv } from "../env";
+import { llm } from "../agent/llm.js";
+import { llmEnv } from "../env.js";
 
 /**
  * Geração de embeddings.

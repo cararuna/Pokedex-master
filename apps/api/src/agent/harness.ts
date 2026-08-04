@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type OpenAI from "openai";
-import { llm, MODEL, extrairCusto } from "./llm";
-import { toolsByName, tools } from "./tools";
-import { SYSTEM_PROMPT } from "./prompt";
-import { iniciarTrace, registrarPasso, encerrarTrace } from "./trace";
+import { llm, MODEL, extrairCusto } from "./llm.js";
+import { toolsByName, tools } from "./tools/index.js";
+import { SYSTEM_PROMPT } from "./prompt.js";
+import { iniciarTrace, registrarPasso, encerrarTrace } from "./trace.js";
 
 /**
  * Harness do agente.
