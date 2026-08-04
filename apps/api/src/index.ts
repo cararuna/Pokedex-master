@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import { serverEnv } from "./env";
+import { serverEnv, statusDaConfiguracao, ConfigError } from "./env";
 import { db } from "./db/client";
 
 /**
@@ -58,14 +58,48 @@ app.use(
   }),
 );
 
-app.get("/health", (c) =>
-  c.json({
-    ok: true,
-    catalogo: true,
-    agente: agenteConfigurado(),
-    model: agenteConfigurado() ? process.env.OPENROUTER_MODEL : null,
-  }),
-);
+/**
+ * Diagnóstico. Precisa responder mesmo com o ambiente pela metade — é aqui
+ * que se descobre o que está faltando num deploy que não sobe.
+ */
+app.get("/health", (c) => {
+  const cfg = statusDaConfiguracao();
+  return c.json({
+    ok: cfg.supabase,
+    catalogo: cfg.supabase,
+    agente: cfg.supabase && cfg.openrouter,
+    model: cfg.openrouter ? (process.env.OPENROUTER_MODEL ?? null) : null,
+    ambiente: process.env.VERCEL ? "vercel" : "local",
+    ...(cfg.faltando.length
+      ? {
+          faltando: [...new Set(cfg.faltando)],
+          dica: "Configure em Vercel → Settings → Environment Variables e refaça o deploy.",
+        }
+      : {}),
+  });
+});
+
+/**
+ * Erro não tratado vira JSON, não 500 mudo.
+ *
+ * `ConfigError` é o caso comum num deploy novo: sem as variáveis, a plataforma
+ * devolveria 500 sem corpo e não haveria como saber qual delas faltou.
+ */
+app.onError((err, c) => {
+  if (err instanceof ConfigError) {
+    return c.json(
+      {
+        erro: `Configuração de ${err.area} ausente no servidor.`,
+        faltando: err.faltando,
+        dica: "Vercel → Settings → Environment Variables, depois Redeploy.",
+      },
+      503,
+    );
+  }
+
+  console.error("[api] erro não tratado:", err);
+  return c.json({ erro: err.message || "Erro interno" }, 500);
+});
 
 /* ── Catálogo ─────────────────────────────────────────────────────────────── */
 

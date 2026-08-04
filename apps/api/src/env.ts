@@ -13,13 +13,51 @@ import { z } from "zod";
  * faltando é erro de configuração e deve falhar cedo, com mensagem clara.
  */
 
-function falhar(area: string, issues: { path: PropertyKey[]; message: string }[]): never {
-  console.error(`\n✗ Configuração de ${area} inválida em apps/api/.env\n`);
-  for (const i of issues) {
-    console.error(`  ${i.path.join(".")}: ${i.message}`);
+/** Erro de configuração, com as variáveis que faltam. */
+export class ConfigError extends Error {
+  constructor(
+    readonly area: string,
+    readonly faltando: string[],
+  ) {
+    super(`Configuração de ${area} inválida: ${faltando.join(", ")}`);
+    this.name = "ConfigError";
   }
+}
+
+/**
+ * `process.exit(1)` está certo num servidor que sobe pela linha de comando —
+ * falha cedo, alto e visível. Numa função serverless é o oposto: mata o
+ * processo, a plataforma devolve 500 sem corpo, e não há como saber qual
+ * variável faltou.
+ *
+ * Então: encerra o processo em execução local, lança em serverless. Quem
+ * captura é o app, que responde com a lista do que está faltando.
+ */
+function falhar(area: string, issues: { path: PropertyKey[]; message: string }[]): never {
+  const faltando = issues.map((i) => `${i.path.join(".")} (${i.message})`);
+
+  if (process.env.VERCEL) {
+    throw new ConfigError(area, faltando);
+  }
+
+  console.error(`\n✗ Configuração de ${area} inválida em apps/api/.env\n`);
+  for (const f of faltando) console.error(`  ${f}`);
   console.error("\n  Copie apps/api/.env.example e preencha. Veja SETUP.md.\n");
   process.exit(1);
+}
+
+/** Diz o que está configurado sem lançar — usado pelo /health. */
+export function statusDaConfiguracao() {
+  const supabase = supabaseSchema.safeParse(process.env);
+  const llm = llmSchema.safeParse(process.env);
+  return {
+    supabase: supabase.success,
+    openrouter: llm.success,
+    faltando: [
+      ...(supabase.success ? [] : supabase.error.issues.map((i) => String(i.path[0]))),
+      ...(llm.success ? [] : llm.error.issues.map((i) => String(i.path[0]))),
+    ],
+  };
 }
 
 /* ── Supabase ─────────────────────────────────────────────────────────────── */

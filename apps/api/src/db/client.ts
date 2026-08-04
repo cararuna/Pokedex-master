@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { supabaseEnv } from "../env";
 
 /**
@@ -12,10 +12,37 @@ import { supabaseEnv } from "../env";
  * `persistSession: false` porque não há usuário logado nesta conexão: é
  * processo de servidor, não navegador.
  */
-const env = supabaseEnv();
+/**
+ * Inicialização preguiçosa.
+ *
+ * Criar o cliente no topo do módulo fazia a validação de ambiente rodar no
+ * import — e, sem as variáveis, a função serverless morria antes de qualquer
+ * rota executar. Resultado: 500 sem corpo, inclusive no /health, que existe
+ * justamente para dizer o que está faltando.
+ *
+ * Com o Proxy, o cliente só é construído na primeira consulta de verdade, e
+ * o erro de configuração vira uma resposta HTTP legível.
+ */
+let instancia: SupabaseClient | null = null;
 
-export const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
+function cliente(): SupabaseClient {
+  if (!instancia) {
+    const env = supabaseEnv();
+    instancia = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return instancia;
+}
+
+export const db = new Proxy({} as SupabaseClient, {
+  get(_alvo, prop, receber) {
+    const real = cliente();
+    const valor = Reflect.get(real, prop, receber);
+    // Métodos precisam do `this` correto: `db.from(...)` chamado pelo Proxy
+    // perderia o contexto e quebraria dentro do SDK.
+    return typeof valor === "function" ? valor.bind(real) : valor;
+  },
 });
 
 /* ── Formato dos registros ────────────────────────────────────────────────── */
