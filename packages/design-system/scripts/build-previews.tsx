@@ -238,7 +238,7 @@ const CARDS: Card_[] = [
     grupo: "Components",
     subtitulo: "5 variantes × 3 tamanhos · altura vinda de --control-*",
     conteudo: (
-      <Stack gap={7}>
+      <Stack gap={6}>
         {(["solid", "soft", "outline", "ghost", "danger"] as const).map((v) => (
           <Stack key={v} gap={2}>
             <Rotulo>{v}</Rotulo>
@@ -260,7 +260,7 @@ const CARDS: Card_[] = [
     grupo: "Components",
     subtitulo: "18 tipos · substituiu ~600 linhas de CSS",
     conteudo: (
-      <Stack gap={7}>
+      <Stack gap={6}>
         <Stack gap={2}>
           <Rotulo>Os 18 tipos — mesma faixa de luminância</Rotulo>
           <Inline gap={2}>
