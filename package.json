@@ -20,6 +20,15 @@
     "eval": "pnpm --filter @pokedex/evals eval"
   },
   "dependencies": {
-    "hono": "^4.12.33"
+    "@hono/node-server": "^2.0.12",
+    "@supabase/supabase-js": "^2.111.0",
+    "dotenv": "^17.4.2",
+    "hono": "^4.12.33",
+    "openai": "^7.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^7.0.2"
   }
 }
