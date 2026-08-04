@@ -17,9 +17,21 @@ import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import app from "../apps/api/src/index";
 
-// Node, não Edge: o cliente do Supabase e o SDK da OpenAI dependem de APIs do
-// Node que o runtime Edge não expõe.
-export const config = { runtime: "nodejs" };
+/**
+ * Configuração da função, declarada aqui e não no vercel.json.
+ *
+ * A chave `functions` do vercel.json usa glob, e `[` e `]` são sintaxe de
+ * classe de caracteres — o padrão "api/[[...route]].ts" não casa com o arquivo
+ * de mesmo nome, e o deploy falha com "the pattern doesn't match any
+ * Serverless Functions". Exportar daqui evita o problema por completo.
+ *
+ * Node e não Edge: o cliente do Supabase e o SDK da OpenAI dependem de APIs
+ * que o runtime Edge não expõe.
+ */
+export const runtime = "nodejs";
+
+/** O harness tem timeout interno de 60s; a plataforma precisa acompanhar. */
+export const maxDuration = 60;
 
 const vercel = new Hono().route("/api", app);
 
