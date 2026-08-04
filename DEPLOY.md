@@ -112,7 +112,21 @@ URL, preencha e refaça o deploy.
 
 **Deployments → ⋯ no último → Redeploy.**
 
-Quando terminar, confira nesta ordem:
+Quando terminar, confira nesta ordem. Primeiro a sonda sem dependência nenhuma:
+
+```bash
+curl https://SEU-PROJETO.vercel.app/api/ping
+```
+
+```json
+{"pong":true,"node":"v22.x.x","ambiente":"vercel"}
+```
+
+Ela existe para separar duas perguntas que o erro da Vercel mistura. Se
+`FUNCTION_INVOCATION_FAILED` aparece **também no ping**, o problema é a
+configuração da função — não o código da API, que o ping nem importa.
+
+Depois o diagnóstico de verdade:
 
 ```bash
 curl https://SEU-PROJETO.vercel.app/api/health
@@ -121,14 +135,15 @@ curl https://SEU-PROJETO.vercel.app/api/health
 Esperado:
 
 ```json
-{"ok":true,"catalogo":true,"agente":true,"model":"google/gemini-2.5-flash"}
+{"ok":true,"catalogo":true,"agente":true,"model":"google/gemini-2.5-flash","ambiente":"vercel"}
 ```
 
 | Resposta | Significa |
 |---|---|
 | `"agente": false` | Falta `OPENROUTER_API_KEY` |
+| `503` com `faltando` | As variáveis listadas não estão cadastradas |
 | `404` | Root Directory errado, ou a pasta `api/` não subiu |
-| `500` | Variável do Supabase ausente ou errada — veja Runtime Logs |
+| `FUNCTION_INVOCATION_FAILED` | A função quebrou antes de rodar qualquer rota — veja Runtime Logs, e compare com o `/api/ping` |
 
 Depois, o catálogo:
 
