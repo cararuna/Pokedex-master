@@ -20,7 +20,7 @@
  * truncado de forma intermitente, que é o bug clássico aqui.
  */
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
+import { API_BASE as API_URL } from "./api-base";
 
 export type AgentEvent =
   | { type: "step"; index: number }

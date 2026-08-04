@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Pokédex — design system, API e agente de IA",
-  "//type": "A raiz precisa ser ESM porque é ela que rege api/[[...route]].ts — o pacote mais próximo do arquivo. Sem isto a Vercel compila a função como CommonJS e ela faz require() de apps/api, que é ESM: ERR_REQUIRE_ESM no cold start, FUNCTION_INVOCATION_FAILED em toda rota. Os quatro workspaces já são ESM; só a raiz tinha ficado para trás.",
+  "//type": "A raiz precisa ser ESM porque é ela que rege api/[...route].ts — o pacote mais próximo do arquivo. Sem isto a Vercel compila a função como CommonJS e ela faz require() de apps/api, que é ESM: ERR_REQUIRE_ESM no cold start, FUNCTION_INVOCATION_FAILED em toda rota. Os quatro workspaces já são ESM; só a raiz tinha ficado para trás.",
   "type": "module",
   "engines": {
     "node": ">=20"
