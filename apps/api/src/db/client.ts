@@ -45,6 +45,27 @@ export const db = new Proxy({} as SupabaseClient, {
   },
 });
 
+/**
+ * Linhas de uma consulta, com o formato declarado por quem consome.
+ *
+ * O cliente é criado sem o generic `Database`, então o postgrest-js tenta
+ * inferir o formato das linhas lendo a string do `select` em tempo de tipo. Em
+ * `select` com relação — `pokemon!inner(...)`, `abilities(name, description)` —
+ * essa inferência degrada para uma união que inclui um tipo de erro, e o
+ * callback do `.map` fica sem tipo contextual.
+ *
+ * O detalhe que custou um deploy: se degrada ou não depende da versão do
+ * TypeScript e do modo de resolução de módulo. O mesmo arquivo compila limpo
+ * aqui e falha no build da Vercel com `implicitly has an 'any' type`.
+ *
+ * Declarar o formato tira a inferência do caminho: `unknown` na entrada aceita
+ * o que o SDK devolver, e o `T` na saída é o contrato que o `schema.sql`
+ * sustenta. Também cobre o `?? []` — consulta vazia devolve `null`, não `[]`.
+ */
+export function linhas<T>(data: unknown): T[] {
+  return (data ?? []) as T[];
+}
+
 /* ── Formato dos registros ────────────────────────────────────────────────── */
 
 export interface PokemonRow {
