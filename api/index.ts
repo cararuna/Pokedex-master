@@ -1,17 +1,22 @@
 /**
  * Entrypoint serverless da Vercel.
  *
- * A Vercel trata qualquer arquivo em `/api` na raiz como função. O nome
- * `[...route]` é a rota curinga: uma única função atende `/api/pokemon`,
- * `/api/agent/chat` e tudo mais, em vez de um arquivo por endpoint. Assim o
+ * Uma função só atende `/api/pokemon`, `/api/agent/chat` e tudo mais. Assim o
  * app Hono continua sendo um só — o mesmo que roda em `pnpm dev:api` — e não
  * existe uma versão "de produção" divergente.
  *
- * Um colchete, e não dois. `[[...route]]` é a curinga *opcional*, e essa é uma
- * convenção do Next.js: fora dele a Vercel casava só o primeiro segmento.
- * `/api/pokemon` respondia e `/api/pokemon/bulbasaur` dava 404 — o verso da
- * carta ficava sem talentos e o chat do agente aparecia como offline, os dois
- * pela mesma causa.
+ * ── Por que o nome é `index` e o roteamento vive no vercel.json ──────────
+ *
+ * O roteamento por nome de arquivo da Vercel só cobre **um segmento** fora do
+ * Next.js. `/api/pokemon` respondia e `/api/pokemon/bulbasaur` dava 404 —
+ * tanto com `[[...route]]` quanto com `[...route]`, porque a curinga de
+ * caminho é convenção do Next, não da plataforma.
+ *
+ * Então o roteamento sai do nome do arquivo e vai para uma reescrita
+ * (`/api/(.*)` → `/api`). O arquivo passa a ter nome estático, e quem decide
+ * qual rota atende é o Hono, que é o trabalho dele. Reescritas são avaliadas
+ * depois do sistema de arquivos, então `/api/ping` continua caindo na sonda
+ * própria dele, e `request.url` chega com o caminho original.
  *
  * O `.route("/api", app)` monta o app sob o prefixo. Em desenvolvimento o
  * servidor local serve na raiz (`http://localhost:8787/pokemon`); em produção
@@ -21,16 +26,7 @@
 
 import { Hono } from "hono";
 
-/**
- * Configuração da função, declarada aqui e não no vercel.json.
- *
- * A chave `functions` do vercel.json usa glob, e `[` e `]` são sintaxe de
- * classe de caracteres — o padrão "api/[[...route]].ts" não casa com o arquivo
- * de mesmo nome, e o deploy falha com "the pattern doesn't match any
- * Serverless Functions". Exportar daqui evita o problema por completo.
- *
- * O harness tem timeout interno de 60s; a plataforma precisa acompanhar.
- */
+/** O harness tem timeout interno de 60s; a plataforma precisa acompanhar. */
 export const maxDuration = 60;
 
 /**
@@ -50,7 +46,28 @@ let carregando: Promise<Hono> | null = null;
 
 async function montar(): Promise<Hono> {
   const { default: app } = await import("../apps/api/src/index.js");
-  return new Hono().route("/api", app);
+  const vercel = new Hono().route("/api", app);
+
+  /**
+   * 404 que diz o que a função recebeu.
+   *
+   * Se a reescrita não preservar o caminho original, toda requisição chega
+   * aqui como `/api` e nada casa — e um 404 mudo seria indistinguível do 404
+   * da plataforma, que é onde este problema já se escondeu duas vezes. Com o
+   * caminho no corpo, uma requisição basta para saber de quem é o 404.
+   */
+  vercel.notFound((c) =>
+    c.json(
+      {
+        erro: "Rota não encontrada na API.",
+        caminho_recebido: new URL(c.req.url).pathname,
+        metodo: c.req.method,
+      },
+      404,
+    ),
+  );
+
+  return vercel;
 }
 
 /**
