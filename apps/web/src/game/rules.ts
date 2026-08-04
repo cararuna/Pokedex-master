@@ -92,23 +92,23 @@ export function getTypeIcon(type: string): string {
 /** Rótulos em português. A chave permanece em inglês, como na PokeAPI. */
 export const TYPE_LABELS: Record<GameType, string> = {
   normal: "Normal",
-  fire: "Fogo",
-  water: "Água",
-  grass: "Planta",
-  electric: "Elétrico",
-  ice: "Gelo",
-  fighting: "Lutador",
-  poison: "Venenoso",
-  ground: "Terrestre",
-  flying: "Voador",
-  psychic: "Psíquico",
-  bug: "Inseto",
-  rock: "Pedra",
-  ghost: "Fantasma",
-  dragon: "Dragão",
-  dark: "Sombrio",
-  steel: "Aço",
-  fairy: "Fada",
+  fire: "Fire",
+  water: "Water",
+  grass: "Grass",
+  electric: "Electric",
+  ice: "Ice",
+  fighting: "Fighting",
+  poison: "Poison",
+  ground: "Ground",
+  flying: "Flying",
+  psychic: "Psychic",
+  bug: "Bug",
+  rock: "Rock",
+  ghost: "Ghost",
+  dragon: "Dragon",
+  dark: "Dark",
+  steel: "Steel",
+  fairy: "Fairy",
 };
 
 /** Gerações de arte disponíveis, na ordem do seletor da tela. */
@@ -118,9 +118,9 @@ export const SPRITE_SETS = [
   { key: "generation-iii", label: "Gen. III" },
   { key: "generation-iv", label: "Gen. IV" },
   { key: "generation-v", label: "Gen. V" },
-  { key: "icons", label: "Ícones" },
+  { key: "icons", label: "Icons" },
   { key: "3d", label: "3D" },
-  { key: "artwork", label: "Arte" },
+  { key: "artwork", label: "Artwork" },
 ] as const;
 
 export function formatMoveName(slug: string): string {

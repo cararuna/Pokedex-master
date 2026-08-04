@@ -40,3 +40,6 @@ evals/output/
 # Fica no disco como referência, fora do versionamento do monorepo.
 legacy/*
 !legacy/README.md
+
+.vercel
+.env*

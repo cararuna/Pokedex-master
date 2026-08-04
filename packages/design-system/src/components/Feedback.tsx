@@ -128,7 +128,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
     return (
       <nav
         ref={ref}
-        aria-label="Paginação"
+        aria-label="Pagination"
         className={cn("flex items-center justify-center gap-1", className)}
         {...props}
       >
@@ -137,7 +137,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
           size="sm"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Página anterior"
+          aria-label="Previous page"
         >
           Anterior
         </Button>
@@ -171,7 +171,7 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(
           size="sm"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          aria-label="Próxima página"
+          aria-label="Next page"
         >
           Próxima
         </Button>

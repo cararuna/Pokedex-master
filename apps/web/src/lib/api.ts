@@ -26,10 +26,17 @@ export interface ApiPokemon {
   ataque_destacado?: { nome: string; tipo: string; valor: number };
 }
 
+export interface ApiAbility {
+  name: string;
+  description: string;
+}
+
 export interface ApiPokemonDetail extends ApiPokemon {
-  ataques: ApiMove[];
-  habilidades_inatas: { name: string; description: string }[];
-  talentos: { type: string; name: string; description: string; position: number }[];
+  attacks: ApiMove[];
+  /** O Pokémon já tem. */
+  innate_abilities: ApiAbility[];
+  /** Qualquer Pokémon daquele tipo pode adquirir. */
+  type_abilities: (ApiAbility & { type: string; position: number })[];
 }
 
 export interface Pagina<T> {

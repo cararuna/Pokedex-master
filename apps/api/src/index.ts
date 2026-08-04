@@ -242,11 +242,17 @@ app.get("/pokemon/:slug", async (c) => {
       .order("position"),
   ]);
 
+  /**
+   * Os dois mecanismos têm nomes próprios porque a diferença é de regra, não
+   * de arrumação: **innate** o Pokémon já tem; **type** qualquer Pokémon
+   * daquele tipo pode adquirir. Chamar os dois de "habilidade" na interface
+   * fazia o jogador ler como se já tivesse tudo.
+   */
   return c.json({
     ...p,
-    ataques: golpes.data ?? [],
-    habilidades_inatas: (habilidades.data ?? []).map((h: any) => h.abilities),
-    talentos: talentos.data ?? [],
+    attacks: golpes.data ?? [],
+    innate_abilities: (habilidades.data ?? []).map((h: any) => h.abilities),
+    type_abilities: talentos.data ?? [],
   });
 });
 

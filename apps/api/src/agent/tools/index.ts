@@ -170,7 +170,7 @@ const fichaDoPokemon: Tool = {
         tipo: g.move_type,
         valor_no_jogo: g.game_power,
       })),
-      habilidades_inatas: linhas<{ abilities: Omit<LinhaHabilidade, "id"> }>(
+      innate_abilities: linhas<{ abilities: Omit<LinhaHabilidade, "id"> }>(
         habilidades,
       ).map((h) => h.abilities),
     };
@@ -389,10 +389,10 @@ const buscarPorEfeito: Tool = {
       // O modelo precisa saber que são dois mecanismos diferentes, senão
       // apresenta talento de tipo como se o Pokémon já tivesse a habilidade.
       como_ler:
-        "habilidades_inatas: o Pokémon JÁ TEM. " +
-        "talentos_de_tipo: qualquer Pokémon daquele tipo PODE ADQUIRIR.",
-      habilidades_inatas: habilidadesInatas,
-      talentos_de_tipo: talentosDeTipo,
+        "innate_abilities: the Pokémon ALREADY HAS. " +
+        "type_abilities: any Pokémon of that type CAN ACQUIRE.",
+      innate_abilities: habilidadesInatas,
+      type_abilities: talentosDeTipo,
     };
   },
 };

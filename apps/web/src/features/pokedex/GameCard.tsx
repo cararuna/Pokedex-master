@@ -218,11 +218,11 @@ function FrenteDaCarta({
           caso já cabem. */}
       <div className="min-h-0 flex-1 overflow-y-auto border-t border-border-subtle px-3 py-2">
         <p className="px-1 pb-1.5 font-mono text-2xs uppercase tracking-widest text-text-subtle">
-          Ataques
+          Attacks
         </p>
         {pokemon.moves.length === 0 ? (
           <p className="px-1 py-2 text-xs text-text-subtle">
-            Não aprende ataques com dano.
+            Learns no damaging attacks.
           </p>
         ) : (
           <ul className="flex flex-col">
@@ -246,7 +246,7 @@ function FrenteDaCarta({
           className="flex w-full items-center justify-center gap-1.5 rounded-[var(--r-sm)] py-1.5 text-xs font-medium text-text-muted transition-colors duration-[130ms] hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring-shadow)]"
         >
           <FlipIcon />
-          Talentos e habilidades
+          Abilities
         </button>
       </footer>
     </>
@@ -299,7 +299,7 @@ function MoveRow({ move, destacado }: { move: GameMove; destacado: boolean }) {
       <span
         className="grid size-5 shrink-0 place-items-center rounded-[var(--r-xs)] font-mono text-2xs font-semibold tabular-nums text-text-on-solid"
         style={{ backgroundColor: `var(--color-type-${move.moveType})` }}
-        title={`Valor no jogo: ${move.power}`}
+        title={`Game value: ${move.power}`}
       >
         {move.power}
       </span>
@@ -342,10 +342,10 @@ function VersoDaCarta({
     return () => controller.abort();
   }, [ativo, dados, pokemon.slug]);
 
-  const inatas = dados?.habilidades_inatas ?? [];
-  const talentosPorTipo = new Map<string, ApiPokemonDetail["talentos"]>();
-  for (const t of dados?.talentos ?? []) {
-    talentosPorTipo.set(t.type, [...(talentosPorTipo.get(t.type) ?? []), t]);
+  const inatas = dados?.innate_abilities ?? [];
+  const porTipo = new Map<string, ApiPokemonDetail["type_abilities"]>();
+  for (const t of dados?.type_abilities ?? []) {
+    porTipo.set(t.type, [...(porTipo.get(t.type) ?? []), t]);
   }
 
   return (
@@ -361,17 +361,17 @@ function VersoDaCarta({
           onClick={onFlip}
           className="grid size-6 shrink-0 place-items-center rounded-[var(--r-sm)] text-text-subtle transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring-shadow)]"
         >
-          <span className="sr-only">Voltar para a frente da carta</span>
+          <span className="sr-only">Back to the front of the card</span>
           <FlipIcon />
         </button>
       </header>
 
-      {/* O verso rola de verdade: a árvore de talentos de um Pokémon de dois
-          tipos mais as inatas passa de 34rem com frequência. */}
+      {/* O verso rola de verdade: as habilidades de tipo de um Pokémon de dois
+          tipos mais as inatas passam de 34rem com frequência. */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {erro ? (
           <p className="py-4 text-xs text-danger-text">
-            Não foi possível carregar os talentos.
+            Could not load abilities.
           </p>
         ) : !dados ? (
           <div className="flex flex-col gap-2" aria-busy="true">
@@ -381,44 +381,56 @@ function VersoDaCarta({
           </div>
         ) : (
         <div className="flex flex-col gap-4">
-          {pokemon.types.map((type) => {
-            const talentos = talentosPorTipo.get(type);
-            if (!talentos?.length) return null;
-
-            return (
-              <section key={type}>
-                <h4 className="mb-1.5 flex items-center gap-1.5 font-mono text-2xs uppercase tracking-widest text-text-subtle">
-                  <TypeIcon type={type} size={14} />
-                  {TYPE_LABELS[type]}
-                </h4>
-                <ul className="flex flex-col gap-1.5">
-                  {talentos.map((t) => (
-                    <TalentItem
-                      key={t.name}
-                      nome={t.name}
-                      descricao={t.description}
-                    />
-                  ))}
-                </ul>
-              </section>
-            );
-          })}
-
+          {/* As inatas vêm primeiro porque são o que o Pokémon já tem. As de
+              tipo são potencial — ler na ordem inversa dá a impressão errada
+              de que a carta inteira já está disponível. */}
           {inatas.length > 0 && (
             <section>
               <h4 className="mb-1.5 font-mono text-2xs uppercase tracking-widest text-highlight-text">
-                Habilidades inatas
+                Innate abilities
               </h4>
               <ul className="flex flex-col gap-1.5">
-                {inatas.map((t) => (
-                  <TalentItem
-                    key={t.name}
-                    nome={t.name}
-                    descricao={t.description}
+                {inatas.map((a) => (
+                  <AbilityItem
+                    key={a.name}
+                    name={a.name}
+                    description={a.description}
                     destaque
                   />
                 ))}
               </ul>
+            </section>
+          )}
+
+          {porTipo.size > 0 && (
+            <section>
+              <h4 className="mb-2 font-mono text-2xs uppercase tracking-widest text-text-subtle">
+                Type abilities
+              </h4>
+              <div className="flex flex-col gap-3">
+                {pokemon.types.map((type) => {
+                  const doTipo = porTipo.get(type);
+                  if (!doTipo?.length) return null;
+
+                  return (
+                    <div key={type}>
+                      <h5 className="mb-1.5 flex items-center gap-1.5 font-mono text-2xs uppercase tracking-widest text-text-subtle">
+                        <TypeIcon type={type} size={14} />
+                        {TYPE_LABELS[type]}
+                      </h5>
+                      <ul className="flex flex-col gap-1.5">
+                        {doTipo.map((a) => (
+                          <AbilityItem
+                            key={a.name}
+                            name={a.name}
+                            description={a.description}
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
             </section>
           )}
         </div>
@@ -428,13 +440,13 @@ function VersoDaCarta({
   );
 }
 
-function TalentItem({
-  nome,
-  descricao,
+function AbilityItem({
+  name,
+  description,
   destaque = false,
 }: {
-  nome: string;
-  descricao: string;
+  name: string;
+  description: string;
   destaque?: boolean;
 }) {
   return (
@@ -450,9 +462,9 @@ function TalentItem({
           destaque ? "text-highlight-text" : "text-text",
         ].join(" ")}
       >
-        {nome}
+        {name}
       </p>
-      <p className="text-2xs leading-snug text-text-muted">{descricao}</p>
+      <p className="text-2xs leading-snug text-text-muted">{description}</p>
     </li>
   );
 }
