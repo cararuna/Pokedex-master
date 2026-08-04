@@ -26,26 +26,33 @@ export const POKEMON_TYPES = [
 
 export type PokemonType = (typeof POKEMON_TYPES)[number];
 
-/** Rótulos em português. A chave permanece em inglês — é a da PokeAPI. */
+/**
+ * Rótulo exibido para cada tipo.
+ *
+ * A tabela existe mesmo sendo quase idêntica à chave: o rótulo é texto de
+ * interface e pode mudar; a chave é o identificador da PokeAPI e do banco, e
+ * não muda. Colapsar os dois num `capitalize` amarraria a tela ao formato do
+ * dado — e o primeiro tipo com nome composto quebraria a regra.
+ */
 const TYPE_LABELS: Record<PokemonType, string> = {
   normal: "Normal",
-  fire: "Fogo",
-  water: "Água",
-  grass: "Planta",
-  electric: "Elétrico",
-  ice: "Gelo",
-  fighting: "Lutador",
-  poison: "Venenoso",
-  ground: "Terrestre",
-  flying: "Voador",
-  psychic: "Psíquico",
-  bug: "Inseto",
-  rock: "Pedra",
-  ghost: "Fantasma",
-  dragon: "Dragão",
-  dark: "Sombrio",
-  steel: "Aço",
-  fairy: "Fada",
+  fire: "Fire",
+  water: "Water",
+  grass: "Grass",
+  electric: "Electric",
+  ice: "Ice",
+  fighting: "Fighting",
+  poison: "Poison",
+  ground: "Ground",
+  flying: "Flying",
+  psychic: "Psychic",
+  bug: "Bug",
+  rock: "Rock",
+  ghost: "Ghost",
+  dragon: "Dragon",
+  dark: "Dark",
+  steel: "Steel",
+  fairy: "Fairy",
 };
 
 export interface TypeChipProps

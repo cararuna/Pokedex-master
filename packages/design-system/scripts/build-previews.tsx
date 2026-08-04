@@ -22,6 +22,12 @@ import { Badge } from "../src/components/Badge";
 import { Card } from "../src/components/Card";
 import { Skeleton } from "../src/components/Skeleton";
 import { TypeChip, POKEMON_TYPES } from "../src/components/TypeChip";
+import { SearchField } from "../src/components/SearchField";
+import { Select } from "../src/components/Select";
+import { Table } from "../src/components/Table";
+import { Tabs } from "../src/components/Tabs";
+import { Markdown } from "../src/components/Markdown";
+import { EmptyState, StatBar, Pagination } from "../src/components/Feedback";
 import { Stack, Inline, Divider } from "../src/primitives/Layout";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
@@ -155,10 +161,10 @@ const CARDS: Card_[] = [
           </div>
         </Stack>
         <Inline gap={3}>
-          <Button variant="solid">Capturar</Button>
-          <Button variant="soft">Comparar</Button>
-          <Button variant="outline">Filtrar</Button>
-          <Button variant="ghost">Cancelar</Button>
+          <Button variant="solid">Add</Button>
+          <Button variant="soft">Compare</Button>
+          <Button variant="outline">Filter</Button>
+          <Button variant="ghost">Cancel</Button>
         </Inline>
       </Stack>
     ),
@@ -243,11 +249,11 @@ const CARDS: Card_[] = [
           <Stack key={v} gap={2}>
             <Rotulo>{v}</Rotulo>
             <Inline gap={3} align="center">
-              <Button variant={v} size="sm">Pequeno</Button>
-              <Button variant={v} size="md">Médio</Button>
-              <Button variant={v} size="lg">Grande</Button>
-              <Button variant={v} loading>Carregando</Button>
-              <Button variant={v} disabled>Desabilitado</Button>
+              <Button variant={v} size="sm">Small</Button>
+              <Button variant={v} size="md">Medium</Button>
+              <Button variant={v} size="lg">Large</Button>
+              <Button variant={v} loading>Loading</Button>
+              <Button variant={v} disabled>Disabled</Button>
             </Inline>
           </Stack>
         ))}
@@ -310,11 +316,11 @@ const CARDS: Card_[] = [
         <Card elevation="interactive">
           <Card.Header>
             <Inline justify="between" align="start">
-              <span className="font-mono text-xs text-text-subtle">N.º 006</span>
-              <Badge tone="highlight" size="sm" dot>Favorito</Badge>
+              <span className="font-mono text-xs text-text-subtle">No. 006</span>
+              <Badge tone="highlight" size="sm" dot>Party</Badge>
             </Inline>
             <Card.Title>Charizard</Card.Title>
-            <Card.Description>Cospe fogo quente o bastante para derreter pedras.</Card.Description>
+            <Card.Description>Heat Wave · 10 — the strongest fire attack on the table.</Card.Description>
           </Card.Header>
           <Card.Body>
             <Inline gap={1}>
@@ -323,21 +329,21 @@ const CARDS: Card_[] = [
             </Inline>
           </Card.Body>
           <Card.Footer>
-            <Button size="sm" variant="ghost">Detalhes</Button>
+            <Button size="sm" variant="ghost">Abilities</Button>
           </Card.Footer>
         </Card>
 
         <Card elevation="raised">
           <Card.Header>
-            <span className="font-mono text-xs text-text-subtle">N.º 009</span>
+            <span className="font-mono text-xs text-text-subtle">No. 009</span>
             <Card.Title>Blastoise</Card.Title>
-            <Card.Description>Os canhões nas costas disparam jatos com precisão.</Card.Description>
+            <Card.Description>Hydro Pump · 10 — strong against fire, ground and rock.</Card.Description>
           </Card.Header>
           <Card.Body>
             <Inline gap={1}><TypeChip type="water" size="sm" /></Inline>
           </Card.Body>
           <Card.Footer>
-            <Button size="sm" variant="ghost">Detalhes</Button>
+            <Button size="sm" variant="ghost">Abilities</Button>
           </Card.Footer>
         </Card>
 
@@ -377,10 +383,225 @@ const CARDS: Card_[] = [
         <Stack gap={3}>
           <Rotulo>Botões em carregamento — aria-busy anuncia o estado</Rotulo>
           <Inline gap={3}>
-            <Button loading>Capturando</Button>
-            <Button variant="soft" loading>Sincronizando</Button>
-            <Button variant="outline" loading>Buscando</Button>
+            <Button loading>Adding</Button>
+            <Button variant="soft" loading>Syncing</Button>
+            <Button variant="outline" loading>Searching</Button>
           </Inline>
+        </Stack>
+      </Stack>
+    ),
+  },
+  {
+    arquivo: "components/campos.html",
+    nome: "Campos de formulário",
+    grupo: "Components",
+    subtitulo: "SearchField e Select · mesma altura vinda de --control-*",
+    conteudo: (
+      <Stack gap={8}>
+        <Stack gap={3}>
+          <Rotulo>Os três tamanhos, lado a lado com o botão</Rotulo>
+          <Stack gap={4}>
+            {(["sm", "md", "lg"] as const).map((s) => (
+              <Inline key={s} gap={3} align="end">
+                <div className="w-56">
+                  <SearchField
+                    label={`size="${s}"`}
+                    placeholder="Name or number"
+                    size={s}
+                  />
+                </div>
+                <div className="w-44">
+                  <Select
+                    label="Learns attack of"
+                    size={s}
+                    defaultValue="fire"
+                    options={[
+                      { value: "fire", label: "Fire" },
+                      { value: "water", label: "Water" },
+                    ]}
+                  />
+                </div>
+                <Button size={s}>Search</Button>
+              </Inline>
+            ))}
+          </Stack>
+        </Stack>
+
+        <Divider />
+
+        <Stack gap={3}>
+          <Rotulo>Dica, erro e desabilitado — a altura do campo não muda</Rotulo>
+          <Inline gap={5} align="start">
+            <div className="w-56">
+              <SearchField
+                label="Search Pokémon"
+                placeholder="Name or number"
+                hint="Accepts partial names."
+              />
+            </div>
+            <div className="w-56">
+              <SearchField
+                label="Search Pokémon"
+                defaultValue="?!"
+                error="Use letters or numbers only."
+              />
+            </div>
+            <div className="w-56">
+              <SearchField label="Search Pokémon" placeholder="Disabled" disabled />
+            </div>
+          </Inline>
+        </Stack>
+      </Stack>
+    ),
+  },
+  {
+    arquivo: "components/dados.html",
+    nome: "Tabela e abas",
+    grupo: "Components",
+    subtitulo: "<table> de verdade · aba sublinhada, nunca cápsula",
+    conteudo: (
+      <Stack gap={8}>
+        <Stack gap={3}>
+          <Rotulo>Table — números em tabular-nums para a coluna alinhar</Rotulo>
+          <Table>
+            <Table.Caption>
+              Strongest attack of each Pokémon, on the board game scale.
+            </Table.Caption>
+            <Table.Header>
+              <Table.Row>
+                <Table.Head>No.</Table.Head>
+                <Table.Head>Pokémon</Table.Head>
+                <Table.Head>Attack</Table.Head>
+                <Table.Head>Type</Table.Head>
+                <Table.Head className="text-right">Value</Table.Head>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {[
+                ["006", "Charizard", "Heat Wave", "fire", 10],
+                ["003", "Venusaur", "Solar Beam", "grass", 10],
+                ["009", "Blastoise", "Hydro Pump", "water", 10],
+                ["012", "Butterfree", "Bug Buzz", "bug", 9],
+              ].map(([n, nome, ataque, tipo, valor]) => (
+                <Table.Row key={String(n)}>
+                  <Table.Cell className="font-mono text-xs tabular-nums text-text-subtle">
+                    {n}
+                  </Table.Cell>
+                  <Table.Cell className="font-medium">{nome}</Table.Cell>
+                  <Table.Cell>{ataque}</Table.Cell>
+                  <Table.Cell>
+                    <TypeChip type={tipo as never} size="sm" />
+                  </Table.Cell>
+                  <Table.Cell className="text-right font-mono tabular-nums">
+                    {valor}
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table>
+        </Stack>
+
+        <Divider />
+
+        <Stack gap={3}>
+          <Rotulo>Tabs — sublinhado porque cápsula teria a silhueta de um botão</Rotulo>
+          <Tabs defaultValue="attacks">
+            <Tabs.List>
+              <Tabs.Trigger value="attacks">Attacks</Tabs.Trigger>
+              <Tabs.Trigger value="innate">Innate abilities</Tabs.Trigger>
+              <Tabs.Trigger value="type">Type abilities</Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="attacks">
+              <p className="text-sm text-text-muted">
+                Heat Wave · 10 — Dragon Breath · 8 — Crunch · 8
+              </p>
+            </Tabs.Content>
+          </Tabs>
+        </Stack>
+      </Stack>
+    ),
+  },
+  {
+    arquivo: "components/feedback.html",
+    nome: "Vazio, medida e paginação",
+    grupo: "Components",
+    subtitulo: "Vazio não é erro — e as duas telas não podem parecer iguais",
+    conteudo: (
+      <Stack gap={8}>
+        <div className="grid grid-cols-2 gap-5">
+          <EmptyState
+            title="No Pokémon found"
+            description={'Nothing matches "charizrd".'}
+            action={{ label: "Clear filters", onClick: () => {} }}
+          />
+          <EmptyState
+            title="Could not load"
+            description="The API is not responding."
+            action={{ label: "Try again", onClick: () => {} }}
+          />
+        </div>
+
+        <Divider />
+
+        <Stack gap={3}>
+          <Rotulo>StatBar — o número é texto; a barra é aria-hidden</Rotulo>
+          <div className="max-w-sm">
+            <Stack gap={3}>
+              <StatBar label="Heat Wave" value={10} max={10} />
+              <StatBar label="Bug Buzz" value={9} max={10} />
+              <StatBar label="Dragon Breath" value={8} max={10} />
+            </Stack>
+          </div>
+        </Stack>
+
+        <Stack gap={3}>
+          <Rotulo>Pagination — aria-current na página atual, extremos desabilitados</Rotulo>
+          <Pagination page={1} totalPages={17} onPageChange={() => {}} />
+        </Stack>
+      </Stack>
+    ),
+  },
+  {
+    arquivo: "components/markdown.html",
+    nome: "Markdown",
+    grupo: "Components",
+    subtitulo: "A resposta do agente, com os tokens do sistema",
+    conteudo: (
+      <Stack gap={6}>
+        <Stack gap={3}>
+          <Rotulo>Saída real do agente — sem react-markdown, sem innerHTML</Rotulo>
+          <div className="max-w-2xl rounded-[var(--r-md)] border border-border bg-surface-raised p-5">
+            <Markdown>
+              {[
+                "Pokémon that learn a **fire** attack with value **10**:",
+                "",
+                "| Pokémon | Attack | Types |",
+                "| --- | --- | --- |",
+                "| Charmander | Flare Blitz | fire |",
+                "| Charizard | Heat Wave | fire/flying |",
+                "| Magmar | Fire Blast | fire |",
+                "",
+                "There are **30** in total — these are the first three by number.",
+              ].join("\n")}
+            </Markdown>
+          </div>
+        </Stack>
+
+        <Stack gap={3}>
+          <Rotulo>Lista, código e citação</Rotulo>
+          <div className="max-w-2xl rounded-[var(--r-md)] border border-border bg-surface-raised p-5">
+            <Markdown>
+              {[
+                "The conversion rule, step by step:",
+                "",
+                "1. Only level-up moves with damage above zero",
+                "2. `value = ceil(damage / 10)`",
+                "3. Above 10 becomes 10; 7 or less becomes 8",
+                "",
+                "> Only the strongest move of each type is kept.",
+              ].join("\n")}
+            </Markdown>
+          </div>
         </Stack>
       </Stack>
     ),

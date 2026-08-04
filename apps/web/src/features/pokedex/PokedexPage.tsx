@@ -65,12 +65,12 @@ function paraCarta(p: ApiPokemon & { pokemon_moves?: unknown[] }): GamePokemon {
  * Pokémon aprendem um golpe daquele tipo, já com o valor convertido para a
  * escala do jogo. Não é um catálogo de espécies — é uma mesa de consulta.
  *
- * Os dados vêm de `game/dataset.json`, gerado offline por
- * `scripts/build-dataset.mjs`. Zero requisição à PokeAPI em tempo de execução:
- * busca e filtro rodam sobre um array em memória e respondem na hora.
+ * Os dados vêm da API, paginados: uma requisição por página, contra as ~15.000
+ * que a versão original fazia à PokeAPI a cada abertura.
  *
- * Na Fase 2 este mesmo dataset vira as tabelas do Supabase e o import estático
- * é trocado por uma chamada paginada — sem mexer em componente nenhum.
+ * O texto de interface é em inglês porque é a língua da mesa — os nomes dos
+ * golpes, dos tipos e das cartas físicas já são. Misturar rótulo em português
+ * com `Flare Blitz` e `Fire` fazia a tela falar duas línguas ao mesmo tempo.
  */
 export function PokedexPage() {
   const { theme, toggle } = useTheme();
@@ -111,10 +111,10 @@ export function PokedexPage() {
           setVisiveis([]);
           setErro(
             e instanceof ApiOfflineError
-              ? "A API não está no ar. Suba com `pnpm dev:api`."
+              ? "The API is not responding. Start it with `pnpm dev:api`."
               : e instanceof Error
                 ? e.message
-                : "Falha ao carregar.",
+                : "Failed to load.",
           );
         });
     }, atraso);
@@ -145,8 +145,8 @@ export function PokedexPage() {
             {/* Ferramentas de consulta */}
             <div className="grid gap-4 lg:grid-cols-[1fr_16rem_11rem] lg:items-end">
               <SearchField
-                label="Buscar Pokémon"
-                placeholder="Nome ou número"
+                label="Search Pokémon"
+                placeholder="Name or number"
                 value={busca}
                 onChange={(e) => {
                   setBusca(e.target.value);
@@ -156,14 +156,14 @@ export function PokedexPage() {
               />
 
               <Select
-                label="Aprende ataque de"
+                label="Learns attack of"
                 value={tipoDeAtaque}
                 onValueChange={(v) => {
                   setTipoDeAtaque(v);
                   setPagina(1);
                 }}
                 options={[
-                  { value: "all", label: "Qualquer tipo" },
+                  { value: "all", label: "Any type" },
                   ...POKEMON_TYPES.map((t) => ({
                     value: t,
                     label: TYPE_LABELS[t],
@@ -173,7 +173,7 @@ export function PokedexPage() {
               />
 
               <Select
-                label="Arte"
+                label="Artwork"
                 value={spriteKey}
                 onValueChange={setSpriteKey}
                 options={SPRITE_SETS.map((s) => ({
@@ -186,7 +186,7 @@ export function PokedexPage() {
             <Inline justify="between" align="center">
               <p className="text-sm text-text-muted" aria-live="polite">
                 {carregando ? (
-                  "Consultando…"
+                  "Searching…"
                 ) : (
                   <>
                     <strong className="font-semibold text-text">{total}</strong>{" "}
@@ -194,7 +194,7 @@ export function PokedexPage() {
                     {tipoDeAtaque !== "all" && (
                       <>
                         {" "}
-                        aprendem ataque de {TYPE_LABELS[tipoDeAtaque as GameType]}
+                        learn {TYPE_LABELS[tipoDeAtaque as GameType]} attacks
                       </>
                     )}
                   </>
@@ -202,16 +202,16 @@ export function PokedexPage() {
               </p>
               {temFiltro && (
                 <Button variant="ghost" size="sm" onClick={limpar}>
-                  Limpar
+                  Clear
                 </Button>
               )}
             </Inline>
 
             {erro ? (
               <EmptyState
-                title="Não foi possível carregar"
+                title="Could not load"
                 description={erro}
-                action={{ label: "Tentar de novo", onClick: () => location.reload() }}
+                action={{ label: "Try again", onClick: () => location.reload() }}
               />
             ) : carregando ? (
               // Placeholders com a altura fixa da carta: a grade não desloca
@@ -226,15 +226,15 @@ export function PokedexPage() {
               </CardGrid>
             ) : visiveis.length === 0 ? (
               <EmptyState
-                title="Nenhum Pokémon encontrado"
+                title="No Pokémon found"
                 description={
                   tipoDeAtaque !== "all" && busca
-                    ? `Nenhum Pokémon com "${busca}" aprende ataque de ${TYPE_LABELS[tipoDeAtaque as GameType]}.`
+                    ? `No Pokémon matching "${busca}" learns a ${TYPE_LABELS[tipoDeAtaque as GameType]} attack.`
                     : busca
-                      ? `Nada corresponde a "${busca}".`
-                      : "Nenhum registro para este filtro."
+                      ? `Nothing matches "${busca}".`
+                      : "No records for this filter."
                 }
-                action={{ label: "Limpar filtros", onClick: limpar }}
+                action={{ label: "Clear filters", onClick: limpar }}
               />
             ) : (
               <>
@@ -284,21 +284,18 @@ function Cabecalho({
               Pokédex
             </span>
             <span className="hidden font-mono text-2xs uppercase tracking-widest text-text-subtle sm:inline">
-              Cartas de consulta
+              Reference cards
             </span>
           </div>
 
           <Inline gap={1}>
             <AgentPanel />
-            <Button asChild variant="ghost" size="sm">
-              <a href="/design-system">Design system</a>
-            </Button>
             <Button
               variant="ghost"
               size="sm"
               iconOnly
               onClick={onToggleTheme}
-              aria-label={theme === "dark" ? "Usar tema claro" : "Usar tema escuro"}
+              aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}
             >
               {theme === "dark" ? <SolIcon /> : <LuaIcon />}
             </Button>

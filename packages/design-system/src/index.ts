@@ -13,6 +13,7 @@ export { Badge, type BadgeProps } from "./components/Badge";
 export { Skeleton, type SkeletonProps } from "./components/Skeleton";
 export { SearchField, type SearchFieldProps } from "./components/SearchField";
 export { Select, type SelectProps, type SelectOption } from "./components/Select";
+export { Markdown, type MarkdownProps } from "./components/Markdown";
 export { Table } from "./components/Table";
 export { Tabs } from "./components/Tabs";
 export { Dialog } from "./components/Dialog";
