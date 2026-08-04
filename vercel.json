@@ -5,8 +5,6 @@
   "buildCommand": "pnpm --filter @pokedex/web build",
   "outputDirectory": "apps/web/dist",
 
-  "//rewrites": "A primeira regra existe porque o roteamento por nome de arquivo da Vercel só cobre um segmento fora do Next.js: /api/pokemon respondia e /api/pokemon/bulbasaur dava 404, tanto com [[...route]] quanto com [...route]. O reescrito não depende de convenção de nome — manda todo /api/* para a função única, que é o app Hono e sabe rotear sozinho. As reescritas são avaliadas DEPOIS do sistema de arquivos, então /api/ping continua caindo na sonda própria dele, e o caminho original chega intacto em request.url.",
-
   "rewrites": [
     {
       "source": "/api/(.*)",
