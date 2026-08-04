@@ -1,5 +1,5 @@
-import { db } from "../db/client";
-import { openRouterEmbedder } from "./embedder";
+import { db } from "../db/client.js";
+import { openRouterEmbedder } from "./embedder.js";
 
 /**
  * Busca vetorial.

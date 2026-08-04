@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { supabaseEnv } from "../env";
+import { supabaseEnv } from "../env.js";
 
 /**
  * Cliente do Supabase com a service_role.

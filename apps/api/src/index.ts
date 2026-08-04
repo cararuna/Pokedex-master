@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import { serverEnv, statusDaConfiguracao, ConfigError } from "./env";
-import { db } from "./db/client";
+import { serverEnv, statusDaConfiguracao, ConfigError } from "./env.js";
+import { db } from "./db/client.js";
 
 /**
  * O agente é carregado sob demanda.
@@ -16,8 +16,8 @@ import { db } from "./db/client";
  */
 async function carregarAgente() {
   const [{ runAgent }, { llmEnv }] = await Promise.all([
-    import("./agent/harness"),
-    import("./env"),
+    import("./agent/harness.js"),
+    import("./env.js"),
   ]);
   return { runAgent, modelo: llmEnv().OPENROUTER_MODEL };
 }

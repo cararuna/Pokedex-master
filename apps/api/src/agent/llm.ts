@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { llmEnv, serverEnv } from "../env";
+import { llmEnv, serverEnv } from "../env.js";
 
 /**
  * Cliente de LLM — SDK da OpenAI apontado para o OpenRouter.

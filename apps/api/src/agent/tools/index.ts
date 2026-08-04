@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { db, linhas } from "../../db/client";
+import { db, linhas } from "../../db/client.js";
 
 /**
  * Registro de ferramentas.
@@ -427,7 +427,7 @@ const buscarDocumentacao: Tool = {
     limite: z.number().min(1).max(8).default(5),
   }),
   async execute({ pergunta, area, limite }) {
-    const { buscarTrechos } = await import("../../rag/search");
+    const { buscarTrechos } = await import("../../rag/search.js");
     const trechos = await buscarTrechos(pergunta, { limite, kind: area ?? null });
 
     if (trechos.length === 0) {

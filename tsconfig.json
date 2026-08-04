@@ -1,11 +1,12 @@
 {
   "//": "Existe só para a pasta api/ na raiz — o entrypoint serverless da Vercel. Os workspaces têm os seus próprios.",
+  "//moduleResolution": "nodenext espelha o que o Node faz com a função publicada. Sob bundler o compilador aceitava `from \"../apps/api/src/index\"` — e em ESM o Node não completa extensão, então a função quebrava no cold start com o build verde.",
   "//typescript": "A raiz usa TypeScript 5, não 7, de propósito. O builder da Vercel usa o TS local para compilar a função e chama a API de compilador em JavaScript; o TS 7 é a reescrita em Go e não a expõe da mesma forma — o deploy falha com 'Cannot read properties of undefined (reading readFile)'. Os workspaces seguem em TS 7, que só é usado pelo tsc deles.",
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
