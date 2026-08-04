@@ -140,3 +140,10 @@ e é público por definição.
 - **Case de arquivo.** `dragonType.PNG` já quebrou em produção (Vercel é case-sensitive,
   Windows não). Confira o case ao referenciar asset de `public/`.
 - **`legacy/` está no `.gitignore`** e mantém um `.git` próprio. Não tente versionar.
+- **`vercel.json` não aceita comentário.** O schema tem `additionalProperties: false`,
+  então a convenção `"//chave"` usada nos `tsconfig` derruba o build inteiro com
+  *Invalid vercel.json*. Explicação sobre deploy vai em `DEPLOY.md` ou no
+  `api/index.ts` — nunca dentro do `vercel.json`.
+- **Roteamento da função.** Fora do Next.js, o nome do arquivo em `api/` só casa
+  **um segmento**: `[...route].ts` não atende `/api/a/b`. Quem roteia é a reescrita
+  `/api/(.*)` → `/api`, e depois o Hono.

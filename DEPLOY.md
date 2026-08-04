@@ -5,7 +5,7 @@ Um projeto só serve as duas coisas: o site estático (Vite) e a API do agente
 
 ```
 seuprojeto.vercel.app/           → apps/web/dist       site
-seuprojeto.vercel.app/api/*      → api/[...route].ts  API + agente
+seuprojeto.vercel.app/api/*      → api/index.ts  API + agente
 ```
 
 ---
