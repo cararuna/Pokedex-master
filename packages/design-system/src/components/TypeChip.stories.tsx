@@ -141,7 +141,7 @@ export const NoContexto: Story = {
   render: () => (
     <div className="max-w-xs rounded-[var(--card-radius)] border border-border bg-surface-raised p-5">
       <Stack gap={3}>
-        <span className="font-mono text-xs text-text-subtle">N.º 006</span>
+        <span className="font-mono text-xs text-text-subtle">No. 006</span>
         <p className="font-display text-lg font-semibold">Charizard</p>
         <Inline gap={1.5 as never}>
           <TypeChip type="fire" size="sm" />

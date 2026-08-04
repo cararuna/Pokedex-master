@@ -43,3 +43,6 @@ legacy/*
 
 .vercel
 .env*
+
+# saída de publicação do Storybook
+packages/design-system/.storybook-deploy

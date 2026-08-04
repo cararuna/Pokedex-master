@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Select } from "./Select";
-import { TypeChip, POKEMON_TYPES, getTypeLabel } from "./TypeChip";
+import { POKEMON_TYPES, getTypeLabel } from "./TypeChip";
+import { TypeIcon } from "./TypeIcon";
 import { Stack } from "../primitives/Layout";
 
 const TIPOS = [
@@ -9,7 +10,8 @@ const TIPOS = [
   ...POKEMON_TYPES.map((t) => ({
     value: t,
     label: getTypeLabel(t),
-    adornment: <TypeChip type={t} variant="solid" className="size-3 p-0" />,
+    // O mesmo símbolo que a tela usa — não uma aproximação colorida.
+    adornment: <TypeIcon type={t} size={16} />,
   })),
 ];
 

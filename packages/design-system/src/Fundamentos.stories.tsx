@@ -175,7 +175,7 @@ export const Tipografia: Story = {
       </Linha>
       <Linha rotulo="sans / sm" classe="text-sm text-text-muted">Texto secundário</Linha>
       <Linha rotulo="mono / xs" classe="font-mono text-xs uppercase tracking-widest text-text-subtle">
-        N.º 001 · Semente
+        No. 001 · Seed
       </Linha>
     </Stack>
   ),

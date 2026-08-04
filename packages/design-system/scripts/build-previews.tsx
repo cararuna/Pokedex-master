@@ -22,6 +22,7 @@ import { Badge } from "../src/components/Badge";
 import { Card } from "../src/components/Card";
 import { Skeleton } from "../src/components/Skeleton";
 import { TypeChip, POKEMON_TYPES } from "../src/components/TypeChip";
+import { TypeIcon } from "../src/components/TypeIcon";
 import { SearchField } from "../src/components/SearchField";
 import { Select } from "../src/components/Select";
 import { Table } from "../src/components/Table";
@@ -392,6 +393,48 @@ const CARDS: Card_[] = [
     ),
   },
   {
+    arquivo: "components/simbolos.html",
+    nome: "Símbolos de tipagem",
+    grupo: "Foundations",
+    subtitulo:
+      "As mesmas imagens das cartas físicas · identidade anterior ao sistema",
+    conteudo: (
+      <Stack gap={8}>
+        <Stack gap={3}>
+          <Rotulo>Os 18 símbolos, no tamanho da carta</Rotulo>
+          <div className="grid grid-cols-9 gap-5">
+            {POKEMON_TYPES.map((t) => (
+              <Stack key={t} gap={2} align="center">
+                <TypeIcon type={t} size={32} decorative={false} />
+                <code className="font-mono text-2xs text-text-subtle">{t}</code>
+              </Stack>
+            ))}
+          </div>
+        </Stack>
+
+        <Divider />
+
+        <Stack gap={3}>
+          <Rotulo>
+            No chip — o token de cor governa fundo, borda e texto; o símbolo é
+            preservado
+          </Rotulo>
+          <Inline gap={2}>
+            {POKEMON_TYPES.slice(0, 9).map((t) => (
+              <TypeChip key={t} type={t} />
+            ))}
+          </Inline>
+          <Inline gap={2}>
+            {POKEMON_TYPES.slice(9).map((t) => (
+              <TypeChip key={t} type={t} />
+            ))}
+          </Inline>
+        </Stack>
+
+      </Stack>
+    ),
+  },
+  {
     arquivo: "components/campos.html",
     nome: "Campos de formulário",
     grupo: "Components",
@@ -416,8 +459,9 @@ const CARDS: Card_[] = [
                     size={s}
                     defaultValue="fire"
                     options={[
-                      { value: "fire", label: "Fire" },
-                      { value: "water", label: "Water" },
+                      // O mesmo símbolo do tabuleiro que a tela usa.
+                      { value: "fire", label: "Fire", adornment: <TypeIcon type="fire" size={16} /> },
+                      { value: "water", label: "Water", adornment: <TypeIcon type="water" size={16} /> },
                     ]}
                   />
                 </div>
