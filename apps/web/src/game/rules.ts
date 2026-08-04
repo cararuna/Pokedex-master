@@ -82,14 +82,13 @@ export function getAdvantages(type: GameType): GameType[] {
 }
 
 /**
- * Ícone de tipagem. São os mesmos símbolos das cartas físicas do jogo — por
- * isso ficam como imagem, e não como ícone genérico do design system.
+ * Os símbolos de tipagem mudaram de casa: agora são `TypeIcon`, do design
+ * system. Ficavam aqui como caminho para `public/`, o que os tornava
+ * invisíveis para o Storybook e para as previews — a vitrine mostrava um
+ * ponto de cor enquanto o produto mostrava o símbolo do tabuleiro.
  */
-export function getTypeIcon(type: string): string {
-  return `/${type.toLowerCase()}Type.png`;
-}
 
-/** Rótulos em português. A chave permanece em inglês, como na PokeAPI. */
+/** Rótulo exibido. A chave permanece em inglês, como na PokeAPI. */
 export const TYPE_LABELS: Record<GameType, string> = {
   normal: "Normal",
   fire: "Fire",

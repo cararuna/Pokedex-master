@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import { Skeleton, Tooltip } from "@pokedex/design-system";
+import { Skeleton, Tooltip, TypeIcon } from "@pokedex/design-system";
 import {
   formatMoveName,
   formatName,
@@ -10,7 +10,6 @@ import {
   type GameType,
 } from "../../game/rules";
 import { obterPokemon, type ApiPokemonDetail } from "../../lib/api";
-import { TypeIcon } from "./TypeIcon";
 
 /**
  * Cache do verso, por sessão.
@@ -172,7 +171,7 @@ function FrenteDaCarta({
       <header className="flex shrink-0 items-start justify-between gap-2 px-4 pt-3.5">
         <div className="flex min-w-0 flex-col gap-1">
           <span className="font-mono text-2xs tabular-nums text-text-subtle">
-            N.º {String(pokemon.dexNumber).padStart(3, "0")}
+            No. {String(pokemon.dexNumber).padStart(3, "0")}
           </span>
           <h3 className="truncate font-display text-lg font-semibold leading-tight tracking-tight text-text">
             {formatName(pokemon.slug)}
@@ -207,7 +206,7 @@ function FrenteDaCarta({
             className="relative h-28 object-contain [image-rendering:pixelated] transition-transform duration-[280ms] ease-out group-hover:scale-105"
           />
         ) : (
-          <span className="relative text-xs text-text-subtle">sem arte</span>
+          <span className="relative text-xs text-text-subtle">no artwork</span>
         )}
       </div>
 

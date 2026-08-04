@@ -1,5 +1,8 @@
 import { forwardRef } from "react";
 import { cn } from "../lib/cn";
+// `TypeIcon` importa `PokemonType` daqui de volta, mas só como tipo — o
+// `import type` some na compilação e não existe ciclo em tempo de execução.
+import { TypeIcon } from "./TypeIcon";
 
 /**
  * TypeChip — identifica o tipo elemental de um Pokémon ou golpe.
@@ -68,14 +71,17 @@ export interface TypeChipProps
   /** Oculta o texto e mantém só o ponto de cor. O nome vai para o aria-label. */
   iconOnly?: boolean;
   /**
-   * Substitui o ponto de cor por um símbolo próprio.
+   * Substitui o símbolo do tabuleiro por outro conteúdo.
    *
-   * Existe porque este produto tem identidade visual anterior ao design
-   * system: os ícones de tipagem são os mesmos das cartas físicas do jogo de
-   * tabuleiro. O sistema acomoda esse símbolo em vez de apagá-lo — o token de
-   * cor continua governando fundo, borda e texto.
+   * O padrão é o `TypeIcon` — o mesmo símbolo das cartas físicas do jogo. Ele
+   * já foi opcional, e o resultado foi a vitrine mostrar um ponto de cor
+   * enquanto o produto mostrava o símbolo: ninguém passava a prop. Um padrão
+   * que precisa ser lembrado não é padrão.
+   *
+   * Passe `null` para o ponto de cor simples, quando o símbolo competir com
+   * outra imagem ao lado.
    */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | null;
 }
 
 export const TypeChip = forwardRef<HTMLSpanElement, TypeChipProps>(
@@ -118,7 +124,7 @@ export const TypeChip = forwardRef<HTMLSpanElement, TypeChipProps>(
         aria-label={iconOnly ? label : undefined}
         {...props}
       >
-        {icon ?? (
+        {icon === null ? (
           <span
             aria-hidden="true"
             className={cn(
@@ -127,6 +133,8 @@ export const TypeChip = forwardRef<HTMLSpanElement, TypeChipProps>(
               variant === "solid" && "bg-current opacity-70",
             )}
           />
+        ) : (
+          (icon ?? <TypeIcon type={type} size={size === "sm" ? 12 : 14} />)
         )}
         {!iconOnly && label}
       </span>

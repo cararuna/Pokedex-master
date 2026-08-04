@@ -13,7 +13,7 @@
     "lint": "node scripts/lint-tokens.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "previews": "tailwindcss -i src/styles/index.css -o previews/.ds.css --minify && tsx scripts/build-previews.tsx",
+    "previews": "tailwindcss -i src/styles/index.css -o previews/.ds.css --minify && node --import tsx --import ./scripts/register-png.mjs scripts/build-previews.tsx",
     "publish:storybook": "pnpm build-storybook && node scripts/publish-storybook.mjs"
   },
   "devDependencies": {

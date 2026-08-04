@@ -34,6 +34,7 @@ export {
   type PokemonType,
   type TypeChipProps,
 } from "./components/TypeChip";
+export { TypeIcon, type TypeIconProps } from "./components/TypeIcon";
 
 /* Primitivos de layout */
 export {

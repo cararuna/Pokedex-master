@@ -11,6 +11,7 @@ import {
   Stack,
   TooltipProvider,
   useTheme,
+  TypeIcon,
 } from "@pokedex/design-system";
 import {
   POKEMON_TYPES,
@@ -22,7 +23,6 @@ import {
 } from "../../game/rules";
 import { listarPokemon, ApiOfflineError, type ApiPokemon } from "../../lib/api";
 import { GameCard } from "./GameCard";
-import { TypeIcon } from "./TypeIcon";
 import { AgentPanel } from "../agent-chat/AgentPanel";
 
 const POR_PAGINA = 24;
