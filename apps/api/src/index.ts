@@ -1,4 +1,3 @@
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
@@ -347,27 +346,13 @@ app.post("/agent/ask", async (c) => {
 });
 
 /**
- * Só sobe um servidor HTTP quando executado diretamente.
+ * Este módulo exporta o app e nada mais — quem abre porta é `server.ts`.
  *
- * Na Vercel este módulo é importado por `api/[[...route]].ts`, que entrega o
- * `fetch` do app para o runtime serverless. Chamar `serve()` ali tentaria
- * abrir uma porta dentro de uma função — que não tem porta, e falharia no
- * cold start.
- *
- * `VERCEL` é definida pela própria plataforma no build e no runtime.
+ * A separação é o que mantém o mesmo código nos dois ambientes sem que um
+ * carregue o peso do outro. Na Vercel, `api/[[...route]].ts` importa daqui e
+ * entrega o `fetch` do app ao runtime; um `serve()` neste arquivo arrastaria
+ * `@hono/node-server` — que existe para abrir portas — para dentro de uma
+ * função que não tem porta nenhuma.
  */
-if (!process.env.VERCEL) {
-  serve({ fetch: app.fetch, port: serverEnv.PORT }, (info) => {
-    console.log(`\n  API em http://localhost:${info.port}`);
-    console.log(`  Catálogo: pronto`);
-    console.log(
-      `  Agente:   ${
-        agenteConfigurado()
-          ? process.env.OPENROUTER_MODEL
-          : "não configurado (falta OPENROUTER_API_KEY)"
-      }\n`,
-    );
-  });
-}
-
+export { agenteConfigurado };
 export default app;
