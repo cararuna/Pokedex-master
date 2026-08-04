@@ -5,13 +5,6 @@
   "buildCommand": "pnpm --filter @pokedex/web build",
   "outputDirectory": "apps/web/dist",
 
-  "functions": {
-    "api/[[...route]].ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
-
   "rewrites": [
     {
       "source": "/((?!api/).*)",
