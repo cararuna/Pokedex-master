@@ -4,6 +4,18 @@ import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { serverEnv, statusDaConfiguracao, ConfigError } from "./env.js";
 import { db } from "./db/client.js";
+import changes from "./routes/changes.js";
+import { validarPolitica } from "./auth/policy.js";
+
+/**
+ * A política de acesso é conferida no import, não na primeira requisição.
+ *
+ * Um `kind` com erro de digitação em policy.ts não daria erro nenhum: o papel
+ * simplesmente perderia a permissão, em silêncio, e alguém descobriria isso
+ * tentando aprovar algo no meio de uma partida. Falhar aqui transforma um bug
+ * mudo num erro que aparece no primeiro `pnpm dev`.
+ */
+validarPolitica();
 
 /**
  * O agente é carregado sob demanda.
@@ -266,6 +278,17 @@ app.get("/vantagens", async (c) => {
   }
   return c.json(mapa);
 });
+
+/* ── Pedidos de mudança ───────────────────────────────────────────────────── */
+
+/**
+ * Único ramo da API que **escreve** no domínio, e o único atrás de token.
+ *
+ * Montado como sub-app em vez de rotas soltas por causa disso: a fronteira
+ * entre o que é público e o que exige credencial fica visível numa linha, em
+ * vez de depender de cada rota lembrar do seu middleware.
+ */
+app.route("/changes", changes);
 
 /* ── Agente ───────────────────────────────────────────────────────────────── */
 
