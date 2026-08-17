@@ -266,6 +266,25 @@ export async function proporMudanca(
   pedido: string,
   opcoes: { model?: string; kinds?: string[] | null } = {},
 ): Promise<PropostaGerada> {
+  try {
+    return await proporInterno(pedido, opcoes);
+  } catch (e) {
+    // `AbortSignal.timeout` lança TimeoutError; o SDK pode reembalar como
+    // AbortError. Os dois viram a mesma mensagem, que diz o que fazer.
+    const nome = (e as { name?: string })?.name;
+    if (nome === "TimeoutError" || nome === "AbortError") {
+      throw new Error(
+        "The model took too long to answer. Nothing was written — submit the request again.",
+      );
+    }
+    throw e;
+  }
+}
+
+async function proporInterno(
+  pedido: string,
+  opcoes: { model?: string; kinds?: string[] | null },
+): Promise<PropostaGerada> {
   const modelo = opcoes.model ?? env().OPENROUTER_MODEL;
   const kinds = opcoes.kinds ?? null;
   const { generateText, tool, stepCountIs, openrouter } = await carregarSdk();
@@ -338,6 +357,21 @@ export async function proporMudanca(
      * às custas de quem está esperando na tela.
      */
     stopWhen: stepCountIs(4),
+    /**
+     * Orçamento de tempo, como no harness do agente.
+     *
+     * Faltava, e cobrou: uma execução em produção estourou o teto da função
+     * serverless e devolveu `FUNCTION_INVOCATION_TIMEOUT` — erro cru de
+     * plataforma, sem corpo, na cara de quem estava esperando. O caminho comum
+     * leva 2 a 3 segundos; quatro voltas contra um provedor lento no OpenRouter
+     * chegam ao minuto.
+     *
+     * 25s é folgado para o caso normal e bem abaixo do `maxDuration = 60` da
+     * função. A diferença é o que importa: com o corte aqui, sobra tempo para
+     * responder um JSON que explica o que houve, em vez de a plataforma matar
+     * o processo no meio.
+     */
+    abortSignal: AbortSignal.timeout(25_000),
     // Extração, não redação: variar a saída aqui só produz proposta diferente
     // para o mesmo pedido, que é o oposto do que se quer num fluxo auditável.
     temperature: 0,
