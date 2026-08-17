@@ -181,7 +181,13 @@ export function ChangesPage() {
       setPedidos(await listarMudancas());
     } catch (err) {
       if (err instanceof NaoAutenticado) setEu(null);
-      else setErro(err instanceof Error ? err.message : "Something went wrong.");
+      else {
+        setErro(err instanceof Error ? err.message : "Something went wrong.");
+        // Sai de `null` mesmo falhando. `null` é "ainda carregando", e é o que
+        // desenha o esqueleto — deixar assim depois de um erro mostrava a
+        // mensagem de falha com dois blocos pulsando embaixo, para sempre.
+        setPedidos([]);
+      }
     }
   }, []);
 
@@ -232,8 +238,30 @@ export function ChangesPage() {
     );
   }
 
-  const pendentes = pedidos?.filter((p) => p.status === "proposed") ?? [];
-  const historico = pedidos?.filter((p) => p.status !== "proposed") ?? [];
+  /**
+   * Um rollback bem-sucedido é dobrado na linha que ele desfez.
+   *
+   * No banco ele é uma linha própria, e continua sendo — o histórico é
+   * append-only e é assim que se lê a mesa de trás para frente. Mas na tela
+   * ele aparecia como uma **segunda carta idêntica**, com a mesma operação e a
+   * mesma tabela invertida, logo acima da original. O efeito era de tela
+   * duplicada, e escondia o que a lista deveria mostrar: quantas mudanças
+   * distintas houve.
+   *
+   * Um rollback que **falhou** continua visível. Ali a linha extra é a
+   * informação: o desfazer não aconteceu, e some-la deixaria a original
+   * marcada como revertida sem que o dado tivesse voltado.
+   */
+  const dobrado = (p: ChangeRequest) => Boolean(p.rollback_of) && p.status === "applied";
+
+  const desfeitoPor = new Map<string, string>();
+  for (const p of pedidos ?? []) {
+    if (dobrado(p)) desfeitoPor.set(p.rollback_of!, p.requested_by ?? "unknown");
+  }
+
+  const visiveis = (pedidos ?? []).filter((p) => !dobrado(p));
+  const pendentes = visiveis.filter((p) => p.status === "proposed");
+  const historico = visiveis.filter((p) => p.status !== "proposed");
 
   return (
     <Container className="py-8">
@@ -299,6 +327,7 @@ export function ChangesPage() {
                     key={p.id}
                     pedido={p}
                     eu={eu}
+                    revertidoPor={desfeitoPor.get(p.id)}
                     ocupado={ocupado}
                     onAprovar={(id) => void decidir(() => aprovar(id))}
                     onRejeitar={(id) => void decidir(() => rejeitar(id))}
@@ -317,6 +346,7 @@ export function ChangesPage() {
                     key={p.id}
                     pedido={p}
                     eu={eu}
+                    revertidoPor={desfeitoPor.get(p.id)}
                     ocupado={ocupado}
                     onAprovar={(id) => void decidir(() => aprovar(id))}
                     onRejeitar={(id) => void decidir(() => rejeitar(id))}

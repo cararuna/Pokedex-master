@@ -160,12 +160,21 @@ async function pedir<T>(caminho: string, init?: RequestInit): Promise<T> {
 
 /* ── Operações ────────────────────────────────────────────────────────────── */
 
+/**
+ * Os caminhos da raiz são `""`, não `"/"`.
+ *
+ * Custou um 404 em teste: `${API_BASE}/changes` + `"/"` produz `/changes/`, e o
+ * Hono não trata barra final como equivalente — a sub-app montada em
+ * `/changes` responde em `/changes`, e `/changes/` é outra rota, que não
+ * existe. `/changes/me` funcionava, então dava para entrar na tela e só depois
+ * descobrir que listar e propor não funcionavam.
+ */
 export const quemSouEu = () => pedir<Me>("/me");
 
-export const listarMudancas = () => pedir<ChangeRequest[]>("/?limite=50");
+export const listarMudancas = () => pedir<ChangeRequest[]>("?limite=50");
 
 export const proporMudanca = (text: string) =>
-  pedir<ChangeRequest>("/", { method: "POST", body: JSON.stringify({ text }) });
+  pedir<ChangeRequest>("", { method: "POST", body: JSON.stringify({ text }) });
 
 export const aprovar = (id: string) =>
   pedir<ChangeRequest>(`/${id}/approve`, { method: "POST" });

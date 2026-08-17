@@ -73,6 +73,15 @@ function Diff({ mudancas }: { mudancas: Mudanca[] }) {
 export interface ChangeCardProps {
   pedido: ChangeRequest;
   eu: Me;
+  /**
+   * Quem desfez este pedido, quando foi desfeito.
+   *
+   * Chega de fora porque quem desfez é **outra linha** de `change_requests` —
+   * o rollback é append-only no banco, e é assim que tem de ser. Na tela ele
+   * não é outra mudança, é um evento nesta; a página dobra os dois antes de
+   * renderizar. Ver `ChangesPage`.
+   */
+  revertidoPor?: string | null;
   ocupado: boolean;
   onAprovar: (id: string) => void;
   onRejeitar: (id: string) => void;
@@ -82,6 +91,7 @@ export interface ChangeCardProps {
 export function ChangeCard({
   pedido,
   eu,
+  revertidoPor,
   ocupado,
   onAprovar,
   onRejeitar,
@@ -107,6 +117,7 @@ export function ChangeCard({
               {pedido.decided_by && pedido.decided_by !== pedido.requested_by
                 ? ` · decided by ${pedido.decided_by}`
                 : ""}
+              {revertidoPor ? ` · undone by ${revertidoPor}` : ""}
             </p>
           </Stack>
           <Badge tone={estado.tone} dot>
