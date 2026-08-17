@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { llmEnv } from "../env.js";
-import { operations, type Proposal } from "./operations.js";
+import { operations, operationsByKind, type Proposal } from "./operations.js";
 
 /**
  * Converte o pedido em texto livre numa operação tipada.
@@ -12,11 +12,27 @@ import { operations, type Proposal } from "./operations.js";
  * extração de um turno só, com saída obrigada a casar com um schema. É
  * decodificação restrita, e reimplementá-la não ensina nada.
  *
- * O que o `generateObject` entrega e o parse manual não entregava: ele negocia
- * o modo de saída com o provedor — `json_schema` nativo quando o modelo
- * suporta, modo-ferramenta quando não — e tenta de novo quando a saída não
- * valida. No OpenRouter isso não é detalhe: o suporte a structured output
- * varia por modelo, e trocar de modelo passava a ser descobrir em produção.
+ * **Por que ferramenta e não `generateObject`.** A escolha óbvia era
+ * `generateObject`, e ela falhou de forma instrutiva: com
+ * `anthropic/claude-sonnet-4.5` pelo OpenRouter, os dez casos do
+ * `check-proposer` voltaram vazios. O modelo respondeu JSON dentro de uma
+ * cerca markdown, com campos que ele inventou — `{"operation": "…",
+ * "pokemon": "…", "power": 10}` — nada parecido com o schema.
+ *
+ * O motivo: a Anthropic não expõe `response_format: json_schema`, e o
+ * OpenRouter repassa o pedido sem ele. O `generateObject` do AI SDK v7 só tem
+ * esse caminho — o `mode: 'tool'` que existia na v4 foi removido —, então ele
+ * degradou para pedir JSON em prosa, sem sequer injetar o schema no prompt.
+ *
+ * Tool calling, por outro lado, é nativo na Anthropic e já é o que o harness
+ * do agente usa neste mesmo projeto, pelo mesmo provedor. Então o schema entra
+ * como `inputSchema` de uma ferramenta única, com `toolChoice: "required"`.
+ * O resultado é o mesmo que se queria — decodificação restrita por schema — só
+ * que pelo caminho que este par modelo/provedor de fato suporta.
+ *
+ * Vale como lição de portfólio, não como derrota: "usei o AI SDK" e "structured
+ * output funciona em qualquer modelo" são duas afirmações diferentes, e a
+ * segunda é falsa. Foi um script de validação que mostrou isso, não produção.
  *
  * **O schema não é a fronteira de segurança.** Ele melhora o acerto de
  * primeira; quem decide o que executa é `parseProposal`, em operations.ts, que
@@ -41,7 +57,7 @@ const env = () => llmEnv();
  * que um modelo muda de preço.
  */
 async function carregarSdk() {
-  const [{ generateObject }, { createOpenRouter }] = await Promise.all([
+  const [{ generateText, tool }, { createOpenRouter }] = await Promise.all([
     import("ai"),
     import("@openrouter/ai-sdk-provider"),
   ]);
@@ -51,25 +67,10 @@ async function carregarSdk() {
     extraBody: { usage: { include: true } },
   });
 
-  return { generateObject, openrouter };
+  return { generateText, tool, openrouter };
 }
 
 /* ── Schema da saída ──────────────────────────────────────────────────────── */
-
-/**
- * O modelo precisa de uma forma de dizer "não sei fazer isso".
- *
- * Sem `unsupported`, todo pedido casa com alguma coisa — e um pedido como
- * "adicione o Mewtwo" seria encaixado à força na operação mais parecida, que é
- * o modo de falhar mais perigoso que existe aqui: uma escrita plausível na
- * linha errada. Dar a saída explícita transforma isso num aviso na tela.
- */
-const naoSuportado = z.object({
-  kind: z.literal("unsupported"),
-  reason: z
-    .string()
-    .describe("Why no available operation fits this request, in one sentence."),
-});
 
 /**
  * As operações visíveis para esta chamada.
@@ -92,22 +93,39 @@ function operacoesVisiveis(kinds: string[] | null) {
 }
 
 /**
- * O union é montado a partir do registro, não escrito à mão.
+ * O schema da ferramenta — **plano**, e isso custou uma rodada de depuração.
  *
- * Assim, acrescentar uma operação em operations.ts já a torna proponível: não
- * existe uma segunda lista para esquecer de atualizar. Foi exatamente esse
- * tipo de lista duplicada que fez o design system divergir do produto.
+ * A forma natural era `{ rationale, operation: discriminatedUnion(...) }`. Ela
+ * gera `oneOf` aninhado dentro de uma propriedade, e schema de ferramenta da
+ * Anthropic não lida bem com isso: o modelo devolveu o objeto certo
+ * **serializado como string** dentro do campo, e o SDK marcou a chamada como
+ * inválida. O conteúdo estava correto; a estrutura não sobreviveu.
+ *
+ * Achatar resolve porque troca o que o modelo precisa construir. Um `enum` no
+ * primeiro nível mais campos no primeiro nível é a forma mais universalmente
+ * suportada que existe em tool calling — nenhum provedor tropeça nela.
+ *
+ * O preço é que todo campo vira opcional, então o schema sozinho não garante
+ * que os campos certos vieram para o `kind` escolhido. Isso não custa
+ * segurança: quem valida de verdade é `parseProposal`, contra o schema real da
+ * operação, e ele já era a fronteira — o schema da ferramenta sempre foi
+ * ajuda de pontaria, não trava.
+ *
+ * Os campos continuam derivados do registro, um por operação visível. Nada
+ * aqui é uma segunda lista para esquecer de atualizar.
  */
 function schemaDaProposta(kinds: string[] | null) {
-  const membros = [
-    ...operacoesVisiveis(kinds).map((op) =>
-      z.object({
-        kind: z.literal(op.kind),
-        args: op.schema as z.ZodType<Record<string, unknown>>,
-      }),
-    ),
-    naoSuportado,
-  ];
+  const visiveis = operacoesVisiveis(kinds);
+  const campos: Record<string, z.ZodType> = {};
+
+  for (const op of visiveis) {
+    const shape = (op.schema as unknown as z.ZodObject<z.ZodRawShape>).shape;
+    for (const [nome, tipo] of Object.entries(shape)) {
+      // Nomes repetidos entre operações querem dizer a mesma coisa
+      // (`description` em talento e em habilidade). O primeiro vence.
+      campos[nome] ??= (tipo as z.ZodType).optional();
+    }
+  }
 
   return z.object({
     rationale: z
@@ -115,9 +133,20 @@ function schemaDaProposta(kinds: string[] | null) {
       .describe(
         "One or two sentences explaining the choice. Shown to the human who approves.",
       ),
-    // `as any`: o Zod tipa discriminatedUnion sobre uma tupla literal, e esta
-    // lista é montada em tempo de execução. O runtime aceita o array.
-    operation: z.discriminatedUnion("kind", membros as any),
+    /**
+     * `unsupported` é o que dá ao modelo uma forma de dizer "não sei fazer
+     * isso". Sem ele, todo pedido casa com alguma coisa — e "adicione o
+     * Mewtwo" seria encaixado à força na operação mais parecida, que é o modo
+     * de falhar mais perigoso aqui: uma escrita plausível na linha errada.
+     */
+    kind: z
+      .enum(["unsupported", ...visiveis.map((o) => o.kind)] as [string, ...string[]])
+      .describe("The operation to perform, or 'unsupported' to decline."),
+    reason: z
+      .string()
+      .optional()
+      .describe("Required when kind is 'unsupported': why no operation fits."),
+    ...campos,
   });
 }
 
@@ -182,37 +211,85 @@ export async function proporMudanca(
 ): Promise<PropostaGerada> {
   const modelo = opcoes.model ?? env().OPENROUTER_MODEL;
   const kinds = opcoes.kinds ?? null;
-  const { generateObject, openrouter } = await carregarSdk();
+  const { generateText, tool, openrouter } = await carregarSdk();
 
-  const { object, usage, providerMetadata } = await generateObject({
+  const { toolCalls, usage, providerMetadata } = await generateText({
     model: openrouter.chat(modelo),
-    schema: schemaDaProposta(kinds),
     system: SYSTEM.replace("{{OPERATIONS}}", cardapio(kinds)),
     prompt: pedido,
+    tools: {
+      /**
+       * Uma ferramenta só, sem `execute`.
+       *
+       * Sem `execute`, o SDK devolve a chamada em vez de rodá-la — que é
+       * exatamente o que se quer: a "execução" desta proposta é uma pessoa
+       * clicando em Approve, horas depois, em outro processo.
+       */
+      submit_proposal: tool({
+        description: "Submit exactly one typed operation, or decline the request.",
+        inputSchema: schemaDaProposta(kinds),
+      }),
+    },
+    // Obriga a ferramenta. Sem isto o modelo responde em prosa quando acha o
+    // pedido estranho — e prosa não é proposta.
+    toolChoice: "required",
     // Extração, não redação: variar a saída aqui só produz proposta diferente
     // para o mesmo pedido, que é o oposto do que se quer num fluxo auditável.
     temperature: 0,
   });
 
-  const op = object.operation as { kind: string; args?: Record<string, unknown>; reason?: string };
-
-  if (op.kind === "unsupported") {
-    return {
-      proposal: null,
-      unsupportedReason: op.reason ?? "No available operation fits this request.",
-      rationale: object.rationale,
-      model: modelo,
-      costUsd: extrairCusto(providerMetadata),
-      tokens: usage?.totalTokens ?? null,
-    };
+  const chamada = toolCalls[0];
+  if (!chamada) {
+    throw new Error("O modelo não devolveu proposta nenhuma.");
+  }
+  // O SDK marca assim a chamada cujos argumentos não casaram com o schema.
+  // Sem esta checagem, `input` viria com o que o modelo mandou de qualquer
+  // jeito, e o defeito só apareceria lá na frente como campo faltando.
+  if (chamada.invalid) {
+    throw new Error(
+      `O modelo devolveu uma chamada inválida: ${JSON.stringify(chamada.input).slice(0, 300)}`,
+    );
   }
 
-  return {
-    proposal: { kind: op.kind, args: op.args ?? {} },
-    unsupportedReason: null,
-    rationale: object.rationale,
+  const saida = chamada.input as Record<string, unknown> & {
+    rationale: string;
+    kind: string;
+    reason?: string;
+  };
+
+  const comum = {
+    rationale: saida.rationale,
     model: modelo,
     costUsd: extrairCusto(providerMetadata),
     tokens: usage?.totalTokens ?? null,
   };
+
+  if (saida.kind === "unsupported") {
+    return {
+      ...comum,
+      proposal: null,
+      unsupportedReason: saida.reason ?? "No available operation fits this request.",
+    };
+  }
+
+  /**
+   * Remontagem do `{ kind, args }` a partir dos campos planos.
+   *
+   * Quem diz de quais campos aquele `kind` é feito é o schema da própria
+   * operação — não uma tabela paralela aqui. Campo que o modelo mandou e não
+   * pertence à operação escolhida é descartado em silêncio; se faltar algum,
+   * quem reclama é `parseProposal`, com o nome do campo.
+   */
+  const op = operationsByKind.get(saida.kind);
+  if (!op) {
+    throw new Error(`O modelo escolheu uma operação desconhecida: ${saida.kind}`);
+  }
+
+  const shape = (op.schema as unknown as z.ZodObject<z.ZodRawShape>).shape;
+  const args: Record<string, unknown> = {};
+  for (const nome of Object.keys(shape)) {
+    if (saida[nome] !== undefined) args[nome] = saida[nome];
+  }
+
+  return { ...comum, proposal: { kind: saida.kind, args }, unsupportedReason: null };
 }

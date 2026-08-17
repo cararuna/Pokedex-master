@@ -11,7 +11,8 @@
     "test": "vitest run",
     "ingest": "tsx scripts/ingest-docs.ts",
     "token": "tsx scripts/tokens.ts",
-    "build-dataset": "tsx scripts/build-dataset.mjs"
+    "build-dataset": "tsx scripts/build-dataset.mjs",
+    "check:proposer": "tsx scripts/check-proposer.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.12",
