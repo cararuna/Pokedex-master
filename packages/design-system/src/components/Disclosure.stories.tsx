@@ -82,7 +82,7 @@ export const Lista: Story = {
       },
     },
   },
-  render: (args) => (
+  render: () => (
     <Stack gap={2}>
       {[
         { t: "Set charizard's fire attack value to 9", s: "Rolled back", tone: "warning" },
