@@ -120,11 +120,13 @@ function Opcoes({
   ocupado,
   onEscolher,
   onEsclarecer,
+  onDescartar,
 }: {
   pedido: ChangeRequest;
   ocupado: boolean;
   onEscolher: (id: string, indice: number) => void;
   onEsclarecer: (id: string, texto: string) => void;
+  onDescartar: (id: string) => void;
 }) {
   const [texto, setTexto] = useState("");
   const [aberto, setAberto] = useState(false);
@@ -179,13 +181,28 @@ function Opcoes({
           </Inline>
         </Stack>
       ) : (
-        <button
-          type="button"
-          onClick={() => setAberto(true)}
-          className="self-start text-xs text-text-subtle underline underline-offset-2 hover:text-text"
-        >
-          None of these
-        </button>
+        <Inline gap={4}>
+          <button
+            type="button"
+            onClick={() => setAberto(true)}
+            className="text-xs text-text-subtle underline underline-offset-2 hover:text-text"
+          >
+            None of these
+          </button>
+          {/*
+            Sem esta saída, um pedido em dúvida fica preso: não dá para
+            aprová-lo — ele não tem operação — e não havia como tirá-lo da
+            fila. Desistir de uma pergunta é uma resposta legítima.
+          */}
+          <button
+            type="button"
+            disabled={ocupado}
+            onClick={() => onDescartar(pedido.id)}
+            className="text-xs text-text-subtle underline underline-offset-2 hover:text-text disabled:opacity-50"
+          >
+            Discard
+          </button>
+        </Inline>
       )}
     </Stack>
   );
@@ -325,6 +342,7 @@ export function ChangeCard(props: ChangeCardProps) {
             ocupado={ocupado}
             onEscolher={props.onEscolher}
             onEsclarecer={props.onEsclarecer}
+            onDescartar={props.onRejeitar}
           />
         ) : (
           detalhe
