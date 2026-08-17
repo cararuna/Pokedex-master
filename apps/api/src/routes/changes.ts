@@ -6,6 +6,7 @@ import {
   aprovar,
   rejeitar,
   reverter,
+  apresentar,
   ChangeError,
   type ChangeStatus,
 } from "../changes/service.js";
@@ -104,12 +105,12 @@ changes.get("/", exigir("changes:read"), async (c) => {
     return c.json({ erro: "Parâmetros inválidos", detalhes: filtro.error.issues }, 400);
   }
 
-  return c.json(
-    await listarPedidos({
-      status: filtro.data.status as ChangeStatus | undefined,
-      limite: filtro.data.limite,
-    }),
-  );
+  const pedidos = await listarPedidos({
+    status: filtro.data.status as ChangeStatus | undefined,
+    limite: filtro.data.limite,
+  });
+
+  return c.json(pedidos.map(apresentar));
 });
 
 const propostaSchema = z.object({
@@ -136,21 +137,21 @@ changes.post("/", exigir("changes:propose"), async (c) => {
   // 201 só quando nasceu algo para decidir. Recusa e falha de proposta são
   // respostas legítimas da rota — o pedido foi registrado — mas devolver 201
   // faria a tela comemorar uma proposta que ninguém vai aprovar.
-  return c.json(pedido, pedido.status === "proposed" ? 201 : 200);
+  return c.json(apresentar(pedido), pedido.status === "proposed" ? 201 : 200);
 });
 
 /* ── Decisões ─────────────────────────────────────────────────────────────── */
 
 changes.post("/:id/approve", exigir("changes:approve"), async (c) =>
-  c.json(await aprovar(c.req.param("id"), atorDe(c))),
+  c.json(apresentar(await aprovar(c.req.param("id"), atorDe(c)))),
 );
 
 changes.post("/:id/reject", exigir("changes:approve"), async (c) =>
-  c.json(await rejeitar(c.req.param("id"), atorDe(c))),
+  c.json(apresentar(await rejeitar(c.req.param("id"), atorDe(c)))),
 );
 
 changes.post("/:id/rollback", exigir("changes:rollback"), async (c) =>
-  c.json(await reverter(c.req.param("id"), atorDe(c))),
+  c.json(apresentar(await reverter(c.req.param("id"), atorDe(c)))),
 );
 
 export default changes;

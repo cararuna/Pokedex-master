@@ -488,6 +488,49 @@ export async function reverter(id: string, ator: Actor): Promise<ChangeRequest> 
   return resultado;
 }
 
+/* ── Apresentação ─────────────────────────────────────────────────────────── */
+
+export interface ChangeRequestView extends ChangeRequest {
+  /** A frase legível da operação, ou `null` se não há operação. */
+  summary: string | null;
+  /** Os campos que mudam, prontos para virar linhas de tabela na tela. */
+  changes: { field: string; from: unknown; to: unknown }[];
+}
+
+/**
+ * Enriquece o registro com o que a tela precisa mostrar.
+ *
+ * Poderia ser feito no cliente — `before_state` e `after_state` vão inteiros
+ * na resposta. Mas `summary` é um método da operação e `diff` é a função que a
+ * verificação pós-escrita usa; reimplementar os dois em TypeScript do
+ * navegador criaria duas descrições da mesma mudança, e elas divergiriam na
+ * primeira operação nova.
+ *
+ * Nunca lança: um pedido antigo cuja operação saiu do registro precisa
+ * continuar aparecendo no histórico, sem resumo, e não derrubar a listagem.
+ */
+export function apresentar(pedido: ChangeRequest): ChangeRequestView {
+  let summary: string | null = null;
+
+  try {
+    if (pedido.operation) {
+      const { op, args } = parseProposal(pedido.operation);
+      summary = op.summary(args);
+    }
+  } catch {
+    summary = null;
+  }
+
+  return {
+    ...pedido,
+    summary,
+    changes:
+      pedido.before_state && pedido.after_state
+        ? diff(pedido.before_state, pedido.after_state)
+        : [],
+  };
+}
+
 /* ── Leitura ──────────────────────────────────────────────────────────────── */
 
 export async function listarPedidos(filtro: {
