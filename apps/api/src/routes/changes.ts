@@ -6,6 +6,8 @@ import {
   aprovar,
   rejeitar,
   reverter,
+  escolherCandidato,
+  esclarecer,
   apresentar,
   ChangeError,
   type ChangeStatus,
@@ -94,6 +96,7 @@ const filtroSchema = z.object({
       "rolled_back",
       "unsupported",
       "denied",
+      "needs_clarification",
     ])
     .optional(),
   limite: z.coerce.number().min(1).max(200).default(50),
@@ -138,6 +141,37 @@ changes.post("/", exigir("changes:propose"), async (c) => {
   // respostas legítimas da rota — o pedido foi registrado — mas devolver 201
   // faria a tela comemorar uma proposta que ninguém vai aprovar.
   return c.json(apresentar(pedido), pedido.status === "proposed" ? 201 : 200);
+});
+
+/* ── Desambiguação ────────────────────────────────────────────────────────── */
+
+/**
+ * Responder de qual alvo se tratava.
+ *
+ * Exige `changes:propose`, e não `changes:approve`: quem responde é quem
+ * pediu, e responder não aprova nada — o pedido volta para a fila normal e
+ * ainda precisa passar por quem aprova.
+ */
+changes.post("/:id/choose", exigir("changes:propose"), async (c) => {
+  const body = z
+    .object({ index: z.coerce.number().int().min(0) })
+    .safeParse(await c.req.json().catch(() => ({})));
+
+  if (!body.success) return c.json({ erro: "Escolha inválida" }, 400);
+
+  return c.json(
+    apresentar(await escolherCandidato(c.req.param("id"), body.data.index, atorDe(c))),
+  );
+});
+
+changes.post("/:id/clarify", exigir("changes:propose"), async (c) => {
+  const body = z
+    .object({ text: z.string().min(2).max(300) })
+    .safeParse(await c.req.json().catch(() => ({})));
+
+  if (!body.success) return c.json({ erro: "Esclarecimento inválido" }, 400);
+
+  return c.json(apresentar(await esclarecer(c.req.param("id"), body.data.text, atorDe(c))));
 });
 
 /* ── Decisões ─────────────────────────────────────────────────────────────── */

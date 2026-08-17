@@ -263,6 +263,35 @@
   }
 }
 
+/* Abertura do Disclosure.
+
+   `--radix-collapsible-content-height` é medido e publicado pelo Radix — é o
+   que permite animar até a altura real do conteúdo. `height: auto` nunca foi
+   interpolável, e a saída comum (animar `max-height` para um valor chutado)
+   deixa a transição rápida demais em conteúdo curto e cortada em conteúdo
+   longo. */
+@keyframes disclosure-open {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes disclosure-close {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
 /* ── Utilitários ─────────────────────────────────────────────────────────── */
 @utility sr-only {
   position: absolute;

@@ -50,7 +50,8 @@ export type ChangeStatus =
   | "failed"
   | "rolled_back"
   | "unsupported"
-  | "denied";
+  | "denied"
+  | "needs_clarification";
 
 export type Capability =
   | "changes:read"
@@ -73,11 +74,26 @@ export interface Mudanca {
   to: unknown;
 }
 
+/**
+ * Uma opção, quando mais de um alvo servia.
+ *
+ * `operation` já vem completa do servidor: escolher é um clique e não chama o
+ * modelo. Ver `montarCandidatos` em changes/proposer.ts.
+ */
+export interface Candidato {
+  label: string;
+  detail: string;
+  operation: { kind: string; args: Record<string, unknown> };
+}
+
 export interface ChangeRequest {
   id: string;
   request_text: string;
   status: ChangeStatus;
   operation: { kind: string; args: Record<string, unknown> } | null;
+  candidates: Candidato[] | null;
+  question: string | null;
+  clarification: string | null;
   before_state: Record<string, unknown> | null;
   after_state: Record<string, unknown> | null;
   rationale: string | null;
@@ -184,6 +200,18 @@ export const rejeitar = (id: string) =>
 
 export const reverter = (id: string) =>
   pedir<ChangeRequest>(`/${id}/rollback`, { method: "POST" });
+
+export const escolher = (id: string, index: number) =>
+  pedir<ChangeRequest>(`/${id}/choose`, {
+    method: "POST",
+    body: JSON.stringify({ index }),
+  });
+
+export const esclarecer = (id: string, text: string) =>
+  pedir<ChangeRequest>(`/${id}/clarify`, {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
 
 /** Valida um token colado, sem gravá-lo antes de saber se presta. */
 export async function verificarToken(token: string): Promise<Me> {
