@@ -437,11 +437,100 @@ export async function proporMudanca(
     if (saida[nome] !== undefined) args[nome] = saida[nome];
   }
 
+  /**
+   * A trava determinística.
+   *
+   * O modelo *deveria* pedir esclarecimento quando dois alvos servem, e o
+   * prompt manda. Ele obedece na maior parte das vezes — e não em todas.
+   * Rodando o mesmo pedido do Charizard ("a habilidade que dá +1 em fogo"),
+   * ele perguntou nas primeiras execuções e, numa seguinte, escolheu Blaze em
+   * silêncio. `temperature: 0` não garante determinismo com tool calling e
+   * roteamento do OpenRouter.
+   *
+   * Isso não é bug do prompt, é limite da abordagem: **propriedade de
+   * segurança na mão do modelo não é propriedade de segurança.** Aqui a
+   * pergunta deixa de depender do julgamento dele.
+   */
+  const forcada = detectarAmbiguidade(pedido, { kind: saida.kind, args }, vistos);
+  if (forcada) return { ...comum, proposal: null, unsupportedReason: null, clarification: forcada };
+
   return {
     ...comum,
     proposal: { kind: saida.kind, args },
     unsupportedReason: null,
     clarification: null,
+  };
+}
+
+/** Espaço colapsado, sem caixa nem acento de pontuação — para comparar texto. */
+function normalizar(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * O pedido consegue distinguir o alvo escolhido dos demais?
+ *
+ * A regra é estreita de propósito, e cobre exatamente o caso perigoso: alguém
+ * descreveu o alvo pelo **efeito**, e o efeito não discrimina. É o Charizard —
+ * `Blaze` (inata) e `Chama Potente` (talento fire) carregam a descrição
+ * idêntica, então "a que dá +1 em fogo" aponta para as duas.
+ *
+ * Duas condições, e as duas precisam valer:
+ *
+ *   1. o pedido **não nomeia** o alvo escolhido — nomear resolve tudo, e
+ *      "mude o Blaze para +2" não pode virar pergunta;
+ *   2. existe outro candidato, entre os que o retrieval trouxe, com a **mesma
+ *      descrição atual**.
+ *
+ * Descrições diferentes não entram aqui mesmo quando ambas são plausíveis:
+ * ali o modelo tem material para decidir, e forçar pergunta transformaria toda
+ * proposta num formulário. Este guarda o caso em que decidir é impossível.
+ */
+function detectarAmbiguidade(
+  pedido: string,
+  proposta: Proposal,
+  vistos: Candidato[],
+): { question: string; candidates: CandidatoDeMudanca[] } | null {
+  const campo =
+    proposta.kind === "update_ability_text"
+      ? "ability_name"
+      : proposta.kind === "update_talent_text"
+        ? "talent_name"
+        : null;
+
+  if (!campo) return null;
+
+  const alvo = proposta.args[campo];
+  const novaDescricao = proposta.args.description;
+  if (typeof alvo !== "string" || typeof novaDescricao !== "string") return null;
+
+  // Nomeou o alvo: não há dúvida a resolver.
+  if (normalizar(pedido).includes(normalizar(alvo))) return null;
+
+  const escolhido = vistos.find((c) => normalizar(c.name) === normalizar(alvo));
+  if (!escolhido) return null;
+
+  const gemeos = vistos.filter(
+    (c) =>
+      normalizar(c.description) === normalizar(escolhido.description) &&
+      normalizar(c.name) !== normalizar(escolhido.name),
+  );
+
+  if (gemeos.length === 0) return null;
+
+  const candidatos = montarCandidatos(
+    [escolhido, ...gemeos].map((c) => c.name),
+    vistos,
+    novaDescricao,
+  );
+
+  if (candidatos.length < 2) return null;
+
+  return {
+    question:
+      `More than one entry reads “${escolhido.description}”. ` +
+      `The request does not say which one — pick the target.`,
+    candidates: candidatos,
   };
 }
 
