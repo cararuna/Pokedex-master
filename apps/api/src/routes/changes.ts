@@ -180,7 +180,15 @@ changes.post("/:id/approve", exigir("changes:approve"), async (c) =>
   c.json(apresentar(await aprovar(c.req.param("id"), atorDe(c)))),
 );
 
-changes.post("/:id/reject", exigir("changes:approve"), async (c) =>
+/**
+ * Descartar exige `changes:propose`, não `changes:approve`.
+ *
+ * Recusar uma proposta alheia e desistir da própria pergunta são o mesmo
+ * verbo aqui, e o segundo não deveria depender de quem aprova: quem pediu tem
+ * de poder tirar da fila o que ele mesmo colocou. Exigir aprovação para isso
+ * deixava o editor sem como limpar as próprias dúvidas.
+ */
+changes.post("/:id/reject", exigir("changes:propose"), async (c) =>
   c.json(apresentar(await rejeitar(c.req.param("id"), atorDe(c)))),
 );
 

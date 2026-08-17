@@ -437,6 +437,14 @@ export async function aprovar(id: string, ator: Actor): Promise<ChangeRequest> {
   return executar(data as ChangeRequest, { verificarDrift: true });
 }
 
+/**
+ * Descarta um pedido, esteja ele esperando aprovação ou esperando resposta.
+ *
+ * Os dois estados entram, e a omissão de `needs_clarification` foi um defeito
+ * real: o pedido em dúvida devolvia 409 e ficava preso na fila para sempre —
+ * ninguém consegue aprová-lo, porque ele não tem operação, e ninguém
+ * conseguia dispensá-lo. Desistir de uma pergunta é uma saída legítima.
+ */
 export async function rejeitar(id: string, ator: Actor): Promise<ChangeRequest> {
   const { data, error } = await db
     .from("change_requests")
@@ -445,14 +453,18 @@ export async function rejeitar(id: string, ator: Actor): Promise<ChangeRequest> 
       decided_at: new Date().toISOString(),
       decided_by_token: ator.tokenId,
       decided_by: ator.label,
+      // Os candidatos somem junto: a pergunta deixou de existir, e mantê-los
+      // faria o histórico oferecer escolhas para algo já descartado.
+      candidates: null,
+      question: null,
     })
     .eq("id", id)
-    .eq("status", "proposed")
+    .in("status", ["proposed", "needs_clarification"])
     .select("*")
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!data) throw new ChangeError(409, "This request is not awaiting approval.");
+  if (!data) throw new ChangeError(409, "This request was already decided.");
   return data as ChangeRequest;
 }
 
