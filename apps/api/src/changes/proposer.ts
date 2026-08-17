@@ -451,7 +451,7 @@ export async function proporMudanca(
    * segurança na mão do modelo não é propriedade de segurança.** Aqui a
    * pergunta deixa de depender do julgamento dele.
    */
-  const forcada = detectarAmbiguidade(pedido, { kind: saida.kind, args }, vistos);
+  const forcada = await detectarAmbiguidade(pedido, { kind: saida.kind, args }, vistos);
   if (forcada) return { ...comum, proposal: null, unsupportedReason: null, clarification: forcada };
 
   return {
@@ -485,12 +485,21 @@ function normalizar(s: string): string {
  * Descrições diferentes não entram aqui mesmo quando ambas são plausíveis:
  * ali o modelo tem material para decidir, e forçar pergunta transformaria toda
  * proposta num formulário. Este guarda o caso em que decidir é impossível.
+ *
+ * **A consulta é feita aqui, não reaproveitada do laço.** A primeira versão
+ * comparava só o que o modelo tinha consultado, e em produção ele propôs sem
+ * chamar `lookup_targets` nenhuma vez: `vistos` veio vazio, não havia com quem
+ * comparar, e a trava passou batido no exato caso que ela existe para pegar.
+ *
+ * Uma trava que depende de o modelo ter feito a coisa certa antes não é trava.
+ * O que o laço trouxe entra como atalho — se o alvo já está lá, aproveita —,
+ * mas a ausência dele não dispensa a checagem.
  */
-function detectarAmbiguidade(
+async function detectarAmbiguidade(
   pedido: string,
   proposta: Proposal,
   vistos: Candidato[],
-): { question: string; candidates: CandidatoDeMudanca[] } | null {
+): Promise<{ question: string; candidates: CandidatoDeMudanca[] } | null> {
   const campo =
     proposta.kind === "update_ability_text"
       ? "ability_name"
@@ -507,10 +516,29 @@ function detectarAmbiguidade(
   // Nomeou o alvo: não há dúvida a resolver.
   if (normalizar(pedido).includes(normalizar(alvo))) return null;
 
-  const escolhido = vistos.find((c) => normalizar(c.name) === normalizar(alvo));
+  // O alvo, pelo que o laço já trouxe — ou buscado agora, se ele não buscou.
+  const escolhido =
+    vistos.find((c) => normalizar(c.name) === normalizar(alvo)) ??
+    (await consultarAlvos({ contains: alvo })).find(
+      (c) => normalizar(c.name) === normalizar(alvo),
+    );
+
   if (!escolhido) return null;
 
-  const gemeos = vistos.filter(
+  /**
+   * Os gêmeos vêm de uma busca pela **descrição**, não da lista do laço.
+   *
+   * O `ilike` casa o texto inteiro, que é exatamente o critério: só interessa
+   * quem diz a mesma coisa. Buscar de novo custa uma consulta indexada e
+   * remove a dependência de o modelo ter consultado o Pokémon certo — ele pode
+   * ter olhado só as inatas e nunca visto o talento de tipo homônimo.
+   */
+  const universo = [
+    ...vistos,
+    ...(await consultarAlvos({ contains: escolhido.description })),
+  ];
+
+  const gemeos = universo.filter(
     (c) =>
       normalizar(c.description) === normalizar(escolhido.description) &&
       normalizar(c.name) !== normalizar(escolhido.name),
@@ -520,7 +548,7 @@ function detectarAmbiguidade(
 
   const candidatos = montarCandidatos(
     [escolhido, ...gemeos].map((c) => c.name),
-    vistos,
+    [escolhido, ...gemeos, ...vistos],
     novaDescricao,
   );
 
