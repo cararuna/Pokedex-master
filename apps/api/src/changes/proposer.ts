@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { llmEnv } from "../env.js";
 import { operations, operationsByKind, type Proposal } from "./operations.js";
+import { consultarAlvos, rotularCandidato, type Candidato } from "./lookup.js";
 
 /**
  * Converte o pedido em texto livre numa operação tipada.
@@ -57,7 +58,7 @@ const env = () => llmEnv();
  * que um modelo muda de preço.
  */
 async function carregarSdk() {
-  const [{ generateText, tool }, { createOpenRouter }] = await Promise.all([
+  const [{ generateText, tool, stepCountIs }, { createOpenRouter }] = await Promise.all([
     import("ai"),
     import("@openrouter/ai-sdk-provider"),
   ]);
@@ -67,7 +68,7 @@ async function carregarSdk() {
     extraBody: { usage: { include: true } },
   });
 
-  return { generateText, tool, openrouter };
+  return { generateText, tool, stepCountIs, openrouter };
 }
 
 /* ── Schema da saída ──────────────────────────────────────────────────────── */
@@ -140,12 +141,30 @@ function schemaDaProposta(kinds: string[] | null) {
      * de falhar mais perigoso aqui: uma escrita plausível na linha errada.
      */
     kind: z
-      .enum(["unsupported", ...visiveis.map((o) => o.kind)] as [string, ...string[]])
-      .describe("The operation to perform, or 'unsupported' to decline."),
+      .enum([
+        "unsupported",
+        "needs_clarification",
+        ...visiveis.map((o) => o.kind),
+      ] as [string, ...string[]])
+      .describe(
+        "The operation to perform, 'needs_clarification' when two or more " +
+          "targets fit, or 'unsupported' to decline.",
+      ),
     reason: z
       .string()
       .optional()
       .describe("Required when kind is 'unsupported': why no operation fits."),
+    question: z
+      .string()
+      .optional()
+      .describe("Required when kind is 'needs_clarification': what to ask the human."),
+    candidate_names: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "Required when kind is 'needs_clarification': the exact names returned " +
+          "by lookup_targets that could be the target.",
+      ),
     ...campos,
   });
 }
@@ -165,27 +184,65 @@ typed operation. You never write SQL and you never invent identifiers.
 Available operations:
 {{OPERATIONS}}
 
-Rules that matter:
+## How to work
+
+1. If the request is about an ability or a talent, call lookup_targets FIRST.
+   Never guess a name. The request often describes the effect instead of the
+   name — "the ability about sunny day" — and only the lookup knows both the
+   real name and which of the two mechanisms it belongs to.
+2. Then call submit_proposal exactly once.
+
+## Rules that matter
+
 - Attack values in this game are 8, 9 or 10 — never the video-game damage
   number. A request mentioning 90 or 120 is almost certainly the video-game
   value; use "unsupported" and say so rather than guessing a conversion.
 - A Pokémon has at most one attack per type. There is no "second fire move".
-- Innate abilities are ones a Pokémon already has. Type talents are ones any
-  Pokémon of that type can acquire. Pick the operation that matches which of
-  the two the request names.
+- Innate abilities are ones a Pokémon already has (update_ability_text). Type
+  talents are ones any Pokémon of that type can acquire (update_talent_text).
+  Do not infer which one from the wording — the lookup tells you.
 - Pokémon are addressed by lowercase slug, e.g. "charizard".
-- If the request is ambiguous, names something that does not exist, or asks for
-  anything outside the list above — creating rows, deleting rows, bulk edits —
-  return "unsupported" with the reason. Refusing is correct behaviour here, not
-  failure.`;
+- Asking for anything outside the operation list — creating rows, deleting
+  rows, bulk edits — is "unsupported". Refusing is correct behaviour, not
+  failure.
+
+## When two or more targets fit
+
+Use "needs_clarification" and list their exact names in candidate_names.
+
+This is not a fallback for being unsure — it is the correct answer when the
+request genuinely does not contain enough to choose. Two abilities can carry
+the *same description in different tables*, and then no amount of reasoning
+picks the right one: the information simply is not in the request. Guessing
+there writes a plausible value into the wrong row, and the human reviewing the
+diff sees one plausible value becoming another and approves it.
+
+Still supply the new text (description) — the change is the same either way,
+only the target is in doubt.`;
 
 /* ── Resultado ────────────────────────────────────────────────────────────── */
 
+/** Uma opção pronta para virar mudança com um clique. */
+export interface CandidatoDeMudanca {
+  label: string;
+  detail: string;
+  operation: Proposal;
+}
+
 export interface PropostaGerada {
-  /** Nulo quando o modelo respondeu `unsupported`. */
+  /** Preenchido só quando o modelo escolheu um alvo único. */
   proposal: Proposal | null;
-  /** Preenchido quando `proposal` é nulo. */
+  /** Preenchido quando o modelo recusou. */
   unsupportedReason: string | null;
+  /**
+   * Preenchido quando mais de um alvo servia.
+   *
+   * Cada candidato já é uma operação completa: escolher não chama o modelo de
+   * novo. Guardar só o identificador do alvo obrigaria uma segunda passada
+   * para montar os argumentos — uma segunda chance de errar, exatamente no
+   * ponto em que a pessoa acabou de remover a dúvida.
+   */
+  clarification: { question: string; candidates: CandidatoDeMudanca[] } | null;
   rationale: string;
   model: string;
   costUsd: number | null;
@@ -211,36 +268,89 @@ export async function proporMudanca(
 ): Promise<PropostaGerada> {
   const modelo = opcoes.model ?? env().OPENROUTER_MODEL;
   const kinds = opcoes.kinds ?? null;
-  const { generateText, tool, openrouter } = await carregarSdk();
+  const { generateText, tool, stepCountIs, openrouter } = await carregarSdk();
 
-  const { toolCalls, usage, providerMetadata } = await generateText({
+  /**
+   * O que o retrieval devolveu ao longo da conversa.
+   *
+   * Precisa ser acumulado aqui porque, ao pedir desambiguação, o modelo cita
+   * os candidatos **pelo nome** — e transformar nome em operação exige o
+   * mecanismo e o tipo, que só a linha do banco tem. Confiar no modelo para
+   * repetir esses campos seria reintroduzir o palpite no exato ponto onde
+   * estamos tentando eliminá-lo.
+   */
+  const vistos: Candidato[] = [];
+
+  const { steps, usage, providerMetadata } = await generateText({
     model: openrouter.chat(modelo),
     system: SYSTEM.replace("{{OPERATIONS}}", cardapio(kinds)),
     prompt: pedido,
     tools: {
       /**
-       * Uma ferramenta só, sem `execute`.
+       * Esta **tem** `execute`, então o SDK a roda e devolve o resultado ao
+       * modelo — o laço continua. É o que transforma a extração de um turno
+       * num agente de dois passos: consultar, depois propor.
+       */
+      lookup_targets: tool({
+        description:
+          "Find abilities and talents that could be the target. Returns the exact " +
+          "name of each and whether it is an innate ability or a type talent. " +
+          "Call this before proposing any change to an ability or talent.",
+        inputSchema: z.object({
+          pokemon: z
+            .string()
+            .optional()
+            .describe("Lowercase slug, when the request names a Pokémon"),
+          contains: z
+            .string()
+            .optional()
+            .describe("Words from the effect, e.g. 'dia ensolarado'"),
+        }),
+        execute: async (consulta) => {
+          const achados = await consultarAlvos(consulta);
+          vistos.push(...achados);
+          return achados.length > 0
+            ? achados
+            : { note: "No ability or talent matched. Do not invent one." };
+        },
+      }),
+
+      /**
+       * Esta **não** tem `execute`.
        *
-       * Sem `execute`, o SDK devolve a chamada em vez de rodá-la — que é
-       * exatamente o que se quer: a "execução" desta proposta é uma pessoa
+       * Sem ele o SDK devolve a chamada em vez de rodá-la, e o laço para — que
+       * é exatamente o que se quer: a "execução" desta proposta é uma pessoa
        * clicando em Approve, horas depois, em outro processo.
        */
       submit_proposal: tool({
-        description: "Submit exactly one typed operation, or decline the request.",
+        description:
+          "Submit exactly one typed operation, ask for clarification, or decline.",
         inputSchema: schemaDaProposta(kinds),
       }),
     },
     // Obriga a ferramenta. Sem isto o modelo responde em prosa quando acha o
     // pedido estranho — e prosa não é proposta.
     toolChoice: "required",
+    /**
+     * Teto de voltas. Consultar e propor são dois passos; quatro dá margem
+     * para uma segunda consulta — quando a primeira volta vazia e vale tentar
+     * outro termo — sem permitir que o modelo fique consultando para sempre
+     * às custas de quem está esperando na tela.
+     */
+    stopWhen: stepCountIs(4),
     // Extração, não redação: variar a saída aqui só produz proposta diferente
     // para o mesmo pedido, que é o oposto do que se quer num fluxo auditável.
     temperature: 0,
   });
 
-  const chamada = toolCalls[0];
+  const chamada = steps
+    .flatMap((s) => s.toolCalls)
+    .find((c) => c.toolName === "submit_proposal");
+
   if (!chamada) {
-    throw new Error("O modelo não devolveu proposta nenhuma.");
+    throw new Error(
+      "O modelo consultou o catálogo mas não chegou a propor nada dentro do limite de passos.",
+    );
   }
   // O SDK marca assim a chamada cujos argumentos não casaram com o schema.
   // Sem esta checagem, `input` viria com o que o modelo mandou de qualquer
@@ -255,6 +365,8 @@ export async function proporMudanca(
     rationale: string;
     kind: string;
     reason?: string;
+    question?: string;
+    candidate_names?: string[];
   };
 
   const comum = {
@@ -268,7 +380,41 @@ export async function proporMudanca(
     return {
       ...comum,
       proposal: null,
+      clarification: null,
       unsupportedReason: saida.reason ?? "No available operation fits this request.",
+    };
+  }
+
+  if (saida.kind === "needs_clarification") {
+    const candidatos = montarCandidatos(saida.candidate_names ?? [], vistos, saida.description);
+
+    /**
+     * Menos de dois candidatos não é dúvida.
+     *
+     * Acontece quando o modelo cita um nome que o retrieval não devolveu — ou
+     * seja, inventou. Perguntar "qual destes?" mostrando uma opção só empurra
+     * a invenção para a tela com cara de escolha legítima. Vira recusa.
+     */
+    if (candidatos.length < 2) {
+      return {
+        ...comum,
+        proposal: null,
+        clarification: null,
+        unsupportedReason:
+          "Could not identify which ability or talent this refers to. " +
+          "Name it directly, or describe its effect in the words used on the card.",
+      };
+    }
+
+    return {
+      ...comum,
+      proposal: null,
+      unsupportedReason: null,
+      clarification: {
+        question:
+          saida.question ?? "More than one ability matches. Which one did you mean?",
+        candidates: candidatos,
+      },
     };
   }
 
@@ -291,5 +437,59 @@ export async function proporMudanca(
     if (saida[nome] !== undefined) args[nome] = saida[nome];
   }
 
-  return { ...comum, proposal: { kind: saida.kind, args }, unsupportedReason: null };
+  return {
+    ...comum,
+    proposal: { kind: saida.kind, args },
+    unsupportedReason: null,
+    clarification: null,
+  };
+}
+
+/**
+ * Nomes citados pelo modelo → operações prontas para aplicar.
+ *
+ * O modelo devolve só o nome; o **mecanismo** e o **tipo** vêm da linha que o
+ * retrieval trouxe, nunca do que ele escreveu. É a diferença entre desambiguar
+ * e trocar um palpite por outro: se o nome não estiver entre os candidatos
+ * consultados, ele é descartado — inclusive quando soa plausível.
+ *
+ * A mudança em si é a mesma nas duas pontas (o texto novo); o que estava em
+ * dúvida era só o alvo. Por isso um candidato consegue ser uma operação
+ * inteira, e escolher não custa nada.
+ */
+function montarCandidatos(
+  nomes: string[],
+  vistos: Candidato[],
+  descricaoNova: unknown,
+): CandidatoDeMudanca[] {
+  if (typeof descricaoNova !== "string" || descricaoNova.trim() === "") return [];
+
+  const porNome = new Map(vistos.map((c) => [c.name.toLowerCase(), c]));
+  const usados = new Set<string>();
+  const saida: CandidatoDeMudanca[] = [];
+
+  for (const nome of nomes) {
+    const c = porNome.get(nome.trim().toLowerCase());
+    // O mesmo candidato pode voltar de duas consultas; a lista da tela não
+    // pode mostrar a mesma opção duas vezes.
+    if (!c || usados.has(c.name.toLowerCase())) continue;
+    usados.add(c.name.toLowerCase());
+
+    saida.push({
+      label: rotularCandidato(c),
+      detail: c.description,
+      operation:
+        c.mechanism === "innate"
+          ? {
+              kind: "update_ability_text",
+              args: { ability_name: c.name, description: descricaoNova },
+            }
+          : {
+              kind: "update_talent_text",
+              args: { type: c.type, talent_name: c.name, description: descricaoNova },
+            },
+    });
+  }
+
+  return saida;
 }

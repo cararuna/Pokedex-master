@@ -15,6 +15,8 @@ import {
 } from "@pokedex/design-system";
 import {
   aprovar,
+  escolher,
+  esclarecer,
   listarMudancas,
   NaoAutenticado,
   proporMudanca,
@@ -239,6 +241,49 @@ export function ChangesPage() {
   }
 
   /**
+   * Uma seção da fila.
+   *
+   * Declarada aqui dentro para fechar sobre `eu`, `ocupado` e os despachos —
+   * eram sete props repetidas em cada bloco, e a terceira seção teria feito a
+   * repetição virar o lugar óbvio para uma delas ficar para trás.
+   */
+  function Secao({
+    titulo,
+    itens,
+    separar = false,
+  }: {
+    titulo: string;
+    itens: ChangeRequest[];
+    separar?: boolean;
+  }) {
+    if (itens.length === 0) return null;
+
+    return (
+      <Stack gap={3}>
+        {separar && <Divider />}
+        <Inline gap={2} align="baseline">
+          <h2 className="text-sm font-semibold text-text-muted">{titulo}</h2>
+          <span className="text-xs tabular-nums text-text-subtle">{itens.length}</span>
+        </Inline>
+        {itens.map((p) => (
+          <ChangeCard
+            key={p.id}
+            pedido={p}
+            eu={eu!}
+            revertidoPor={desfeitoPor.get(p.id)}
+            ocupado={ocupado}
+            onAprovar={(id) => void decidir(() => aprovar(id))}
+            onRejeitar={(id) => void decidir(() => rejeitar(id))}
+            onReverter={(id) => void decidir(() => reverter(id))}
+            onEscolher={(id, i) => void decidir(() => escolher(id, i))}
+            onEsclarecer={(id, t) => void decidir(() => esclarecer(id, t))}
+          />
+        ))}
+      </Stack>
+    );
+  }
+
+  /**
    * Um rollback bem-sucedido é dobrado na linha que ele desfez.
    *
    * No banco ele é uma linha própria, e continua sendo — o histórico é
@@ -260,8 +305,24 @@ export function ChangesPage() {
   }
 
   const visiveis = (pedidos ?? []).filter((p) => !dobrado(p));
+
+  /**
+   * Três seções, e a ordem é a de quem está esperando por quem.
+   *
+   *   1. esperando você        o sistema perguntou e a bola está com quem pediu
+   *   2. esperando análise     a proposta está pronta e falta decidir
+   *   3. histórico             já resolvido; abre no clique de quem quiser ver
+   *
+   * A primeira vem antes da segunda porque um pedido em dúvida está **parado**:
+   * ninguém consegue aprová-lo, e ele não sai do lugar até alguém responder.
+   * No fim da lista, ficaria esquecido justamente por não ter botão de ação
+   * nas seções que a pessoa costuma olhar.
+   */
+  const emDuvida = visiveis.filter((p) => p.status === "needs_clarification");
   const pendentes = visiveis.filter((p) => p.status === "proposed");
-  const historico = visiveis.filter((p) => p.status !== "proposed");
+  const historico = visiveis.filter(
+    (p) => p.status !== "proposed" && p.status !== "needs_clarification",
+  );
 
   return (
     <Container className="py-8">
@@ -316,45 +377,10 @@ export function ChangesPage() {
             description="Describe a change above and it will show up as a proposal to review."
           />
         ) : (
-          <Stack gap={6}>
-            {pendentes.length > 0 && (
-              <Stack gap={3}>
-                <h2 className="text-sm font-semibold text-text-muted">
-                  Awaiting approval ({pendentes.length})
-                </h2>
-                {pendentes.map((p) => (
-                  <ChangeCard
-                    key={p.id}
-                    pedido={p}
-                    eu={eu}
-                    revertidoPor={desfeitoPor.get(p.id)}
-                    ocupado={ocupado}
-                    onAprovar={(id) => void decidir(() => aprovar(id))}
-                    onRejeitar={(id) => void decidir(() => rejeitar(id))}
-                    onReverter={(id) => void decidir(() => reverter(id))}
-                  />
-                ))}
-              </Stack>
-            )}
-
-            {historico.length > 0 && (
-              <Stack gap={3}>
-                {pendentes.length > 0 && <Divider />}
-                <h2 className="text-sm font-semibold text-text-muted">History</h2>
-                {historico.map((p) => (
-                  <ChangeCard
-                    key={p.id}
-                    pedido={p}
-                    eu={eu}
-                    revertidoPor={desfeitoPor.get(p.id)}
-                    ocupado={ocupado}
-                    onAprovar={(id) => void decidir(() => aprovar(id))}
-                    onRejeitar={(id) => void decidir(() => rejeitar(id))}
-                    onReverter={(id) => void decidir(() => reverter(id))}
-                  />
-                ))}
-              </Stack>
-            )}
+          <Stack gap={8}>
+            <Secao titulo="Waiting on you" itens={emDuvida} />
+            <Secao titulo="Pending review" itens={pendentes} />
+            <Secao titulo="History" itens={historico} separar />
           </Stack>
         )}
       </Stack>

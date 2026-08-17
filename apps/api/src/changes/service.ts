@@ -1,5 +1,5 @@
 import { db } from "../db/client.js";
-import { proporMudanca } from "./proposer.js";
+import { proporMudanca, type CandidatoDeMudanca } from "./proposer.js";
 import {
   parseProposal,
   diff,
@@ -43,7 +43,8 @@ export type ChangeStatus =
   | "failed"
   | "rolled_back"
   | "unsupported"
-  | "denied";
+  | "denied"
+  | "needs_clarification";
 
 export interface ChangeRequest {
   id: string;
@@ -55,6 +56,11 @@ export interface ChangeRequest {
   inverse_operation: Proposal | null;
   rationale: string | null;
   error: string | null;
+  /** Preenchido em `needs_clarification` — cada um já é uma operação pronta. */
+  candidates: CandidatoDeMudanca[] | null;
+  question: string | null;
+  /** O que a pessoa acrescentou quando nenhum candidato servia. */
+  clarification: string | null;
   requested_by_token: string | null;
   requested_by: string | null;
   decided_by_token: string | null;
@@ -172,6 +178,22 @@ export async function criarPedido(entrada: {
     model: gerada.model,
     cost_usd: gerada.costUsd,
   };
+
+  /**
+   * Mais de um alvo servia. Vira pergunta, não palpite.
+   *
+   * Nada é escrito e nada é proposto: o pedido fica esperando alguém dizer de
+   * qual dos dois estava falando. É o único estado da fila em que a bola está
+   * com quem pediu, e não com quem aprova.
+   */
+  if (gerada.clarification) {
+    return inserir({
+      ...comum,
+      status: "needs_clarification",
+      question: gerada.clarification.question,
+      candidates: gerada.clarification.candidates,
+    });
+  }
 
   // O modelo recusou traduzir. Guardado assim mesmo: a lista do que pediram e
   // o cardápio não cobre é a fila de backlog mais honesta que existe.
@@ -486,6 +508,134 @@ export async function reverter(id: string, ator: Actor): Promise<ChangeRequest> 
   }
 
   return resultado;
+}
+
+/* ── Desambiguação ────────────────────────────────────────────────────────── */
+
+/** Carrega um pedido que está esperando resposta, ou explica por que não dá. */
+async function pedidoEmDuvida(id: string): Promise<ChangeRequest> {
+  const { data, error } = await db
+    .from("change_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  const pedido = data as ChangeRequest | null;
+
+  if (!pedido) throw new ChangeError(404, "Request not found.");
+  if (pedido.status !== "needs_clarification") {
+    throw new ChangeError(409, `This request is not awaiting clarification — it is ${pedido.status}.`);
+  }
+  return pedido;
+}
+
+/**
+ * A pessoa apontou qual dos candidatos era.
+ *
+ * **Não chama o modelo.** O candidato já é uma operação completa, montada
+ * quando o retrieval trouxe a linha; escolher é só dizer qual. Uma segunda
+ * passada aqui seria uma segunda chance de errar, exatamente no ponto em que a
+ * dúvida acabou de ser removida — e custaria dinheiro para piorar.
+ *
+ * A operação escolhida ainda passa por `parseProposal` e por `read`, como
+ * qualquer outra. Ter vindo do nosso próprio JSON não a dispensa da fronteira.
+ */
+export async function escolherCandidato(
+  id: string,
+  indice: number,
+  ator: Actor,
+): Promise<ChangeRequest> {
+  const pedido = await pedidoEmDuvida(id);
+  const candidato = pedido.candidates?.[indice];
+
+  if (!candidato) throw new ChangeError(400, "No candidate at that position.");
+
+  if (!podePropor(ator.role, candidato.operation.kind)) {
+    throw new ChangeError(
+      403,
+      `Your role (${ator.role}) cannot propose "${candidato.operation.kind}".`,
+    );
+  }
+
+  const { op, args, proposal } = parseProposal(candidato.operation);
+  const antes = await op.read(args);
+
+  return atualizar(id, {
+    status: "proposed",
+    operation: proposal,
+    before_state: antes,
+    after_state: op.project(args, antes),
+    // Os candidatos saem: a dúvida virou escolha, e mantê-los faria a tela
+    // continuar oferecendo alternativas a algo que já foi decidido.
+    candidates: null,
+    question: null,
+    rationale: `Target chosen by ${ator.label}: ${candidato.label}.`,
+  });
+}
+
+/**
+ * Nenhum candidato servia, e a pessoa acrescentou contexto.
+ *
+ * Aqui o modelo roda de novo, com o pedido original **mais** o esclarecimento.
+ * Os dois vão juntos porque o esclarecimento sozinho quase nunca se sustenta —
+ * "a de tipo, não a inata" não é um pedido, é um complemento.
+ */
+export async function esclarecer(
+  id: string,
+  texto: string,
+  ator: Actor,
+): Promise<ChangeRequest> {
+  const pedido = await pedidoEmDuvida(id);
+  await verificarCota(ator);
+
+  const gerada = await proporMudanca(`${pedido.request_text}\n\nClarification: ${texto}`, {
+    kinds: ROLES[ator.role].operationKinds,
+  });
+
+  const comum = {
+    clarification: texto,
+    rationale: gerada.rationale,
+    model: gerada.model,
+    cost_usd: gerada.costUsd,
+  };
+
+  if (gerada.clarification) {
+    return atualizar(id, {
+      ...comum,
+      status: "needs_clarification",
+      question: gerada.clarification.question,
+      candidates: gerada.clarification.candidates,
+    });
+  }
+
+  if (!gerada.proposal) {
+    return atualizar(id, {
+      ...comum,
+      status: "unsupported",
+      candidates: null,
+      question: null,
+      error: gerada.unsupportedReason,
+    });
+  }
+
+  const { op, args, proposal } = parseProposal(gerada.proposal);
+
+  if (!podePropor(ator.role, proposal.kind)) {
+    throw new ChangeError(403, `Your role (${ator.role}) cannot propose "${proposal.kind}".`);
+  }
+
+  const antes = await op.read(args);
+
+  return atualizar(id, {
+    ...comum,
+    status: "proposed",
+    operation: proposal,
+    before_state: antes,
+    after_state: op.project(args, antes),
+    candidates: null,
+    question: null,
+  });
 }
 
 /* ── Apresentação ─────────────────────────────────────────────────────────── */

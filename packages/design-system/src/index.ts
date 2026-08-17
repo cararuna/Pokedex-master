@@ -14,6 +14,7 @@ export { Skeleton, type SkeletonProps } from "./components/Skeleton";
 export { SearchField, type SearchFieldProps } from "./components/SearchField";
 export { Select, type SelectProps, type SelectOption } from "./components/Select";
 export { Textarea, type TextareaProps } from "./components/Textarea";
+export { Disclosure, type DisclosureProps } from "./components/Disclosure";
 export { Markdown, type MarkdownProps } from "./components/Markdown";
 export { Table } from "./components/Table";
 export { Tabs } from "./components/Tabs";
