@@ -1,9 +1,16 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@pokedex/design-system";
 import { PokedexPage } from "./features/pokedex/PokedexPage";
+import { ChangesPage } from "./features/changes/ChangesPage";
 
 /**
- * O aplicativo tem uma tela só: a mesa de consulta.
+ * Duas telas: a mesa de consulta e o inbox de mudanças.
+ *
+ * `/changes` não aparece na navegação de propósito. Não é segurança — quem
+ * decide o que cada pessoa pode fazer é o servidor, a cada rota — é público
+ * certo: quem senta para jogar quer a mesa, e um link para "aprovar mudanças"
+ * no cabeçalho seria uma porta que quase ninguém deve abrir ocupando o lugar
+ * de uma que todos usam.
  *
  * Existia também uma `/design-system`, feita à mão para mostrar os
  * componentes. Ela saiu porque era uma segunda fonte de verdade: mostrava o
@@ -20,6 +27,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<PokedexPage />} />
+          <Route path="/changes" element={<ChangesPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

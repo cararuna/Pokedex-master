@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import { db } from "../src/db/client.js";
 import { chunkMarkdown } from "../src/rag/chunk.js";
 import { openRouterEmbedder } from "../src/rag/embedder.js";
+import { documentoDasRegras, FONTE_REGRAS } from "../src/rag/reindex.js";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(AQUI, "../../..");
@@ -50,38 +51,14 @@ const FONTES: Fonte[] = [
   { path: "PLANO.md", title: "Plano de refatoração", kind: "arquitetura" },
 ];
 
-/**
- * As regras do jogo que vivem como dado, mas em forma de prosa.
+/*
+ * `documentoDasRegras` mora em src/rag/reindex.ts, e não aqui.
  *
- * Talentos e habilidades inatas estão em tabela, mas suas descrições são texto
- * livre — "Sempre que infligir ou receber qualquer status, remova o status de
- * um Pokémon da sua equipe". Uma pergunta como "qual talento remove status?"
- * não é respondível por SQL sem busca textual, e é exatamente o caso do RAG.
+ * O fluxo de pedidos de mudança precisa reindexar só este documento quando
+ * alguém corrige o texto de um talento. Duas cópias do gerador significariam
+ * o índice divergir do banco assim que uma delas mudasse — foi assim que a
+ * vitrine do design system se descolou do produto.
  */
-async function documentoDasRegras(): Promise<string> {
-  const [{ data: talentos }, { data: habilidades }] = await Promise.all([
-    db.from("type_talents").select("type, name, description, position").order("type").order("position"),
-    db.from("abilities").select("name, description").order("name"),
-  ]);
-
-  const linhas: string[] = ["# Talentos e habilidades do jogo", ""];
-
-  let tipoAtual = "";
-  for (const t of talentos ?? []) {
-    if (t.type !== tipoAtual) {
-      tipoAtual = t.type;
-      linhas.push("", `## Talentos do tipo ${t.type}`, "");
-    }
-    linhas.push(`- **${t.name}** — ${t.description}`);
-  }
-
-  linhas.push("", "## Habilidades inatas", "");
-  for (const h of habilidades ?? []) {
-    linhas.push(`- **${h.name}** — ${h.description}`);
-  }
-
-  return linhas.join("\n");
-}
 
 async function main() {
   console.log(`Modelo de embedding: ${openRouterEmbedder.model}`);
@@ -105,7 +82,7 @@ async function main() {
   }
 
   documentos.push({
-    fonte: { path: "banco://regras", title: "Talentos e habilidades", kind: "regras" },
+    fonte: FONTE_REGRAS,
     conteudo: await documentoDasRegras(),
   });
 
